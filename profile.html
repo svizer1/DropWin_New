@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Профиль | DropWin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="particles" id="particles"></div>
+
+<div class="header">
+  <div class="logo">💎 DROPWIN</div>
+  <div class="balance-container">
+    <div class="balance">💰 <span id="balance">—</span>₽</div>
+  </div>
+</div>
+
+<div class="content">
+  <button class="back-btn" onclick="location.href='index.html'">← Назад</button>
+
+  <div class="game-card">
+    <div class="game-title">👤 Профиль</div>
+    <div id="usernameDisplay" style="font-size:1.5rem; font-weight:800; margin:20px 0;">—</div>
+
+    <div class="input-group">
+      <label class="input-label">Промокод</label>
+      <input type="text" id="promoCode" placeholder="Kavexs / Kavexs2026">
+      <button class="btn" onclick="activatePromo()" style="margin-top:12px;">Активировать</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-value" id="gamesPlayed">0</div><div class="stat-label">Игр</div></div>
+      <div class="stat-card"><div class="stat-value" id="winRate">0%</div><div class="stat-label">% побед</div></div>
+      <div class="stat-card"><div class="stat-value" id="totalBet">0₽</div><div class="stat-label">Ставки</div></div>
+      <div class="stat-card"><div class="stat-value" id="totalWin">0₽</div><div class="stat-label">Выигрыш</div></div>
+    </div>
+
+    <div class="history-list">
+      <div class="game-title" style="margin-top:24px;">История</div>
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+  <button class="btn logout-btn" onclick="logout()" style="margin-top:24px;">Выйти</button>
+</div>
+
+<div class="nav">
+  <button class="nav-btn" onclick="location.href='index.html'"><span>🏠</span><span class="nav-label">Главная</span></button>
+  <button class="nav-btn active"><span>👤</span><span class="nav-label">Профиль</span></button>
+  <button class="nav-btn" onclick="location.href='register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
+</div>
+
+<script>
+function createParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = Math.random() * 15 + 10 + 's';
+    p.style.animationDelay = Math.random() * 5 + 's';
+    container.appendChild(p);
+  }
+}
+
+let currentUser = null;
+
+function loadCurrentUser() {
+  const username = localStorage.getItem('dropwin_current_username');
+
+  if (!username) {
+    document.getElementById('usernameDisplay').textContent = 'Гость';
+    document.getElementById('balance').textContent = 0;
+    document.getElementById('gamesPlayed').textContent = 0;
+    document.getElementById('winRate').textContent = '0%';
+    document.getElementById('totalBet').textContent = '0₽';
+    document.getElementById('totalWin').textContent = '0₽';
+    document.getElementById('historyList').innerHTML = '<div class="empty-state">История пуста</div>';
+    return;
+  }
+
+  const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+  currentUser = users.find(u => u.username === username);
+
+  if (!currentUser) {
+    localStorage.removeItem('dropwin_current_username');
+    document.getElementById('usernameDisplay').textContent = 'Гость';
+    document.getElementById('balance').textContent = 0;
+    document.getElementById('gamesPlayed').textContent = 0;
+    document.getElementById('winRate').textContent = '0%';
+    document.getElementById('totalBet').textContent = '0₽';
+    document.getElementById('totalWin').textContent = '0₽';
+    document.getElementById('historyList').innerHTML = '<div class="empty-state">История пуста</div>';
+    return;
+  }
+
+  let displayName = currentUser.username;
+  if (currentUser.isGuest) displayName = 'Гость';
+
+  document.getElementById('usernameDisplay').textContent = displayName;
+  document.getElementById('balance').textContent = currentUser.balance;
+
+  document.getElementById('gamesPlayed').textContent = currentUser.gamesPlayed || 0;
+  document.getElementById('totalBet').textContent = (currentUser.totalBet || 0) + '₽';
+  document.getElementById('totalWin').textContent = (currentUser.totalWin || 0) + '₽';
+
+  const wr = currentUser.gamesPlayed > 0 ? Math.round((currentUser.wins || 0) / currentUser.gamesPlayed * 100) : 0;
+  document.getElementById('winRate').textContent = wr + '%';
+
+  const hl = document.getElementById('historyList');
+  hl.innerHTML = '';
+  if (currentUser.history?.length) {
+    currentUser.history.forEach(item => {
+      const div = document.createElement('div');
+      div.className = `history-item ${item.result || 'loss'}`;
+      div.innerHTML = `
+        <div>
+          <div class="history-game">${item.game}</div>
+          <div class="history-time">${item.time}</div>
+        </div>
+        <div class="history-amount ${item.result}">${item.win > 0 ? '+' : ''}${item.win}₽</div>
+      `;
+      hl.appendChild(div);
+    });
+  } else {
+    hl.innerHTML = '<div class="empty-state">История пуста</div>';
+  }
+}
+
+function saveUsers() {
+  const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+  const idx = users.findIndex(u => u.username === currentUser.username);
+  if (idx !== -1) {
+    users[idx] = currentUser;
+    localStorage.setItem('dropwin_users', JSON.stringify(users));
+  }
+}
+
+function activatePromo() {
+  if (!currentUser) return alert('Войдите в аккаунт');
+  const code = document.getElementById('promoCode').value.trim().toUpperCase();
+  if (!code) return alert('Введите промокод');
+
+  const today = new Date().toDateString();
+  if (currentUser.lastPromoDate === today) return alert('Сегодня уже использовали промокод');
+
+  let sum = 0;
+  if (code === 'KAVEXS' || code === 'KAVEXS2026') {
+    sum = 100;
+  } else {
+    return alert('Неверный промокод');
+  }
+
+  currentUser.balance += sum;
+  currentUser.lastPromoDate = today;
+  saveUsers();
+  document.getElementById('balance').textContent = currentUser.balance;
+  alert(`+${sum}₽ добавлено!`);
+  document.getElementById('promoCode').value = '';
+}
+
+function logout() {
+  localStorage.removeItem('dropwin_current_username');
+  location.href = 'index.html';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  createParticles();
+  loadCurrentUser();
+});
+</script>
+</body>
+</html>

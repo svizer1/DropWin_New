@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Вход / Регистрация | DropWin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="particles" id="particles"></div>
+
+<div class="header">
+  <div class="logo">💎 DROPWIN</div>
+</div>
+
+<div class="content">
+  <button class="back-btn" onclick="location.href='index.html'">← На главную</button>
+
+  <div class="game-card">
+    <div class="game-title">Вход / Регистрация</div>
+
+    <div class="input-group">
+      <label class="input-label">Никнейм</label>
+      <input type="text" id="username" placeholder="Ваш ник">
+    </div>
+    <div class="input-group">
+      <label class="input-label">Пароль</label>
+      <input type="password" id="password" placeholder="Пароль">
+    </div>
+
+    <button class="btn" onclick="loginOrRegister()">Войти / Зарегистрироваться</button>
+    <button class="btn" onclick="guestLogin()" style="margin-top:12px; background: linear-gradient(135deg, #6b7280, #4b5563);">Гостевой вход</button>
+  </div>
+</div>
+
+<script>
+function createParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = Math.random() * 15 + 10 + 's';
+    p.style.animationDelay = Math.random() * 5 + 's';
+    container.appendChild(p);
+  }
+}
+
+let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+
+function saveUsers() {
+  localStorage.setItem('dropwin_users', JSON.stringify(users));
+}
+
+function login(username) {
+  localStorage.setItem('dropwin_current_username', username);
+  location.href = 'index.html';
+}
+
+function loginOrRegister() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
+  if (!username || password.length < 3) return alert('Ник и пароль минимум 3 символа');
+
+  let user = users.find(u => u.username === username);
+
+  if (user) {
+    if (user.password === password) {
+      login(username);
+      alert('Добро пожаловать обратно!');
+    } else {
+      alert('Неверный пароль');
+    }
+  } else {
+    user = {
+      username,
+      password,
+      balance: 1000,
+      gamesPlayed: 0,
+      wins: 0,
+      losses: 0,
+      totalBet: 0,
+      totalWin: 0,
+      history: [],
+      lastPromoDate: ''
+    };
+    users.push(user);
+    saveUsers();
+    login(username);
+    alert('Аккаунт создан! Баланс 1000₽');
+  }
+}
+
+function guestLogin() {
+  const guestName = 'Гость';
+  let guest = users.find(u => u.username === guestName);
+  if (!guest) {
+    guest = {
+      username: guestName,
+      password: 'guest',
+      balance: 500,
+      gamesPlayed: 0,
+      wins: 0,
+      losses: 0,
+      totalBet: 0,
+      totalWin: 0,
+      history: [],
+      lastPromoDate: '',
+      isGuest: true
+    };
+    users.push(guest);
+    saveUsers();
+  }
+  login(guestName);
+  alert('Вошли как Гость! Баланс 500₽ (прогресс не сохраняется после очистки данных браузера)');
+}
+
+document.addEventListener('DOMContentLoaded', createParticles);
+</script>
+</body>
+</html>

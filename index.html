@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>DropWin Casino</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="particles" id="particles"></div>
+
+<div class="header">
+  <div class="logo">💎 DROPWIN</div>
+  <div class="balance-container">
+    <div class="balance">💰 <span id="balance">0</span>₽</div>
+    <button class="auth-btn" id="authBtn">Войти</button>
+  </div>
+</div>
+
+<div class="content">
+  <div class="games-list">
+    <div class="game-icon" onclick="location.href='games/slots.html'"><div class="game-icon-emoji">🎰</div><div class="game-icon-name">Слоты</div></div>
+    <div class="game-icon" onclick="location.href='games/miner.html'"><div class="game-icon-emoji">💎</div><div class="game-icon-name">Минёр</div></div>
+    <div class="game-icon" onclick="location.href='games/roulette.html'"><div class="game-icon-emoji">🎡</div><div class="game-icon-name">Рулетка</div></div>
+    <div class="game-icon" onclick="location.href='games/cards.html'"><div class="game-icon-emoji">🃏</div><div class="game-icon-name">Карты</div></div>
+    <div class="game-icon" onclick="location.href='games/dice.html'"><div class="game-icon-emoji">🎲</div><div class="game-icon-name">Кости</div></div>
+    <div class="game-icon" onclick="location.href='games/crash.html'"><div class="game-icon-emoji">🚀</div><div class="game-icon-name">Краш</div></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active"><span>🏠</span><span class="nav-label">Главная</span></button>
+  <button class="nav-btn" onclick="location.href='profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
+  <button class="nav-btn" onclick="location.href='register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
+</div>
+
+<script>
+function createParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = Math.random() * 15 + 10 + 's';
+    p.style.animationDelay = Math.random() * 5 + 's';
+    container.appendChild(p);
+  }
+}
+createParticles();
+
+let currentUser = null;
+
+function loadCurrentUser() {
+  const username = localStorage.getItem('dropwin_current_username');
+  if (!username) {
+    document.getElementById('balance').textContent = '0';
+    document.getElementById('authBtn').textContent = 'Войти';
+    document.getElementById('authBtn').onclick = () => location.href = 'register.html';
+    return;
+  }
+
+  const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+  currentUser = users.find(u => u.username === username);
+
+  if (currentUser) {
+    document.getElementById('balance').textContent = currentUser.balance;
+    document.getElementById('authBtn').textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
+    document.getElementById('authBtn').onclick = () => location.href = 'profile.html';
+  } else {
+    localStorage.removeItem('dropwin_current_username');
+    document.getElementById('balance').textContent = '0';
+    document.getElementById('authBtn').textContent = 'Войти';
+    document.getElementById('authBtn').onclick = () => location.href = 'register.html';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadCurrentUser);
+</script>
+</body>
+</html>

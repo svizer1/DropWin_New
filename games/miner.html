@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Минёр | DropWin</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="particles" id="particles"></div>
+
+<div class="header">
+  <div class="logo">💎 DROPWIN</div>
+  <div class="balance-container">
+    <div class="balance">💰 <span id="balance">0</span>₽</div>
+    <button class="auth-btn" id="authBtn">Аккаунт</button>
+  </div>
+</div>
+
+<div class="content">
+  <button class="back-btn" onclick="location.href='../index.html'">← Назад</button>
+
+  <div class="game-card">
+    <div class="game-title">💎 Минёр</div>
+    <div class="multiplier-display" id="minerMultiplier">x1.00</div>
+    <div class="miner-grid" id="minerGrid"></div>
+    <div class="input-group">
+      <label class="input-label">Ставка</label>
+      <input type="number" id="minerBet" value="100" min="10">
+    </div>
+    <div class="input-group">
+      <label class="input-label">Бомб (1-5)</label>
+      <input type="number" id="minerBombs" value="3" min="1" max="5">
+    </div>
+    <button class="btn" onclick="startMiner()" id="minerStart">Начать</button>
+    <button class="btn cashout-btn" onclick="cashoutMiner()" id="minerCashout" style="display:none">Забрать</button>
+    <div class="result" id="minerResult">Откройте клетки!</div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn" onclick="location.href='../index.html'"><span>🏠</span><span class="nav-label">Главная</span></button>
+  <button class="nav-btn" onclick="location.href='../profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
+  <button class="nav-btn" onclick="location.href='../register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
+</div>
+
+<script>
+function createParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = Math.random() * 15 + 10 + 's';
+    p.style.animationDelay = Math.random() * 5 + 's';
+    container.appendChild(p);
+  }
+}
+
+let currentUser = null;
+let currentUsername = null;
+let minerCells = [];
+let minerRevealed = 0;
+let minerMultiplier = 1;
+let bombPositions = [];
+let bet = 0;
+let bombsCount = 0;
+
+function loadCurrentUser() {
+  currentUsername = localStorage.getItem('dropwin_current_username');
+
+  if (!currentUsername) {
+    location.href = '../register.html';
+    return;
+  }
+
+  const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+  currentUser = users.find(u => u.username === currentUsername);
+
+  if (!currentUser) {
+    localStorage.removeItem('dropwin_current_username');
+    location.href = '../register.html';
+    return;
+  }
+
+  document.getElementById('balance').textContent = currentUser.balance;
+
+  const btn = document.getElementById('authBtn');
+  btn.textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
+  btn.onclick = () => location.href = '../profile.html';
+}
+
+function saveUser() {
+  if (!currentUser) return;
+  const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+  const idx = users.findIndex(u => u.username === currentUsername);
+  if (idx !== -1) {
+    users[idx] = currentUser;
+    localStorage.setItem('dropwin_users', JSON.stringify(users));
+  }
+}
+
+function addToHistory(game, winAmount) {
+  const entry = {
+    game,
+    time: new Date().toLocaleString('ru-RU'),
+    win: winAmount,
+    result: winAmount > 0 ? 'win' : 'loss'
+  };
+  currentUser.history = currentUser.history || [];
+  currentUser.history.unshift(entry);
+  if (currentUser.history.length > 20) currentUser.history.pop();
+  saveUser();
+}
+
+function startMiner() {
+  if (!currentUser) return alert('Сессия истекла. Войдите заново.');
+
+  bet = Number(document.getElementById('minerBet').value);
+  bombsCount = Number(document.getElementById('minerBombs').value);
+
+  if (bet > currentUser.balance || bet < 10 || bombsCount < 1 || bombsCount > 5 || isNaN(bet) || isNaN(bombsCount)) {
+    alert('Ошибка ставки или количества бомб');
+    return;
+  }
+
+  currentUser.balance -= bet;
+  currentUser.totalBet = (currentUser.totalBet || 0) + bet;
+  currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
+  saveUser();
+  document.getElementById('balance').textContent = currentUser.balance;
+
+  minerCells = [];
+  minerRevealed = 0;
+  minerMultiplier = 1;
+  document.getElementById('minerMultiplier').textContent = 'x1.00';
+  document.getElementById('minerCashout').style.display = 'none';
+  document.getElementById('minerStart').disabled = true;
+
+  const grid = document.getElementById('minerGrid');
+  grid.innerHTML = '';
+
+  const positions = Array.from({length: 25}, (_, i) => i);
+  positions.sort(() => Math.random() - 0.5);
+  bombPositions = positions.slice(0, bombsCount);
+
+  for (let i = 0; i < 25; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'miner-cell';
+    cell.dataset.index = i;
+    cell.onclick = () => revealCell(i);
+    grid.appendChild(cell);
+    minerCells.push(cell);
+  }
+
+  document.getElementById('minerResult').textContent = 'Выбирайте клетки...';
+}
+
+function revealCell(idx) {
+  if (minerCells[idx].classList.contains('revealed')) return;
+
+  minerCells[idx].classList.add('revealed');
+
+  if (bombPositions.includes(idx)) {
+    minerCells[idx].classList.add('bomb');
+    minerCells[idx].textContent = '💣';
+    document.getElementById('minerResult').innerHTML = '<span style="color:#ef4444">ВЗРЫВ! Проигрыш</span>';
+    currentUser.losses = (currentUser.losses || 0) + 1;
+    addToHistory('Минёр', -bet);
+    endMiner();
+  } else {
+    minerCells[idx].classList.add('gem');
+    minerCells[idx].textContent = '💎';
+    minerRevealed++;
+
+    // Базовый прирост маленький + бонус за риск (больше бомб → выше x)
+    const base = 0.18;
+    const riskBonus = 0.07 * bombsCount;
+    minerMultiplier = 1 + (minerRevealed * (base + riskBonus));
+
+    document.getElementById('minerMultiplier').textContent = `x${minerMultiplier.toFixed(2)}`;
+    document.getElementById('minerCashout').style.display = 'block';
+
+    if (minerRevealed === 25 - bombsCount) {
+      const win = Math.floor(bet * minerMultiplier);
+      currentUser.balance += win;
+      currentUser.wins = (currentUser.wins || 0) + 1;
+      currentUser.totalWin = (currentUser.totalWin || 0) + win;
+      document.getElementById('minerResult').innerHTML = `<span style="color:#10b981">ПОБЕДА! +${win}₽</span>`;
+      addToHistory('Минёр', win);
+      endMiner(true);
+    }
+  }
+  saveUser();
+  document.getElementById('balance').textContent = currentUser.balance;
+}
+
+function cashoutMiner() {
+  const win = Math.floor(bet * minerMultiplier);
+  currentUser.balance += win;
+  currentUser.wins = (currentUser.wins || 0) + 1;
+  currentUser.totalWin = (currentUser.totalWin || 0) + win;
+  document.getElementById('minerResult').innerHTML = `<span style="color:#10b981">Забрано: +${win}₽</span>`;
+  addToHistory('Минёр', win);
+  endMiner(true);
+  saveUser();
+  document.getElementById('balance').textContent = currentUser.balance;
+}
+
+function endMiner(won = false) {
+  document.getElementById('minerStart').disabled = false;
+  document.getElementById('minerCashout').style.display = 'none';
+  minerCells.forEach(cell => cell.onclick = null);
+  if (!won) {
+    currentUser.losses = (currentUser.losses || 0) + 1;
+    addToHistory('Минёр', -bet);
+    saveUser();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  createParticles();
+  loadCurrentUser();
+});
+</script>
+</body>
+</html>

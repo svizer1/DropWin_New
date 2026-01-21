@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Слоты | DropWin</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="particles" id="particles"></div>
+
+<div class="header">
+  <div class="logo">💎 DROPWIN</div>
+  <div class="balance-container">
+    <div class="balance">💰 <span id="balance">0</span>₽</div>
+    <button class="auth-btn" id="authBtn">Аккаунт</button>
+  </div>
+</div>
+
+<div class="content">
+  <button class="back-btn" onclick="location.href='../index.html'">← Назад</button>
+
+  <div class="game-card">
+    <div class="game-title">🎰 Слоты</div>
+    <div class="game-grid">
+      <div class="game-item" id="slot1">?</div>
+      <div class="game-item" id="slot2">?</div>
+      <div class="game-item" id="slot3">?</div>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Ставка</label>
+      <input type="number" id="bet" value="50" min="10">
+    </div>
+    <button class="btn" onclick="spin()">Крутить</button>
+    <div class="result" id="result">Готовы?</div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn" onclick="location.href='../index.html'"><span>🏠</span><span class="nav-label">Главная</span></button>
+  <button class="nav-btn" onclick="location.href='../profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
+  <button class="nav-btn" onclick="location.href='../register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
+</div>
+
+<script>
+function createParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = Math.random() * 15 + 10 + 's';
+    p.style.animationDelay = Math.random() * 5 + 's';
+    container.appendChild(p);
+  }
+}
+
+let currentUser = null;
+let currentUsername = null;
+
+function loadCurrentUser() {
+  currentUsername = localStorage.getItem('dropwin_current_username');
+
+  if (!currentUsername) {
+    location.href = '../register.html';
+    return;
+  }
+
+  const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+  currentUser = users.find(u => u.username === currentUsername);
+
+  if (!currentUser) {
+    localStorage.removeItem('dropwin_current_username');
+    location.href = '../register.html';
+    return;
+  }
+
+  document.getElementById('balance').textContent = currentUser.balance;
+
+  const btn = document.getElementById('authBtn');
+  btn.textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
+  btn.onclick = () => location.href = '../profile.html';
+}
+
+function saveUser() {
+  if (!currentUser) return;
+  const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+  const idx = users.findIndex(u => u.username === currentUsername);
+  if (idx !== -1) {
+    users[idx] = currentUser;
+    localStorage.setItem('dropwin_users', JSON.stringify(users));
+  }
+}
+
+function addToHistory(game, winAmount) {
+  const entry = {
+    game: game,
+    time: new Date().toLocaleString('ru-RU'),
+    win: winAmount,
+    result: winAmount > 0 ? 'win' : 'loss'
+  };
+  currentUser.history = currentUser.history || [];
+  currentUser.history.unshift(entry);
+  if (currentUser.history.length > 20) currentUser.history.pop();
+  saveUser();
+}
+
+const symbols = ['🍒','🍋','🍊','🍉','🔔','⭐','💎','7'];
+
+function spin() {
+  if (!currentUser) return alert('Сессия истекла. Войдите заново');
+
+  let bet = Number(document.getElementById('bet').value);
+  if (bet < 10 || bet > currentUser.balance || isNaN(bet)) {
+    alert('Неверная ставка');
+    return;
+  }
+
+  currentUser.balance -= bet;
+  currentUser.totalBet = (currentUser.totalBet || 0) + bet;
+  currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
+  saveUser();
+  document.getElementById('balance').textContent = currentUser.balance;
+
+  document.getElementById('result').textContent = 'Крутим...';
+
+  document.querySelectorAll('.game-item').forEach(el => {
+    el.classList.add('spin');
+    el.textContent = symbols[Math.floor(Math.random()*symbols.length)];
+  });
+
+  setTimeout(() => {
+    document.querySelectorAll('.game-item').forEach(el => el.classList.remove('spin'));
+
+    const s1 = document.getElementById('slot1').textContent;
+    const s2 = document.getElementById('slot2').textContent;
+    const s3 = document.getElementById('slot3').textContent;
+
+    let win = 0;
+    if (s1 === s2 && s2 === s3) win = bet * 10;
+    else if (s1 === s2 || s2 === s3 || s1 === s3) win = bet * 2;
+
+    if (win > 0) {
+      currentUser.balance += win;
+      currentUser.totalWin = (currentUser.totalWin || 0) + win;
+      currentUser.wins = (currentUser.wins || 0) + 1;
+      document.getElementById('result').innerHTML = `<span style="color:#10b981">Выигрыш +${win}₽</span>`;
+      addToHistory('Слоты', win);
+    } else {
+      currentUser.losses = (currentUser.losses || 0) + 1;
+      document.getElementById('result').innerHTML = '<span style="color:#ef4444">Проигрыш</span>';
+      addToHistory('Слоты', -bet);
+    }
+
+    saveUser();
+    document.getElementById('balance').textContent = currentUser.balance;
+  }, 1200);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  createParticles();
+  loadCurrentUser();
+});
+</script>
+</body>
+</html>

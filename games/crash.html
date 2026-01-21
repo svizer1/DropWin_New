@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Краш | DropWin</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    #crashGraph {
+      width: 100%;
+      height: 260px;
+      background: rgba(15,23,42,0.6);
+      border-radius: 16px;
+      border: 2px solid #475569;
+      margin: 20px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    #crashLine {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      stroke: #fbbf24;
+      stroke-width: 5;
+      fill: none;
+      filter: drop-shadow(0 0 12px #fbbf24);
+    }
+    #crashMultiplier {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 5rem;
+      font-weight: 900;
+      color: #fbbf24;
+      text-shadow: 0 0 40px #fbbf24;
+      z-index: 10;
+    }
+    .crashed {
+      color: #ef4444 !important;
+      animation: flash 0.8s infinite alternate;
+    }
+    @keyframes flash { to { opacity: 0.5; } }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-width: 360px;
+      margin: 20px auto;
+    }
+    .cashout-btn {
+      padding: 16px 32px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .cashout-btn:disabled {
+      background: #4b5563;
+      cursor: not-allowed;
+    }
+    .result {
+      font-size: 1.4rem;
+      font-weight: 600;
+      text-align: center;
+      margin-top: 20px;
+      min-height: 60px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<div class="header">
+  <div class="logo">💎 DROPWIN</div>
+  <div class="balance-container">
+    <div class="balance">💰 <span id="balance">0</span>₽</div>
+    <button class="auth-btn" id="authBtn">Аккаунт</button>
+  </div>
+</div>
+
+<div class="content">
+  <button class="back-btn" onclick="location.href='../index.html'">← Назад</button>
+
+  <div class="game-card">
+    <div class="game-title">🚀 Краш</div>
+
+    <div id="crashGraph">
+      <svg id="graphSvg" width="100%" height="100%" preserveAspectRatio="none">
+        <polyline id="crashLine" points="0,260" />
+      </svg>
+      <div id="crashMultiplier">1.00×</div>
+    </div>
+
+    <div class="controls">
+      <div class="input-group">
+        <label class="input-label">Ставка</label>
+        <input type="number" id="betCrash" value="100" min="10">
+      </div>
+      <button class="btn" id="startBtn" onclick="startCrash()">Запустить</button>
+      <button class="cashout-btn" id="cashoutBtn" disabled onclick="cashOut()">Забрать ×<span id="currentMult">1.00</span></button>
+    </div>
+
+    <div class="result" id="crashResult">Готов запустить ракету?</div>
+  </div>
+</div>
+
+<script>
+// Загрузка и сохранение пользователя (уже рабочий блок)
+let currentUser = null;
+let currentUsername = null;
+
+function loadCurrentUser() {
+  currentUsername = localStorage.getItem('dropwin_current_username');
+  if (!currentUsername) {
+    alert('Войдите в аккаунт');
+    location.href = '../register.html';
+    return;
+  }
+
+  let users;
+  try {
+    users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+  } catch (e) {
+    localStorage.removeItem('dropwin_users');
+    users = [];
+  }
+
+  currentUser = users.find(u => u.username === currentUsername);
+  if (!currentUser) {
+    localStorage.removeItem('dropwin_current_username');
+    alert('Аккаунт не найден. Войдите заново.');
+    location.href = '../register.html';
+    return;
+  }
+
+  currentUser.balance     = Number(currentUser.balance)     || 0;
+  currentUser.gamesPlayed = Number(currentUser.gamesPlayed) || 0;
+  currentUser.wins        = Number(currentUser.wins)        || 0;
+  currentUser.losses      = Number(currentUser.losses)      || 0;
+  currentUser.totalBet    = Number(currentUser.totalBet)    || 0;
+  currentUser.totalWin    = Number(currentUser.totalWin)    || 0;
+  currentUser.history     = Array.isArray(currentUser.history) ? currentUser.history : [];
+
+  document.getElementById('balance').textContent = currentUser.balance;
+  const btn = document.getElementById('authBtn');
+  btn.textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
+  btn.onclick = () => location.href = '../profile.html';
+}
+
+function saveUser() {
+  if (!currentUser) return;
+  let users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+  const idx = users.findIndex(u => u.username === currentUser.username);
+  if (idx !== -1) {
+    users[idx] = { ...currentUser };
+  } else {
+    users.push({ ...currentUser });
+  }
+  localStorage.setItem('dropwin_users', JSON.stringify(users));
+}
+
+function addToHistory(game, change) {
+  const entry = {
+    game,
+    time: new Date().toLocaleString('ru-RU'),
+    win: change,
+    result: change > 0 ? 'win' : 'loss'
+  };
+  currentUser.history = currentUser.history || [];
+  currentUser.history.unshift(entry);
+  if (currentUser.history.length > 30) currentUser.history = currentUser.history.slice(0, 30);
+  saveUser();
+}
+
+function createParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = Math.random() * 15 + 10 + 's';
+    p.style.animationDelay = Math.random() * 5 + 's';
+    container.appendChild(p);
+  }
+}
+
+// ─── Краш ────────────────────────────────────────────────────────────────
+let gameRunning = false;
+let multiplier = 1.00;
+let crashPoint = 0;
+let animationFrame;
+let betAmount = 0;
+
+function startCrash() {
+  if (gameRunning) return;
+  if (!currentUser) return alert('Войдите в аккаунт');
+
+  betAmount = Number(document.getElementById('betCrash').value);
+  if (betAmount < 10 || betAmount > currentUser.balance || isNaN(betAmount)) {
+    return alert('Неверная ставка');
+  }
+
+  currentUser.balance -= betAmount;
+  saveUser();
+  document.getElementById('balance').textContent = currentUser.balance;
+
+  gameRunning = true;
+  multiplier = 1.00;
+
+  // Более мягкие шансы — краш на низких реже, чем раньше
+  const r = Math.random();
+  if      (r < 0.20) crashPoint = 1.00 + Math.random() * 0.35;   // 20% — краш до 1.35×
+  else if (r < 0.45) crashPoint = 1.35 + Math.random() * 0.65;   // 25% — 1.35–2.0×
+  else if (r < 0.75) crashPoint = 2.00 + Math.random() * 1.80;   // 30% — 2.0–3.8×
+  else if (r < 0.92) crashPoint = 3.80 + Math.random() * 4.00;   // 17% — 3.8–7.8×
+  else               crashPoint = 7.80 + Math.random() * 18;     // 8%  — 7.8–25.8×
+
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('cashoutBtn').disabled = false;
+  document.getElementById('crashResult').textContent = 'Ракета запущена...';
+  document.getElementById('crashMultiplier').classList.remove('crashed');
+
+  animateCrash();
+}
+
+function animateCrash() {
+  if (!gameRunning) return;
+
+  // Очень медленный рост — теперь реально можно подумать
+  multiplier += 0.0015 + (multiplier * 0.003);   // сильно замедлили
+
+  if (multiplier >= crashPoint) {
+    crash();
+    return;
+  }
+
+  document.getElementById('crashMultiplier').textContent = multiplier.toFixed(2) + '×';
+  document.getElementById('currentMult').textContent = multiplier.toFixed(2);
+
+  const points = `0,260 ${multiplier * 30},${260 - (multiplier * 25)}`;
+  document.getElementById('crashLine').setAttribute('points', points);
+
+  animationFrame = requestAnimationFrame(animateCrash);
+}
+
+function cashOut() {
+  if (!gameRunning) return;
+
+  gameRunning = false;
+  cancelAnimationFrame(animationFrame);
+
+  const win = Math.round(betAmount * multiplier);
+  const profit = win - betAmount;
+
+  currentUser.balance += win;
+  currentUser.totalWin = (currentUser.totalWin || 0) + win;
+  currentUser.wins = (currentUser.wins || 0) + 1;
+  currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
+  currentUser.totalBet = (currentUser.totalBet || 0) + betAmount;
+
+  document.getElementById('crashResult').innerHTML =
+    `✅ <span style="color:#22c55e; font-weight:bold;">Забрали ${win}₽</span> (+${profit}₽ чистыми) на ${multiplier.toFixed(2)}×`;
+
+  addToHistory('Краш', profit);
+  saveUser();
+  document.getElementById('balance').textContent = currentUser.balance;
+
+  resetGame();
+}
+
+function crash() {
+  gameRunning = false;
+  cancelAnimationFrame(animationFrame);
+
+  document.getElementById('crashMultiplier').textContent = crashPoint.toFixed(2) + '×';
+  document.getElementById('crashMultiplier').classList.add('crashed');
+  document.getElementById('crashResult').innerHTML =
+    `💥 <span style="color:#ef4444; font-weight:bold;">Краш на ${crashPoint.toFixed(2)}×</span> — проиграно ${betAmount}₽`;
+
+  currentUser.losses = (currentUser.losses || 0) + 1;
+  currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
+  currentUser.totalBet = (currentUser.totalBet || 0) + betAmount;
+
+  addToHistory('Краш', -betAmount);
+  saveUser();
+
+  resetGame();
+}
+
+function resetGame() {
+  setTimeout(() => {
+    multiplier = 1.00;
+    document.getElementById('crashMultiplier').textContent = '1.00×';
+    document.getElementById('crashLine').setAttribute('points', '0,260');
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('cashoutBtn').disabled = true;
+    document.getElementById('crashResult').textContent = 'Готов запустить снова?';
+  }, 2800);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  createParticles();
+  loadCurrentUser();
+
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'dropwin_users' || e.key === 'dropwin_current_username') {
+      loadCurrentUser();
+    }
+  });
+});
+</script>
+</body>
+</html>

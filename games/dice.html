@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Кости | DropWin</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .dice-container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin: 40px 0;
+      perspective: 800px;
+    }
+    .dice {
+      width: 110px;
+      height: 110px;
+      background: linear-gradient(145deg, #f1f5f9, #e2e8f0);
+      border-radius: 20px;
+      border: 5px solid #1e293b;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7), inset 0 4px 10px rgba(255,255,255,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4.2rem;
+      font-weight: bold;
+      color: #111;
+      transform-style: preserve-3d;
+      transition: transform 0.4s;
+    }
+    .dice.rolling {
+      animation: rollDice3D 1.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) 3;
+    }
+    @keyframes rollDice3D {
+      0%   { transform: rotateX(0deg) rotateY(0deg) scale(1); }
+      25%  { transform: rotateX(180deg) rotateY(180deg) scale(1.12); }
+      50%  { transform: rotateX(360deg) rotateY(360deg) scale(0.92); }
+      75%  { transform: rotateX(540deg) rotateY(540deg) scale(1.08); }
+      100% { transform: rotateX(720deg) rotateY(720deg) scale(1); }
+    }
+    .dice-face-1 { color: #ef4444; }
+    .dice-face-2, .dice-face-3 { color: #10b981; }
+    .dice-face-4, .dice-face-5, .dice-face-6 { color: #6366f1; }
+
+    .result {
+      font-size: 1.5rem;
+      font-weight: 600;
+      min-height: 80px;
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .bot-dice-container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin: 20px 0;
+      perspective: 800px;
+    }
+    .bot-label {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #fbbf24;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<div class="header">
+  <div class="logo">💎 DROPWIN</div>
+  <div class="balance-container">
+    <div class="balance">💰 <span id="balance">0</span>₽</div>
+    <button class="auth-btn" id="authBtn">Аккаунт</button>
+  </div>
+</div>
+
+<div class="content">
+  <button class="back-btn" onclick="location.href='../index.html'">← Назад</button>
+
+  <div class="game-card">
+    <div class="game-title">🎲 Кости</div>
+
+    <div class="dice-container" id="diceContainer">
+      <div class="dice" id="dice1">?</div>
+      <div class="dice" id="dice2">?</div>
+    </div>
+
+    <div class="bot-label">Кости бота:</div>
+    <div class="bot-dice-container" id="botDiceContainer">
+      <div class="dice" id="botDice1">?</div>
+      <div class="dice" id="botDice2">?</div>
+    </div>
+
+    <div class="input-group" style="max-width:300px; margin:30px auto;">
+      <label class="input-label">Ставка</label>
+      <input type="number" id="betDice" value="100" min="10">
+    </div>
+
+    <button class="btn" id="rollBtn" onclick="rollDice()">Бросить кости</button>
+
+    <div class="result" id="diceResult">Готовы к броску? Бот тоже готов!</div>
+  </div>
+</div>
+
+<script>
+// Универсальный блок загрузки пользователя (как в других играх)
+let currentUser = null;
+let currentUsername = null;
+
+function loadCurrentUser() {
+  currentUsername = localStorage.getItem('dropwin_current_username');
+  if (!currentUsername) {
+    alert('Войдите в аккаунт');
+    location.href = '../register.html';
+    return;
+  }
+
+  let users;
+  try {
+    users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+  } catch (e) {
+    console.error("localStorage users повреждён", e);
+    localStorage.removeItem('dropwin_users');
+    users = [];
+  }
+
+  currentUser = users.find(u => u.username === currentUsername);
+  if (!currentUser) {
+    localStorage.removeItem('dropwin_current_username');
+    alert('Аккаунт не найден. Войдите заново.');
+    location.href = '../register.html';
+    return;
+  }
+
+  currentUser.balance     = Number(currentUser.balance)     || 0;
+  currentUser.gamesPlayed = Number(currentUser.gamesPlayed) || 0;
+  currentUser.wins        = Number(currentUser.wins)        || 0;
+  currentUser.losses      = Number(currentUser.losses)      || 0;
+  currentUser.totalBet    = Number(currentUser.totalBet)    || 0;
+  currentUser.totalWin    = Number(currentUser.totalWin)    || 0;
+  currentUser.history     = Array.isArray(currentUser.history) ? currentUser.history : [];
+
+  document.getElementById('balance').textContent = currentUser.balance;
+  const btn = document.getElementById('authBtn');
+  btn.textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
+  btn.onclick = () => location.href = '../profile.html';
+}
+
+function saveUser() {
+  if (!currentUser) return;
+  let users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+  const idx = users.findIndex(u => u.username === currentUser.username);
+  if (idx !== -1) {
+    users[idx] = { ...currentUser };
+  } else {
+    users.push({ ...currentUser });
+  }
+  localStorage.setItem('dropwin_users', JSON.stringify(users));
+}
+
+function addToHistory(game, change) {
+  const entry = {
+    game,
+    time: new Date().toLocaleString('ru-RU'),
+    win: change,
+    result: change > 0 ? 'win' : 'loss'
+  };
+  currentUser.history = currentUser.history || [];
+  currentUser.history.unshift(entry);
+  if (currentUser.history.length > 30) currentUser.history = currentUser.history.slice(0, 30);
+  saveUser();
+}
+
+function createParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = Math.random() * 15 + 10 + 's';
+    p.style.animationDelay = Math.random() * 5 + 's';
+    container.appendChild(p);
+  }
+}
+
+function rollDice() {
+  if (!currentUser) return alert('Войдите в аккаунт');
+  const btn = document.getElementById('rollBtn');
+  if (btn.disabled) return;
+
+  const bet = Number(document.getElementById('betDice').value);
+  if (bet < 10 || bet > currentUser.balance || isNaN(bet)) {
+    return alert('Неверная ставка');
+  }
+
+  btn.disabled = true;
+  currentUser.balance -= bet;
+  saveUser();
+  document.getElementById('balance').textContent = currentUser.balance;
+
+  document.getElementById('diceResult').innerHTML = 'Бросаем кости...';
+  document.getElementById('dice1').classList.add('rolling');
+  document.getElementById('dice2').classList.add('rolling');
+  document.getElementById('botDice1').classList.add('rolling');
+  document.getElementById('botDice2').classList.add('rolling');
+
+  setTimeout(() => {
+    const playerVal1 = Math.floor(Math.random() * 6) + 1;
+    const playerVal2 = Math.floor(Math.random() * 6) + 1;
+    const playerSum = playerVal1 + playerVal2;
+
+    const botVal1 = Math.floor(Math.random() * 6) + 1;
+    const botVal2 = Math.floor(Math.random() * 6) + 1;
+    const botSum = botVal1 + botVal2;
+
+    document.getElementById('dice1').textContent = playerVal1;
+    document.getElementById('dice2').textContent = playerVal2;
+    document.getElementById('botDice1').textContent = botVal1;
+    document.getElementById('botDice2').textContent = botVal2;
+
+    document.getElementById('dice1').classList.remove('rolling');
+    document.getElementById('dice2').classList.remove('rolling');
+    document.getElementById('botDice1').classList.remove('rolling');
+    document.getElementById('botDice2').classList.remove('rolling');
+
+    let resultText = `Ваша сумма: ${playerSum} | Сумма бота: ${botSum}<br>`;
+    let profit = 0;
+
+    currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
+    currentUser.totalBet = (currentUser.totalBet || 0) + bet;
+
+    if (playerSum > botSum) {
+      profit = bet * 2;
+      currentUser.balance += profit;
+      currentUser.totalWin = (currentUser.totalWin || 0) + profit;
+      currentUser.wins = (currentUser.wins || 0) + 1;
+      resultText += `<span style="color:#22c55e; font-weight:bold;">Вы выиграли +${profit}₽!</span>`;
+      addToHistory('Кости', profit - bet);
+    } else if (playerSum < botSum) {
+      currentUser.losses = (currentUser.losses || 0) + 1;
+      resultText += `<span style="color:#ef4444; font-weight:bold;">Бот выиграл. Проигрыш -${bet}₽</span>`;
+      addToHistory('Кости', -bet);
+    } else {
+      currentUser.balance += bet; // возврат ставки
+      resultText += `<span style="color:#fbbf24; font-weight:bold;">Ничья. Ставка возвращена.</span>`;
+      addToHistory('Кости', 0);
+    }
+
+    document.getElementById('diceResult').innerHTML = resultText;
+    saveUser();
+    document.getElementById('balance').textContent = currentUser.balance;
+
+    setTimeout(() => { btn.disabled = false; }, 1000);
+  }, 4200);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  createParticles();
+  loadCurrentUser();
+
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'dropwin_users' || e.key === 'dropwin_current_username') {
+      loadCurrentUser();
+    }
+  });
+});
+</script>
+</body>
+</html>

@@ -1,328 +1,317 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>Рулетка | DropWin</title>
-    <link rel="stylesheet" href="../style.css">
-    <style>
-        body {
-            margin:0;
-            font-family: system-ui, sans-serif;
-            background:#0f172a;
-            color:white;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Рулетка | DropWin</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: #0f172a;
+      color: white;
+    }
+    .particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .particle {
+      position: absolute;
+      background: #fbbf24;
+      border-radius: 50%;
+      opacity: 0.6;
+      animation: float linear infinite;
+    }
+    @keyframes float {
+      0%   { transform: translateY(100vh) scale(0.5); opacity: 0; }
+      10%  { opacity: 0.8; }
+      90%  { opacity: 0.8; }
+      100% { transform: translateY(-20vh) scale(1.2); opacity: 0; }
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(8px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo { font-size: 1.5rem; font-weight: bold; }
+    .balance-container { display: flex; gap: 12px; align-items: center; }
+    .balance { font-weight: bold; }
+    .auth-btn {
+      padding: 8px 16px;
+      border-radius: 50px;
+      background: #6366f1;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+    .content { padding: 16px; position: relative; z-index: 10; }
+    .back-btn {
+      margin-bottom: 16px;
+      background: transparent;
+      border: none;
+      color: #fbbf24;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+    .game-card {
+      background: rgba(30,41,59,0.7);
+      border-radius: 16px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+    }
+    .game-title {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 16px;
+    }
+    .roulette-type-selector {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 12px 0;
+    }
+    .roulette-type-btn {
+      padding: 8px 16px;
+      border-radius: 50px;
+      border: 2px solid #6366f1;
+      background: transparent;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .roulette-type-btn.active {
+      background: #6366f1;
+    }
 
-        .particles {
-            position:fixed;
-            inset:0;
-            pointer-events:none;
-            z-index:1;
-        }
-        .particle {
-            position:absolute;
-            background:#fbbf24;
-            border-radius:50%;
-            opacity:0.6;
-            animation: float linear infinite;
-        }
-        @keyframes float {
-            0% { transform: translateY(100vh) scale(0.5); opacity:0; }
-            10% { opacity:0.8; }
-            90% { opacity:0.8; }
-            100% { transform: translateY(-20vh) scale(1.2); opacity:0; }
-        }
+    /* Круг */
+    .roulette-wheel-container {
+      position: relative;
+      width: 260px;
+      height: 260px;
+      margin: 50px auto 30px;
+    }
+    .roulette-wheel {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      position: absolute;
+      inset: 0;
+      border: 10px solid #fbbf24;
+      box-shadow: 0 0 60px rgba(251,191,36,0.7), inset 0 0 40px rgba(0,0,0,0.6);
+      background: conic-gradient(
+        #10b981 0deg 9.73deg, #ef4444 9.73deg 19.46deg, #1f2937 19.46deg 29.19deg,
+        #ef4444 29.19deg 38.92deg, #1f2937 38.92deg 48.65deg, #ef4444 48.65deg 58.38deg,
+        #1f2937 58.38deg 68.11deg, #ef4444 68.11deg 77.84deg, #1f2937 77.84deg 87.57deg,
+        #ef4444 87.57deg 97.3deg,  #1f2937 97.3deg 107.03deg, #ef4444 107.03deg 116.76deg,
+        #1f2937 116.76deg 126.49deg, #ef4444 126.49deg 136.22deg, #1f2937 136.22deg 145.95deg,
+        #ef4444 145.95deg 155.68deg, #1f2937 155.68deg 165.41deg, #ef4444 165.41deg 175.14deg,
+        #1f2937 175.14deg 184.87deg, #ef4444 184.87deg 194.6deg,  #1f2937 194.6deg 204.33deg,
+        #ef4444 204.33deg 214.06deg, #1f2937 214.06deg 223.79deg, #ef4444 223.79deg 233.52deg,
+        #1f2937 233.52deg 243.25deg, #ef4444 243.25deg 252.98deg, #1f2937 252.98deg 262.71deg,
+        #ef4444 262.71deg 272.44deg, #1f2937 272.44deg 282.17deg, #ef4444 282.17deg 291.9deg,
+        #1f2937 291.9deg 301.63deg, #ef4444 301.63deg 311.36deg, #1f2937 311.36deg 321.09deg,
+        #ef4444 321.09deg 330.82deg, #1f2937 330.82deg 340.55deg, #ef4444 340.55deg 350.28deg,
+        #1f2937 350.28deg 360deg
+      );
+      transition: transform 4.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+      transform: rotate(0deg);
+    }
+    .roulette-pointer {
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%) rotate(180deg);
+      width: 0;
+      height: 0;
+      border-left: 16px solid transparent;
+      border-right: 16px solid transparent;
+      border-bottom: 34px solid #fbbf24;
+      filter: drop-shadow(0 0 12px #fbbf24);
+      z-index: 20;
+      pointer-events: none;
+    }
 
-        .header {
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            padding:16px;
-            background:rgba(0,0,0,0.4);
-            backdrop-filter:blur(8px);
-            position:sticky;
-            top:0;
-            z-index:100;
-        }
-        .logo { font-size:1.5rem; font-weight:bold; }
-        .balance-container { display:flex; gap:12px; align-items:center; }
-        .balance { font-weight:bold; }
-        .auth-btn {
-            padding:8px 16px;
-            border-radius:50px;
-            background:#6366f1;
-            border:none;
-            color:white;
-            cursor:pointer;
-        }
+    /* Лента */
+    .roulette-container {
+      overflow: hidden;
+      width: 100%;
+      max-width: 380px;
+      margin: 30px auto;
+      position: relative;
+      height: 160px;
+      border: 5px solid #fbbf24;
+      border-radius: 16px;
+      box-shadow: 0 0 50px rgba(251,191,36,0.5);
+      display: none;
+    }
+    .roulette-tape {
+      display: flex;
+      height: 100%;
+      transition: none; /* будет устанавливаться динамически */
+      will-change: transform;
+    }
+    .roulette-cell {
+      flex: 0 0 110px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: white;
+      border-right: 3px solid #fbbf24;
+      box-sizing: border-box;
+    }
+    .roulette-cell.red   { background: #ef4444; }
+    .roulette-cell.black { background: #1f2937; }
+    .roulette-cell.green { background: #10b981; }
 
-        .content { padding:16px; position:relative; z-index:10; }
-        .back-btn {
-            margin-bottom:16px;
-            background:transparent;
-            border:none;
-            color:#fbbf24;
-            font-size:1.1rem;
-            cursor:pointer;
-        }
-        .game-card {
-            background:rgba(30,41,59,0.7);
-            border-radius:16px;
-            padding:20px;
-            backdrop-filter:blur(10px);
-        }
-        .game-title {
-            text-align:center;
-            font-size:2rem;
-            margin-bottom:16px;
-        }
+    .roulette-pointer-line {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 6px;
+      height: 200px;
+      background: #fbbf24;
+      box-shadow: 0 0 18px #fbbf24, 0 0 32px #fbbf24;
+      z-index: 10;
+      pointer-events: none;
+    }
 
-        .roulette-type-selector {
-            display:flex;
-            justify-content:center;
-            gap:12px;
-            margin:12px 0;
-        }
-        .roulette-type-btn {
-            padding:8px 16px;
-            border-radius:50px;
-            border:2px solid #6366f1;
-            background:transparent;
-            color:white;
-            font-weight:600;
-            cursor:pointer;
-            transition:all 0.3s;
-        }
-        .roulette-type-btn.active {
-            background:#6366f1;
-        }
-
-        /* КРУГЛАЯ РУЛЕТКА */
-        .roulette-wheel-container {
-            position: relative;
-            width: 260px;
-            height: 260px;
-            margin: 50px auto 30px;
-        }
-        .roulette-wheel {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            position: absolute;
-            inset: 0;
-            border: 10px solid #fbbf24;
-            box-shadow: 0 0 60px rgba(251,191,36,0.7), inset 0 0 40px rgba(0,0,0,0.6);
-            background: conic-gradient(
-                #10b981 0deg 9.73deg,   #ef4444 9.73deg 19.46deg,
-                #1f2937 19.46deg 29.19deg, #ef4444 29.19deg 38.92deg,
-                #1f2937 38.92deg 48.65deg, #ef4444 48.65deg 58.38deg,
-                #1f2937 58.38deg 68.11deg, #ef4444 68.11deg 77.84deg,
-                #1f2937 77.84deg 87.57deg, #ef4444 87.57deg 97.3deg,
-                #1f2937 97.3deg 107.03deg, #ef4444 107.03deg 116.76deg,
-                #1f2937 116.76deg 126.49deg, #ef4444 126.49deg 136.22deg,
-                #1f2937 136.22deg 145.95deg, #ef4444 145.95deg 155.68deg,
-                #1f2937 155.68deg 165.41deg, #ef4444 165.41deg 175.14deg,
-                #1f2937 175.14deg 184.87deg, #ef4444 184.87deg 194.6deg,
-                #1f2937 194.6deg 204.33deg, #ef4444 204.33deg 214.06deg,
-                #1f2937 214.06deg 223.79deg, #ef4444 223.79deg 233.52deg,
-                #1f2937 233.52deg 243.25deg, #ef4444 243.25deg 252.98deg,
-                #1f2937 252.98deg 262.71deg, #ef4444 262.71deg 272.44deg,
-                #1f2937 272.44deg 282.17deg, #ef4444 282.17deg 291.9deg,
-                #1f2937 291.9deg 301.63deg, #ef4444 301.63deg 311.36deg,
-                #1f2937 311.36deg 321.09deg, #ef4444 321.09deg 330.82deg,
-                #1f2937 330.82deg 340.55deg, #ef4444 340.55deg 350.28deg,
-                #1f2937 350.28deg 360deg
-            );
-            transition: transform 4.8s cubic-bezier(0.22, 0.61, 0.36, 1);
-            transform: rotate(0deg);
-        }
-        .roulette-pointer {
-            position: absolute;
-            top: -18px;
-            left: 50%;
-            transform: translateX(-50%) rotate(180deg);
-            width: 0;
-            height: 0;
-            border-left: 16px solid transparent;
-            border-right: 16px solid transparent;
-            border-bottom: 34px solid #fbbf24;
-            filter: drop-shadow(0 0 12px #fbbf24);
-            z-index: 20;
-            pointer-events: none;
-        }
-
-        /* ЛЕНТА */
-        .roulette-container {
-            overflow:hidden;
-            width:100%;
-            max-width:380px;
-            margin:30px auto;
-            position:relative;
-            height:160px;
-            border:5px solid #fbbf24;
-            border-radius:16px;
-            box-shadow:0 0 50px rgba(251,191,36,0.5);
-            display:none;
-        }
-        .roulette-tape {
-            display:flex;
-            height:100%;
-            transition:transform 5.2s cubic-bezier(0.16,1,0.3,1);
-        }
-        .roulette-cell {
-            flex:0 0 110px;
-            height:100%;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-size:2rem;
-            font-weight:bold;
-            color:white;
-            border-right:3px solid #fbbf24;
-        }
-        .roulette-cell.red    { background:#ef4444; }
-        .roulette-cell.black  { background:#1f2937; }
-        .roulette-cell.green  { background:#10b981; }
-        .roulette-pointer-line {
-            position:absolute;
-            top:50%;
-            left:50%;
-            transform:translate(-50%,-50%);
-            width:8px;
-            height:180px;
-            background:#fbbf24;
-            box-shadow:0 0 15px #fbbf24;
-            z-index:10;
-        }
-
-        .fast-spin-btn {
-            margin:20px auto;
-            padding:12px 24px;
-            background:linear-gradient(135deg,#fbbf24,#f59e0b);
-            border:none;
-            border-radius:50px;
-            color:#111;
-            font-weight:bold;
-            font-size:1.1rem;
-            cursor:pointer;
-            display:block;
-        }
-
-        .input-group {
-            max-width:300px;
-            margin:20px auto;
-        }
-        .input-label {
-            display:block;
-            margin-bottom:8px;
-            font-weight:500;
-        }
-        input[type=number] {
-            width:100%;
-            padding:12px;
-            border-radius:12px;
-            border:none;
-            font-size:1.2rem;
-            background:#1e293b;
-            color:white;
-        }
-
-        .bet-options {
-            display:flex;
-            flex-wrap:wrap;
-            gap:12px;
-            justify-content:center;
-            margin:24px 0;
-        }
-        .bet-btn {
-            padding:14px 24px;
-            border-radius:12px;
-            border:none;
-            font-weight:700;
-            font-size:1.1rem;
-            cursor:pointer;
-            min-width:110px;
-        }
-        .red    { background:#ef4444; color:white; }
-        .black  { background:#1f2937; color:white; }
-        .green  { background:#10b981; color:white; }
-        .number-bet { background:#6366f1; color:white; }
-
-        .result {
-            text-align:center;
-            font-size:1.4rem;
-            min-height:80px;
-            margin-top:20px;
-        }
-    </style>
+    .fast-spin-btn {
+      margin: 20px auto;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      border: none;
+      border-radius: 50px;
+      color: #111;
+      font-weight: bold;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: block;
+    }
+    .input-group {
+      max-width: 300px;
+      margin: 20px auto;
+    }
+    .input-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    input[type=number] {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      font-size: 1.2rem;
+      background: #1e293b;
+      color: white;
+    }
+    .bet-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin: 24px 0;
+    }
+    .bet-btn {
+      padding: 14px 24px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      min-width: 110px;
+    }
+    .red   { background: #ef4444; color: white; }
+    .black { background: #1f2937; color: white; }
+    .green { background: #10b981; color: white; }
+    .number-bet { background: #6366f1; color: white; }
+    .result {
+      text-align: center;
+      font-size: 1.4rem;
+      min-height: 80px;
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
 
-<div class="particles" id="particles"></div>
+  <div class="particles" id="particles"></div>
 
-<div class="header">
+  <div class="header">
     <div class="logo">💎 DROPWIN</div>
     <div class="balance-container">
-        <div class="balance">💰 <span id="balance">0</span>₽</div>
-        <button class="auth-btn" id="authBtn">Аккаунт</button>
+      <div class="balance">💰 <span id="balance">0</span>₽</div>
+      <button class="auth-btn" id="authBtn">Аккаунт</button>
     </div>
-</div>
+  </div>
 
-<div class="content">
+  <div class="content">
     <button class="back-btn" onclick="location.href='../index.html'">← Назад</button>
 
     <div class="game-card">
-        <div class="game-title">🎡 Рулетка</div>
+      <div class="game-title">🎡 Рулетка</div>
 
-        <div class="roulette-type-selector">
-            <button class="roulette-type-btn active" data-type="wheel">Круг</button>
-            <button class="roulette-type-btn" data-type="tape">Лента</button>
+      <div class="roulette-type-selector">
+        <button class="roulette-type-btn active" data-type="wheel">Круг</button>
+        <button class="roulette-type-btn" data-type="tape">Лента</button>
+      </div>
+
+      <div id="wheelContainer">
+        <div class="roulette-wheel-container">
+          <div class="roulette-pointer"></div>
+          <div class="roulette-wheel" id="wheel"></div>
         </div>
+      </div>
 
-        <!-- КРУГ -->
-        <div id="wheelContainer">
-            <div class="roulette-wheel-container">
-                <div class="roulette-pointer"></div>
-                <div class="roulette-wheel" id="wheel"></div>
-            </div>
-        </div>
+      <div id="tapeContainer" class="roulette-container" style="display:none;">
+        <div class="roulette-tape" id="tape"></div>
+        <div class="roulette-pointer-line"></div>
+      </div>
 
-        <!-- ЛЕНТА -->
-        <div id="tapeContainer" class="roulette-container" style="display:none;">
-            <div class="roulette-tape" id="tape"></div>
-            <div class="roulette-pointer-line"></div>
-        </div>
+      <button class="fast-spin-btn" id="fastSpinBtn">Быстрая прокрутка (2.5с)</button>
 
-        <button class="fast-spin-btn" id="fastSpinBtn">Быстрая прокрутка (2.5с)</button>
+      <div class="input-group">
+        <label class="input-label">Ставка</label>
+        <input type="number" id="betAmount" value="100" min="10">
+      </div>
 
-        <div class="input-group">
-            <label class="input-label">Ставка</label>
-            <input type="number" id="betAmount" value="100" min="10">
-        </div>
+      <div class="bet-options">
+        <button class="bet-btn red"   onclick="placeBet('red')">Красное ×2</button>
+        <button class="bet-btn black" onclick="placeBet('black')">Чёрное ×2</button>
+        <button class="bet-btn green" onclick="placeBet('green')">Зелёное ×14</button>
+        <button class="bet-btn number-bet" onclick="placeBet('number')">Число ×36</button>
+      </div>
 
-        <div class="bet-options">
-            <button class="bet-btn red" onclick="placeBet('red')">Красное ×2</button>
-            <button class="bet-btn black" onclick="placeBet('black')">Чёрное ×2</button>
-            <button class="bet-btn green" onclick="placeBet('green')">Зелёное ×14</button>
-            <button class="bet-btn number-bet" onclick="placeBet('number')">Число ×36</button>
-        </div>
-
-        <div class="result" id="rouletteResult">Выберите ставку и крутите!</div>
+      <div class="result" id="rouletteResult">Выберите ставку и крутите!</div>
     </div>
-</div>
+  </div>
 
 <script>
 function createParticles() {
-    const container = document.getElementById('particles');
-    for (let i = 0; i < 50; i++) {
-        const p = document.createElement('div');
-        p.className = 'particle';
-        p.style.width = p.style.height = Math.random() * 4 + 1 + 'px';
-        p.style.left = Math.random() * 100 + '%';
-        p.style.animationDuration = Math.random() * 20 + 15 + 's';
-        p.style.animationDelay = Math.random() * 8 + 's';
-        container.appendChild(p);
-    }
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 50; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.width = p.style.height = Math.random() * 4 + 1 + 'px';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = Math.random() * 20 + 15 + 's';
+    p.style.animationDelay = Math.random() * 8 + 's';
+    container.appendChild(p);
+  }
 }
 
 let currentUser = null;
@@ -334,196 +323,211 @@ const rouletteNumbers = [0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,2
 const redNumbers = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
 
 function getCellColor(num) {
-    if (num === 0) return 'green';
-    return redNumbers.includes(num) ? 'red' : 'black';
+  if (num === 0) return 'green';
+  return redNumbers.includes(num) ? 'red' : 'black';
 }
 
 function loadCurrentUser() {
-    currentUsername = localStorage.getItem('dropwin_current_username');
-    if (!currentUsername) {
-        alert('Войдите в аккаунт');
-        location.href = '../register.html';
-        return;
-    }
-    const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
-    currentUser = users.find(u => u.username === currentUsername);
-    if (!currentUser) {
-        localStorage.removeItem('dropwin_current_username');
-        alert('Аккаунт не найден');
-        location.href = '../register.html';
-        return;
-    }
-    document.getElementById('balance').textContent = currentUser.balance;
-    document.getElementById('authBtn').textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
-    document.getElementById('authBtn').onclick = () => location.href = '../profile.html';
+  currentUsername = localStorage.getItem('dropwin_current_username');
+  if (!currentUsername) {
+    alert('Войдите в аккаунт');
+    location.href = '../register.html';
+    return;
+  }
+  const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+  currentUser = users.find(u => u.username === currentUsername);
+  if (!currentUser) {
+    localStorage.removeItem('dropwin_current_username');
+    alert('Аккаунт не найден');
+    location.href = '../register.html';
+    return;
+  }
+  document.getElementById('balance').textContent = currentUser.balance;
+  document.getElementById('authBtn').textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
+  document.getElementById('authBtn').onclick = () => location.href = '../profile.html';
 }
 
 function saveUser() {
-    if (!currentUser) return;
-    const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
-    const idx = users.findIndex(u => u.username === currentUsername);
-    if (idx !== -1) {
-        users[idx] = currentUser;
-        localStorage.setItem('dropwin_users', JSON.stringify(users));
-    }
+  if (!currentUser) return;
+  const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+  const idx = users.findIndex(u => u.username === currentUsername);
+  if (idx !== -1) {
+    users[idx] = currentUser;
+    localStorage.setItem('dropwin_users', JSON.stringify(users));
+  }
 }
 
 function addToHistory(game, change) {
-    const entry = {
-        game,
-        time: new Date().toLocaleString('ru-RU'),
-        win: change,
-        result: change > 0 ? 'win' : 'loss'
-    };
-    currentUser.history = currentUser.history || [];
-    currentUser.history.unshift(entry);
-    if (currentUser.history.length > 20) currentUser.history.pop();
-    saveUser();
+  const entry = {
+    game,
+    time: new Date().toLocaleString('ru-RU'),
+    win: change,
+    result: change > 0 ? 'win' : 'loss'
+  };
+  currentUser.history = currentUser.history || [];
+  currentUser.history.unshift(entry);
+  if (currentUser.history.length > 20) currentUser.history.pop();
+  saveUser();
 }
 
 let currentBetType = null;
 let currentBetNumber = null;
 
 function generateTape() {
-    const tape = document.getElementById('tape');
-    tape.innerHTML = '';
-    for (let rep = 0; rep < 12; rep++) {
-        rouletteNumbers.forEach(num => {
-            const cell = document.createElement('div');
-            cell.className = `roulette-cell ${getCellColor(num)}`;
-            cell.textContent = num;
-            tape.appendChild(cell);
-        });
-    }
-    tape.style.width = `${rouletteNumbers.length * 110 * 12}px`;
+  const tape = document.getElementById('tape');
+  tape.innerHTML = '';
+  for (let rep = 0; rep < 15; rep++) {
+    rouletteNumbers.forEach(num => {
+      const cell = document.createElement('div');
+      cell.className = `roulette-cell ${getCellColor(num)}`;
+      cell.textContent = num;
+      tape.appendChild(cell);
+    });
+  }
+  tape.style.width = `${rouletteNumbers.length * 15 * 110}px`;
 }
 
 function switchType(type) {
-    document.querySelectorAll('.roulette-type-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector(`[data-type="${type}"]`).classList.add('active');
-    document.getElementById('wheelContainer').style.display = type === 'wheel' ? 'block' : 'none';
-    document.getElementById('tapeContainer').style.display = type === 'tape' ? 'block' : 'none';
-    if (type === 'tape' && document.getElementById('tape').children.length === 0) {
-        generateTape();
-    }
+  document.querySelectorAll('.roulette-type-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-type="${type}"]`).classList.add('active');
+  document.getElementById('wheelContainer').style.display = type === 'wheel' ? 'block' : 'none';
+  document.getElementById('tapeContainer').style.display = type === 'tape' ? 'block' : 'none';
+  if (type === 'tape' && document.getElementById('tape').children.length === 0) {
+    generateTape();
+  }
 }
 
 function placeBet(type) {
-    if (isSpinning) return;
-    if (!currentUser) return alert('Сессия истекла');
+  if (isSpinning) return;
+  if (!currentUser) return alert('Сессия истекла');
 
-    let betNumber = null;
-    if (type === 'number') {
-        const num = prompt("Введите число (0–36):");
-        if (num === null) return;
-        betNumber = Number(num);
-        if (isNaN(betNumber) || betNumber < 0 || betNumber > 36) return alert('Неверное число');
-    }
+  let betNumber = null;
+  if (type === 'number') {
+    const num = prompt("Введите число (0–36):");
+    if (num === null) return;
+    betNumber = Number(num);
+    if (isNaN(betNumber) || betNumber < 0 || betNumber > 36) return alert('Неверное число');
+  }
 
-    const bet = Number(document.getElementById('betAmount').value);
-    if (bet < 10 || bet > currentUser.balance || isNaN(bet)) return alert('Неверная ставка');
+  const bet = Number(document.getElementById('betAmount').value);
+  if (bet < 10 || bet > currentUser.balance || isNaN(bet)) return alert('Неверная ставка');
 
-    isSpinning = true;
-    currentUser.balance -= bet;
-    saveUser();
-    document.getElementById('balance').textContent = currentUser.balance;
-    document.getElementById('rouletteResult').textContent = 'Крутим колесо...';
+  isSpinning = true;
+  currentUser.balance -= bet;
+  saveUser();
+  document.getElementById('balance').textContent = currentUser.balance;
+  document.getElementById('rouletteResult').textContent = 'Крутим колесо...';
 
-    const isWheel = document.getElementById('wheelContainer').style.display !== 'none';
+  const isWheel = document.getElementById('wheelContainer').style.display !== 'none';
 
-    if (isWheel) {
-        const wheel = document.getElementById('wheel');
-        wheel.style.transition = fastSpin ? 'transform 2.5s ease-out' : 'transform 4.8s cubic-bezier(0.22, 0.61, 0.36, 1)';
-        wheel.style.transform = 'rotate(0deg)';
+  if (isWheel) {
+    const wheel = document.getElementById('wheel');
+    wheel.style.transition = fastSpin ? 'transform 2.5s ease-out' : 'transform 4.8s cubic-bezier(0.22, 0.61, 0.36, 1)';
+    wheel.style.transform = 'rotate(0deg)';
 
-        setTimeout(() => {
-            const result = Math.floor(Math.random() * 37);
-            const anglePerNumber = 360 / 37;
+    setTimeout(() => {
+      const result = Math.floor(Math.random() * 37);
+      const anglePerNumber = 360 / 37;
+      const pointerOffset = 1.1;
+      let finalAngle = - (result * anglePerNumber) + pointerOffset;
+      finalAngle += 360 * (12 + Math.floor(Math.random() * 4));
+      wheel.style.transform = `rotate(${finalAngle}deg)`;
 
-            // Для перевёрнутой стрелки (остриём вниз) смещение обычно положительное
-            const pointerOffset = 1.1;  // подстрой: 0.8 – 1.5 обычно хорошо ложится на кончик
+      setTimeout(() => finishSpin(result, bet, type, betNumber), fastSpin ? 2600 : 5000);
+    }, 120);
+  } else {
+    const tape = document.getElementById('tape');
 
-            let finalAngle = - (result * anglePerNumber) + pointerOffset;
-            finalAngle += 360 * (12 + Math.floor(Math.random() * 4)); // 12–15 оборотов
+    // Сброс + принудительный reflow
+    tape.style.transition = 'none';
+    tape.style.transform = 'translateX(0px)';
+    void tape.offsetWidth;
 
-            wheel.style.transform = `rotate(${finalAngle}deg)`;
+    tape.style.transition = fastSpin
+      ? 'transform 2.5s ease-out'
+      : 'transform 5.5s cubic-bezier(0.11, 0.89, 0.32, 1.00)';
 
-            setTimeout(() => finishSpin(result, bet, type, betNumber), fastSpin ? 2600 : 5000);
-        }, 120);
-    } else {
-        const tape = document.getElementById('tape');
-        tape.style.transition = fastSpin ? 'transform 2.5s ease-out' : 'transform 5.2s cubic-bezier(0.16,1,0.3,1)';
-        tape.style.transform = 'translateX(0px)';
+    setTimeout(() => {
+      const result = Math.floor(Math.random() * 37);
+      const cellWidth = 110;
+      const fullCycles = fastSpin ? 6 + Math.floor(Math.random() * 3) : 12 + Math.floor(Math.random() * 5);
+      const index = rouletteNumbers.indexOf(result);
 
-        setTimeout(() => {
-            const result = Math.floor(Math.random() * 37);
-            const cellWidth = 110;
-            const pos = rouletteNumbers.indexOf(result);
-            const offset = - (11 * rouletteNumbers.length * cellWidth + pos * cellWidth + 40 + Math.random() * 50);
-            tape.style.transform = `translateX(${offset}px)`;
+      const halfContainer = 380 / 2;     // 190
+      const halfCell = cellWidth / 2;    // 55
+      const centerOffset = halfContainer - halfCell;  // 135
 
-            setTimeout(() => finishSpin(result, bet, type, betNumber), fastSpin ? 2600 : 5400);
-        }, 120);
-    }
+      let offset = -(
+        fullCycles * rouletteNumbers.length * cellWidth +
+        index * cellWidth +
+        centerOffset
+      );
 
-    currentBetType = type;
-    currentBetNumber = betNumber;
+      // небольшой разброс ±18 px
+      offset += (Math.random() - 0.5) * 36;
+
+      tape.style.transform = `translateX(${offset}px)`;
+
+      setTimeout(() => finishSpin(result, bet, type, betNumber), fastSpin ? 2600 : 5600);
+    }, 60);
+  }
+
+  currentBetType = type;
+  currentBetNumber = betNumber;
 }
 
 function finishSpin(result, bet, type, betNumber) {
-    const color = result === 0 ? 'green' : (redNumbers.includes(result) ? 'red' : 'black');
-    let win = 0;
+  const color = result === 0 ? 'green' : (redNumbers.includes(result) ? 'red' : 'black');
+  let win = 0;
 
-    if (type === 'red'    && color === 'red')    win = bet * 2;
-    if (type === 'black'  && color === 'black')  win = bet * 2;
-    if (type === 'green'  && color === 'green')  win = bet * 14;
-    if (type === 'number' && result === betNumber) win = bet * 36;
+  if (type === 'red'   && color === 'red')   win = bet * 2;
+  if (type === 'black' && color === 'black') win = bet * 2;
+  if (type === 'green' && color === 'green') win = bet * 14;
+  if (type === 'number' && result === betNumber) win = bet * 36;
 
-    currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
-    currentUser.totalBet    = (currentUser.totalBet    || 0) + bet;
+  currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
+  currentUser.totalBet    = (currentUser.totalBet    || 0) + bet;
 
-    if (win > 0) {
-        currentUser.balance += win;
-        currentUser.totalWin = (currentUser.totalWin || 0) + win;
-        currentUser.wins     = (currentUser.wins     || 0) + 1;
+  if (win > 0) {
+    currentUser.balance += win;
+    currentUser.totalWin = (currentUser.totalWin || 0) + win;
+    currentUser.wins     = (currentUser.wins     || 0) + 1;
+    document.getElementById('rouletteResult').innerHTML =
+      `<span style="color:#22c55e; font-weight:bold;">Выигрыш +${win}₽</span> (${result})`;
+    addToHistory('Рулетка', win - bet);
+  } else {
+    currentUser.losses = (currentUser.losses || 0) + 1;
+    document.getElementById('rouletteResult').innerHTML =
+      `<span style="color:#ef4444; font-weight:bold;">Проигрыш (${result})</span>`;
+    addToHistory('Рулетка', -bet);
+  }
 
-        document.getElementById('rouletteResult').innerHTML =
-            `<span style="color:#22c55e; font-weight:bold;">Выигрыш +${win}₽</span> (${result})`;
-
-        addToHistory('Рулетка', win - bet);
-    } else {
-        currentUser.losses = (currentUser.losses || 0) + 1;
-
-        document.getElementById('rouletteResult').innerHTML =
-            `<span style="color:#ef4444; font-weight:bold;">Проигрыш (${result})</span>`;
-
-        addToHistory('Рулетка', -bet);
-    }
-
-    saveUser();
-    document.getElementById('balance').textContent = currentUser.balance;
-    isSpinning = false;
-    currentBetType = currentBetNumber = null;
+  saveUser();
+  document.getElementById('balance').textContent = currentUser.balance;
+  isSpinning = false;
+  currentBetType = currentBetNumber = null;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    createParticles();
-    loadCurrentUser();
+  createParticles();
+  loadCurrentUser();
 
-    document.querySelectorAll('.roulette-type-btn').forEach(btn => {
-        btn.addEventListener('click', () => switchType(btn.dataset.type));
-    });
+  document.querySelectorAll('.roulette-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchType(btn.dataset.type));
+  });
 
-    document.getElementById('fastSpinBtn').addEventListener('click', () => {
-        fastSpin = !fastSpin;
-        const btn = document.getElementById('fastSpinBtn');
-        btn.textContent = fastSpin ? 'Обычная прокрутка (4.8–5.2с)' : 'Быстрая прокрутка (2.5с)';
-        btn.style.background = fastSpin
-            ? 'linear-gradient(135deg, #ef4444, #b91c1c)'
-            : 'linear-gradient(135deg, #fbbf24, #f59e0b)';
-    });
+  document.getElementById('fastSpinBtn').addEventListener('click', () => {
+    fastSpin = !fastSpin;
+    const btn = document.getElementById('fastSpinBtn');
+    btn.textContent = fastSpin
+      ? 'Обычная прокрутка (5.5с)'
+      : 'Быстрая прокрутка (2.5с)';
+    btn.style.background = fastSpin
+      ? 'linear-gradient(135deg, #ef4444, #b91c1c)'
+      : 'linear-gradient(135deg, #fbbf24, #f59e0b)';
+  });
 
-    switchType('wheel');
+  switchType('wheel');
 });
 </script>
 </body>

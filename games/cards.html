@@ -10,48 +10,106 @@
       display: flex;
       flex-direction: row;
       justify-content: center;
-      gap: 18px;               /* больше расстояния между картами */
-      margin: 20px 0;
-      max-width: 380px;
+      gap: 20px;
+      margin: 24px 0;
+      max-width: 420px;
       margin-left: auto;
       margin-right: auto;
-      overflow-x: hidden;      /* убираем скроллбар полностью */
-      padding: 0 10px;
+      padding: 0 12px;
     }
+
     .card {
-      width: 78px;             /* чуть крупнее */
-      height: 110px;
-      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-      border-radius: 12px;
-      border: 2.5px solid #1e293b;
+      width: 92px;
+      height: 130px;
+      background: linear-gradient(135deg, #fefefe, #f1f5f9);
+      border-radius: 14px;
+      border: 1px solid #cbd5e1;
+      box-shadow:
+        0 6px 16px rgba(0,0,0,0.38),
+        0 2px 6px rgba(0,0,0,0.22),
+        inset 0 1px 2px rgba(255,255,255,0.8);
+      position: relative;
+      overflow: hidden;
+      color: #111827;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      transition: all 0.18s ease;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .card:hover {
+      transform: translateY(-8px) scale(1.05);
+      box-shadow: 0 14px 32px rgba(0,0,0,0.45);
+    }
+
+    .card.red   { color: #dc2626; }
+    .card.black { color: #111827; }
+
+    /* Уголки — масть + номинал */
+    .card::before,
+    .card::after {
+      position: absolute;
+      font-size: 1.95rem;
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -0.5px;
+    }
+
+    .card::before {
+      top: 8px;
+      left: 10px;
+      content: attr(data-value) "\a" attr(data-suit);
+      white-space: pre;
+      text-align: left;
+    }
+
+    .card::after {
+      bottom: 8px;
+      right: 10px;
+      content: attr(data-value) "\a" attr(data-suit);
+      white-space: pre;
+      text-align: right;
+      transform: rotate(180deg);
+    }
+
+    /* Большой центральный символ масти */
+    .card .center-suit {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 5.2rem;
+      font-weight: 900;
+      opacity: 0.14;
+      pointer-events: none;
+    }
+
+    .card.red .center-suit {
+      opacity: 0.24;
+      color: #dc2626;
+    }
+
+    .card[data-value="A"] .center-suit {
+      font-size: 5.8rem;
+      opacity: 0.26;
+    }
+
+    /* Карта дилера (закрытая) */
+    .card-back {
+      background: linear-gradient(145deg, #1e293b 0%, #111827 100%);
+      color: #64748b;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.4rem;
-      font-weight: bold;
-      box-shadow: 0 5px 14px rgba(0,0,0,0.45);
-      color: black;
-      position: relative;
-      overflow: hidden;
-      flex-shrink: 0;
+      font-size: 4.2rem;
+      opacity: 0.9;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.6);
     }
-    .card::before {
-      content: attr(data-suit);
-      position: absolute;
-      top: 6px;
-      left: 8px;
-      font-size: 1.3rem;
+
+    .card-back::before,
+    .card-back::after {
+      content: none;
     }
-    .card::after {
-      content: attr(data-suit);
-      position: absolute;
-      bottom: 6px;
-      right: 8px;
-      font-size: 1.3rem;
-      transform: rotate(180deg);
-    }
-    .card.red { color: #dc2626; }
-    .card.red::before, .card.red::after { color: #dc2626; }
   </style>
 </head>
 <body>
@@ -72,12 +130,12 @@
     <div class="game-title">🃏 21 (Блэкджек)</div>
 
     <div class="card-container" id="playerCards"></div>
-    <div id="playerScore" style="font-size:1.4rem; margin:10px 0; text-align:center; font-weight:700;">Ваш счёт: 0</div>
+    <div id="playerScore" style="font-size:1.4rem; margin:12px 0; text-align:center; font-weight:700;">Ваш счёт: 0</div>
 
     <div class="card-container" id="dealerCards"></div>
-    <div id="dealerScore" style="font-size:1.2rem; color:#94a3b8; text-align:center; margin:10px 0;">Счёт дилера: ?</div>
+    <div id="dealerScore" style="font-size:1.2rem; color:#94a3b8; text-align:center; margin:12px 0;">Счёт дилера: ?</div>
 
-    <div class="input-group" style="margin:20px 0; max-width:280px; margin-left:auto; margin-right:auto;">
+    <div class="input-group" style="margin:24px 0; max-width:280px; margin-left:auto; margin-right:auto;">
       <label class="input-label">Ставка</label>
       <input type="number" id="bet21" value="100" min="10">
     </div>
@@ -88,7 +146,7 @@
       <button class="btn cashout-btn" onclick="stand()" id="standBtn" style="display:none">Хватит</button>
     </div>
 
-    <div class="result" id="result21" style="margin-top:20px; text-align:center; min-height:60px;">Готовы сыграть?</div>
+    <div class="result" id="result21" style="margin-top:24px; text-align:center; min-height:60px;">Готовы сыграть?</div>
   </div>
 </div>
 
@@ -99,6 +157,7 @@
 </div>
 
 <script>
+// Particles (оставляем как было)
 function createParticles() {
   const container = document.getElementById('particles');
   for (let i = 0; i < 40; i++) {
@@ -117,7 +176,6 @@ let currentUsername = null;
 
 function loadCurrentUser() {
   currentUsername = localStorage.getItem('dropwin_current_username');
-
   if (!currentUsername) {
     location.href = '../register.html';
     return;
@@ -191,11 +249,26 @@ function drawCard() {
 function renderCards(containerId, cards, hideFirst = false) {
   const container = document.getElementById(containerId);
   container.innerHTML = '';
+
   cards.forEach((card, i) => {
+    const isHidden = hideFirst && i === 0;
+
     const div = document.createElement('div');
-    div.className = 'card' + ((card.suit === '♥' || card.suit === '♦') ? ' red' : '');
-    div.dataset.suit = card.suit;
-    div.innerHTML = hideFirst && i === 0 ? '?' : card.value;
+
+    if (isHidden) {
+      div.className = 'card card-back';
+      div.innerHTML = '<div style="font-size:4.8rem; opacity:0.35;">?</div>';
+    } else {
+      div.className = 'card' + ((card.suit === '♥' || card.suit === '♦') ? ' red' : ' black');
+      div.dataset.value = card.value;
+      div.dataset.suit  = card.suit;
+
+      const center = document.createElement('div');
+      center.className = 'center-suit';
+      center.textContent = card.suit;
+      div.appendChild(center);
+    }
+
     container.appendChild(div);
   });
 }

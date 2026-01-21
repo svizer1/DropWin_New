@@ -48,16 +48,16 @@ body::before {
     100% { transform: translateY(-100vh) scale(0.5); opacity: 0; }
 }
 
-/* Header */
+/* ─── HEADER (самое изменённое место) ──────────────────────────────────────── */
 .header {
-    background: rgba(15, 12, 41, 0.85);
+    background: rgba(15, 12, 41, 0.58);          /* было 0.85 → стало 0.58 */
     backdrop-filter: blur(16px);
     padding: 16px 20px;
-    border-bottom: 1px solid rgba(99,102,241,0.3);
+    border-bottom: 1px solid rgba(99,102,241,0.22);
     position: sticky;
     top: 0;
     z-index: 1000;
-    box-shadow: 0 0 20px rgba(192,132,252,0.3);
+    box-shadow: 0 4px 20px rgba(192,132,252,0.18);
 }
 
 .logo {
@@ -78,11 +78,11 @@ body::before {
     justify-content: space-between;
     align-items: center;
     margin-top: 12px;
-    background: rgba(30, 27, 71, 0.6);
+    background: rgba(30, 27, 71, 0.42);          /* было 0.6 → стало 0.42 */
     padding: 12px 18px;
     border-radius: 16px;
-    border: 1px solid rgba(139,92,246,0.35);
-    backdrop-filter: blur(10px);
+    border: 1px solid rgba(139,92,246,0.28);
+    backdrop-filter: blur(12px);
 }
 
 .balance {
@@ -392,11 +392,11 @@ body::before {
     position: absolute;
     top: 10px;
     right: 10px;
-    background: rgba(30,27,71,0.7);
+    background: rgba(30,27,71,0.55);           /* тоже чуть прозрачнее */
     backdrop-filter: blur(10px);
     padding: 8px 14px;
     border-radius: 12px;
-    border: 1px solid rgba(168,85,247,0.4);
+    border: 1px solid rgba(168,85,247,0.35);
     font-size: 0.85rem;
     color: #c084fc;
     z-index: 999;
@@ -612,4 +612,80 @@ input:focus, select:focus {
 .card-back {
     background: linear-gradient(135deg, #1f2937, #111827);
     transform: rotateY(180deg);
+}
+
+/* ─── СЛОТЫ ──────────────────────────────────────── */
+.slot-machine {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 30px 0 40px;
+    perspective: 1000px;
+}
+
+.reel {
+    width: 110px;
+    height: 110px;
+    overflow: hidden;
+    border-radius: 16px;
+    border: 3px solid #4b5563;
+    background: rgba(20, 20, 45, 0.9);
+    box-shadow:
+        inset 0 0 20px rgba(0,0,0,0.7),
+        0 0 25px rgba(139,92,246,0.25);
+    position: relative;
+}
+
+.slot-item {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5.8rem;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 0 0 15px rgba(0,0,0,0.8);
+    transition: transform 0.4s ease-out;
+}
+
+/* Вращение */
+.reel.spinning .slot-item {
+    animation: reelSpin 0.14s linear infinite;
+}
+
+@keyframes reelSpin {
+    0%   { transform: translateY(-120%); }
+    100% { transform: translateY(120%);  }
+}
+
+/* Остановка с отскоком */
+.reel.stopping .slot-item {
+    animation: none;
+    animation: reelStop 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes reelStop {
+    0%   { transform: translateY(-40%); }
+    60%  { transform: translateY(18%);  }
+    80%  { transform: translateY(-10%); }
+    100% { transform: translateY(0);     }
+}
+
+/* Свечение при активном вращении */
+.reel.spinning {
+    box-shadow:
+        inset 0 0 30px rgba(139,92,246,0.5),
+        0 0 40px rgba(168,85,247,0.6);
+    border-color: #a78bfa;
+}
+
+/* Выигрышная комбинация */
+.slot-item.win-highlight {
+    animation: winGlow 1.2s infinite alternate;
+}
+
+@keyframes winGlow {
+    from { text-shadow: 0 0 10px #fbbf24, 0 0 30px #fbbf24; }
+    to   { text-shadow: 0 0 25px #fbbf24, 0 0 60px #fbbf24; }
 }

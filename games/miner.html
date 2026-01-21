@@ -26,11 +26,11 @@
     <div class="miner-grid" id="minerGrid"></div>
     <div class="input-group">
       <label class="input-label">Ставка</label>
-      <input type="number" id="minerBet" value="100" min="10">
+      <input type="number" id="minerBet" value="100" min="10" step="1">
     </div>
     <div class="input-group">
-      <label class="input-label">Бомб (1-5)</label>
-      <input type="number" id="minerBombs" value="3" min="1" max="5">
+      <label class="input-label">Бомб (3–5)</label>
+      <input type="number" id="minerBombs" value="3" min="3" max="5" step="1">
     </div>
     <button class="btn" onclick="startMiner()" id="minerStart">Начать</button>
     <button class="btn cashout-btn" onclick="cashoutMiner()" id="minerCashout" style="display:none">Забрать</button>
@@ -69,7 +69,6 @@ let bombsCount = 0;
 
 function loadCurrentUser() {
   currentUsername = localStorage.getItem('dropwin_current_username');
-
   if (!currentUsername) {
     location.href = '../register.html';
     return;
@@ -114,14 +113,28 @@ function addToHistory(game, winAmount) {
   saveUser();
 }
 
+function showAllBombs() {
+  bombPositions.forEach(idx => {
+    if (!minerCells[idx].classList.contains('revealed')) {
+      minerCells[idx].classList.add('revealed', 'bomb');
+      minerCells[idx].textContent = '💣';
+    }
+  });
+}
+
 function startMiner() {
   if (!currentUser) return alert('Сессия истекла. Войдите заново.');
 
   bet = Number(document.getElementById('minerBet').value);
   bombsCount = Number(document.getElementById('minerBombs').value);
 
-  if (bet > currentUser.balance || bet < 10 || bombsCount < 1 || bombsCount > 5 || isNaN(bet) || isNaN(bombsCount)) {
-    alert('Ошибка ставки или количества бомб');
+  if (bet > currentUser.balance || bet < 10 || isNaN(bet)) {
+    alert('Ставка должна быть от 10 ₽');
+    return;
+  }
+
+  if (![3,4,5].includes(bombsCount) || isNaN(bombsCount)) {
+    alert('Можно выбрать только 3, 4 или 5 бомб');
     return;
   }
 
@@ -168,15 +181,15 @@ function revealCell(idx) {
     document.getElementById('minerResult').innerHTML = '<span style="color:#ef4444">ВЗРЫВ! Проигрыш</span>';
     currentUser.losses = (currentUser.losses || 0) + 1;
     addToHistory('Минёр', -bet);
+    showAllBombs();           // ← показываем все бомбы
     endMiner();
   } else {
     minerCells[idx].classList.add('gem');
     minerCells[idx].textContent = '💎';
     minerRevealed++;
 
-    // Базовый прирост маленький + бонус за риск (больше бомб → выше x)
-    const base = 0.18;
-    const riskBonus = 0.07 * bombsCount;
+    const base = 0.115;
+    const riskBonus = 0.038 * bombsCount;
     minerMultiplier = 1 + (minerRevealed * (base + riskBonus));
 
     document.getElementById('minerMultiplier').textContent = `x${minerMultiplier.toFixed(2)}`;
@@ -189,6 +202,7 @@ function revealCell(idx) {
       currentUser.totalWin = (currentUser.totalWin || 0) + win;
       document.getElementById('minerResult').innerHTML = `<span style="color:#10b981">ПОБЕДА! +${win}₽</span>`;
       addToHistory('Минёр', win);
+      showAllBombs();         // ← можно показать и при победе (по желанию)
       endMiner(true);
     }
   }
@@ -203,6 +217,7 @@ function cashoutMiner() {
   currentUser.totalWin = (currentUser.totalWin || 0) + win;
   document.getElementById('minerResult').innerHTML = `<span style="color:#10b981">Забрано: +${win}₽</span>`;
   addToHistory('Минёр', win);
+  showAllBombs();             // ← показываем все бомбы после кэшаута
   endMiner(true);
   saveUser();
   document.getElementById('balance').textContent = currentUser.balance;

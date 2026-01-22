@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Акции: Крипта | DropWin</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .crypto-item {
+      background: rgba(30,27,71,0.7);
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 18px;
+      border: 1px solid rgba(139,92,246,0.35);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      transition: all 0.25s ease;
+    }
+    .crypto-item:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 12px 30px rgba(192,132,252,0.35);
+      border-color: #c084fc;
+    }
+    .crypto-name {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #c084fc;
+      margin-bottom: 6px;
+    }
+    .crypto-price {
+      font-size: 1.7rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .price-change {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-left: 12px;
+    }
+    .change-up   { color: #34d399; }
+    .change-down { color: #f87171; }
+    .profit-loss {
+      font-size: 1.05rem;
+      margin: 8px 0;
+      font-weight: 600;
+    }
+    .profit { color: #34d399; }
+    .loss   { color: #f87171; }
+    .portfolio-info {
+      font-size: 1rem;
+      color: #94a3b8;
+      margin: 8px 0 12px;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .controls input {
+      flex: 1 1 110px;
+      padding: 10px 12px;
+      font-size: 1rem;
+      border-radius: 10px;
+      border: 1px solid #4b5563;
+      background: rgba(255,255,255,0.05);
+      color: white;
+    }
+    .controls button {
+      padding: 10px 18px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .buy-btn      { background: #10b981; color: white; }
+    .sell-btn     { background: #ef4444; color: white; }
+    .sell-all-btn { background: #991b1b; color: white; flex: 1 1 100%; }
+    .all-btn      { background: #6366f1; color: white; flex: 1 1 100%; }
+    .buy-btn:hover, .sell-btn:hover, .sell-all-btn:hover, .all-btn:hover {
+      filter: brightness(1.15);
+      transform: translateY(-2px);
+    }
+    .cooldown-msg {
+      color: #fbbf24;
+      font-size: 0.9rem;
+      margin-top: 6px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+<div class="particles" id="particles"></div>
+
+<div class="header">
+  <div class="logo">💎 DROPWIN</div>
+  <div class="balance-container">
+    <div class="balance">💰 <span id="balance">0</span>₽</div>
+    <button class="auth-btn" id="authBtn">Аккаунт</button>
+  </div>
+</div>
+
+<div class="content">
+  <button class="back-btn" onclick="location.href='index.html'">← Назад</button>
+
+  <div class="game-card">
+    <div class="game-title">📈 Акции: Крипта</div>
+    <div id="crypto-list"></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn" onclick="location.href='index.html'"><span>🏠</span><span class="nav-label">Главная</span></button>
+  <button class="nav-btn" onclick="location.href='profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
+  <button class="nav-btn" onclick="location.href='register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, updateDoc, onSnapshot, setDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+    authDomain: "dropwin-8d94b.firebaseapp.com",
+    projectId: "dropwin-8d94b",
+    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    messagingSenderId: "988974289403",
+    appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+    measurementId: "G-BK010MHN8N"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  function createParticles() {
+    const container = document.getElementById('particles');
+    if (!container) return;
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDuration = Math.random() * 15 + 10 + 's';
+      p.style.animationDelay = Math.random() * 5 + 's';
+      container.appendChild(p);
+    }
+  }
+
+  let currentUser = null;
+  let userId = null;
+  let portfolio = {};
+
+  const coins = [
+    { id: 'wincoin',      name: 'WinCoin',      startPrice: 1.00     },
+    { id: 'tgcoin',       name: 'TgCoin',       startPrice: 15.00    },
+    { id: 'bomjcoin',     name: 'BomjCoin',     startPrice: 0.0005   },
+    { id: 'milionercoin', name: 'MilionerCoin', startPrice: 50.00    },
+    { id: 'crashcoin',    name: 'CrashCoin',    startPrice: 100.00   }
+  ];
+
+  const prices = {};
+  const histories = {};
+  const prevPrices = {};
+  const volumes = {};
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      userId = user.uid;
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        currentUser = userDoc.data();
+        portfolio = currentUser.cryptoPortfolio || {};
+        document.getElementById('balance').textContent = Math.round(currentUser.balance || 0);
+        renderList();
+      }
+    } else {
+      location.href = 'register.html';
+    }
+  });
+
+  async function initPrices() {
+    for (const coin of coins) {
+      const ref = doc(db, 'cryptoPrices', coin.id);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) {
+        await setDoc(ref, {
+          price: coin.startPrice,
+          history: [coin.startPrice],
+          volume: 0
+        });
+      }
+    }
+  }
+
+  coins.forEach(coin => {
+    onSnapshot(doc(db, 'cryptoPrices', coin.id), (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        prevPrices[coin.id] = prices[coin.id] || data.price;
+        prices[coin.id] = data.price;
+        histories[coin.id] = data.history || [];
+        volumes[coin.id] = data.volume || 0;
+        renderList();
+      }
+    });
+  });
+
+  setInterval(async () => {
+    for (const coin of coins) {
+      const ref = doc(db, 'cryptoPrices', coin.id);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        let { price, history, volume } = snap.data();
+        const change = (Math.random() * 0.06 - 0.03);
+        price *= (1 + change);
+        price = Math.max(price, 0.00001);
+
+        history.push(price);
+        if (history.length > 60) history.shift();
+
+        await updateDoc(ref, { price, history });
+      }
+    }
+  }, 30000);
+
+  setInterval(async () => {
+    const coin = coins[Math.floor(Math.random() * coins.length)];
+    const ref = doc(db, 'cryptoPrices', coin.id);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      let { price, volume } = snap.data();
+      const isBuy = Math.random() > 0.5;
+      price *= isBuy ? 1.002 : 0.998;
+      volume += Math.random() * 500 + 100;
+      await updateDoc(ref, { price, volume });
+    }
+  }, 60000);
+
+  window.buy = async function(coinId) {
+    if (!currentUser) return;
+    const rubInput = document.getElementById(`${coinId}-rub`);
+    const amtInput = document.getElementById(`${coinId}-amt`);
+    const price = prices[coinId];
+    let amount = parseFloat(amtInput.value) || 0;
+    let rub = parseFloat(rubInput.value) || 0;
+
+    if (rub > 0) {
+      amount = rub / price;
+      amtInput.value = amount.toFixed(6);
+    } else if (amount > 0) {
+      rub = amount * price;
+      rubInput.value = rub.toFixed(0);
+    }
+
+    if (amount <= 0) return;
+    const cost = amount * price;
+    if (cost > currentUser.balance) {
+      alert('Недостаточно средств');
+      return;
+    }
+
+    currentUser.balance -= cost;
+
+    if (!portfolio[coinId]) portfolio[coinId] = { amount: 0, avgPrice: 0, invested: 0, lastBuyTime: 0 };
+    const old = portfolio[coinId];
+    const newAmount = old.amount + amount;
+    const newInvested = old.invested + cost;
+    const newAvg = newInvested / newAmount;
+
+    portfolio[coinId] = {
+      amount: newAmount,
+      avgPrice: newAvg,
+      invested: newInvested,
+      lastBuyTime: Date.now()
+    };
+
+    const priceImpact = Math.min(0.005 * (cost / price), 0.02);
+    const newPrice = prices[coinId] * (1 + priceImpact);
+
+    const newVolume = (volumes[coinId] || 0) + cost;
+
+    await updateDoc(doc(db, 'cryptoPrices', coinId), {
+      price: newPrice,
+      volume: newVolume
+    });
+
+    const transaction = {
+      timestamp: new Date().toISOString(),
+      coin: coinId,
+      type: 'buy',
+      amount,
+      price,
+      cost
+    };
+    await updateDoc(doc(db, 'users', userId), {
+      cryptoTransactions: arrayUnion(transaction)
+    });
+
+    await updateDoc(doc(db, 'users', userId), {
+      balance: currentUser.balance,
+      cryptoPortfolio: portfolio
+    });
+
+    document.getElementById('balance').textContent = Math.round(currentUser.balance);
+    renderList();
+  };
+
+  window.sell = async function(coinId) {
+    if (!portfolio[coinId]) return;
+    const rubInput = document.getElementById(`${coinId}-rub`);
+    const amtInput = document.getElementById(`${coinId}-amt`);
+    const price = prices[coinId];
+    let amount = parseFloat(amtInput.value) || 0;
+    let rub = parseFloat(rubInput.value) || 0;
+
+    if (rub > 0) {
+      amount = rub / price;
+      amtInput.value = amount.toFixed(6);
+    } else if (amount > 0) {
+      rub = amount * price;
+      rubInput.value = rub.toFixed(0);
+    }
+
+    if (amount <= 0 || amount > portfolio[coinId].amount) {
+      alert('Недостаточно монет');
+      return;
+    }
+
+    // Проверка кулдауна
+    const lastBuy = portfolio[coinId].lastBuyTime || 0;
+    const timeLeft = 5 * 60 * 1000 - (Date.now() - lastBuy);
+    if (timeLeft > 0) {
+      const minutes = Math.ceil(timeLeft / 60000);
+      alert(`Нельзя продавать монету! Осталось ${minutes} мин после покупки.`);
+      return;
+    }
+
+    const revenue = amount * price;
+
+    const soldRatio = amount / portfolio[coinId].amount;
+    const reducedInvested = portfolio[coinId].invested * soldRatio;
+    portfolio[coinId].invested -= reducedInvested;
+
+    currentUser.balance += revenue;
+    portfolio[coinId].amount -= amount;
+
+    if (portfolio[coinId].amount <= 0) {
+      delete portfolio[coinId];
+    }
+
+    const priceImpact = Math.min(0.005 * (revenue / price), 0.02);
+    const newPrice = prices[coinId] * (1 - priceImpact);
+
+    const newVolume = (volumes[coinId] || 0) + revenue;
+
+    await updateDoc(doc(db, 'cryptoPrices', coinId), {
+      price: newPrice,
+      volume: newVolume
+    });
+
+    const transaction = {
+      timestamp: new Date().toISOString(),
+      coin: coinId,
+      type: 'sell',
+      amount,
+      price,
+      revenue
+    };
+    await updateDoc(doc(db, 'users', userId), {
+      cryptoTransactions: arrayUnion(transaction)
+    });
+
+    await updateDoc(doc(db, 'users', userId), {
+      balance: currentUser.balance,
+      cryptoPortfolio: portfolio
+    });
+
+    document.getElementById('balance').textContent = Math.round(currentUser.balance);
+    renderList();
+  };
+
+  window.sellAll = async function(coinId) {
+    if (!portfolio[coinId] || portfolio[coinId].amount <= 0) {
+      alert('Нет монет для продажи');
+      return;
+    }
+
+    const lastBuy = portfolio[coinId].lastBuyTime || 0;
+    const timeLeft = 5 * 60 * 1000 - (Date.now() - lastBuy);
+    if (timeLeft > 0) {
+      const minutes = Math.ceil(timeLeft / 60000);
+      alert(`Нельзя продавать монету! Осталось ${minutes} мин после покупки.`);
+      return;
+    }
+
+    const amount = portfolio[coinId].amount;
+    document.getElementById(`${coinId}-amt`).value = amount.toFixed(6);
+    const rub = amount * prices[coinId];
+    document.getElementById(`${coinId}-rub`).value = Math.round(rub);
+    window.sell(coinId);
+  };
+
+  window.buyAll = async function(coinId) {
+    if (!currentUser || currentUser.balance <= 0) return;
+    const amount = currentUser.balance / prices[coinId];
+    document.getElementById(`${coinId}-amt`).value = amount.toFixed(6);
+    document.getElementById(`${coinId}-rub`).value = Math.round(currentUser.balance);
+    window.buy(coinId);
+  };
+
+  function renderList() {
+    const container = document.getElementById('crypto-list');
+    container.innerHTML = '';
+
+    const sortedCoins = [...coins].sort((a, b) => (volumes[b.id] || 0) - (volumes[a.id] || 0));
+
+    sortedCoins.forEach(coin => {
+      const price = prices[coin.id] || coin.startPrice;
+      const prev = prevPrices[coin.id] || price;
+      const changePercent = ((price - prev) / prev * 100);
+      const changeClass = changePercent >= 0 ? 'change-up' : 'change-down';
+      const changeText = changePercent >= 0 ? `+${changePercent.toFixed(2)}%` : `${changePercent.toFixed(2)}%`;
+
+      const port = portfolio[coin.id] || { amount: 0, avgPrice: 0, invested: 0, lastBuyTime: 0 };
+      const currentValue = port.amount * price;
+      const profitLoss = currentValue - port.invested;
+      const plClass = profitLoss >= 0 ? 'profit' : 'loss';
+      const plText = Math.round(profitLoss);
+
+      const hist = histories[coin.id] || [price];
+
+      const cooldown = port.lastBuyTime ? 5 * 60 * 1000 - (Date.now() - port.lastBuyTime) : 0;
+      let cooldownMsg = '';
+      if (cooldown > 0) {
+        const minutes = Math.ceil(cooldown / 60000);
+        cooldownMsg = `<div class="cooldown-msg">Продажа разблокируется через ${minutes} мин</div>`;
+      } else if (cooldown <= 0 && port.lastBuyTime && port.lastBuyTime + 5*60*1000 > Date.now() - 1000) {
+        cooldownMsg = `<div class="cooldown-msg" style="color:#34d399">Продажа разблокирована!</div>`;
+      }
+
+      const div = document.createElement('div');
+      div.className = 'crypto-item';
+      div.innerHTML = `
+        <div class="crypto-name">${coin.name}</div>
+        <div>
+          <span class="crypto-price">${price.toFixed(3)} ₽</span>
+          <span class="price-change ${changeClass}">${changeText}</span>
+        </div>
+        <div class="portfolio-info">
+          У тебя: ${port.amount.toFixed(4)} шт<br>
+          Ср. цена: ${port.avgPrice.toFixed(3)} ₽<br>
+          <span class="${plClass}">Прибыль/убыток: ${plText >= 0 ? '+' : ''}${plText}₽</span>
+        </div>
+        ${cooldownMsg}
+
+        <div class="controls">
+          <input type="number" id="${coin.id}-rub" placeholder="Сколько ₽" step="1" min="1">
+          <input type="number" id="${coin.id}-amt" placeholder="Сколько шт" step="any" min="0.000001">
+          <button class="buy-btn" onclick="window.buy('${coin.id}')">Купить</button>
+          <button class="sell-btn" onclick="window.sell('${coin.id}')">Продать</button>
+          <button class="sell-all-btn" onclick="window.sellAll('${coin.id}')">Продать всё</button>
+          <button class="all-btn" onclick="window.buyAll('${coin.id}')">Купить на всё</button>
+        </div>
+
+        <canvas id="chart-${coin.id}" height="160"></canvas>
+      `;
+      container.appendChild(div);
+
+      const rubInput = document.getElementById(`${coin.id}-rub`);
+      const amtInput = document.getElementById(`${coin.id}-amt`);
+      rubInput.oninput = () => {
+        const rub = parseFloat(rubInput.value) || 0;
+        if (rub > 0 && prices[coin.id]) {
+          amtInput.value = (rub / prices[coin.id]).toFixed(6);
+        }
+      };
+      amtInput.oninput = () => {
+        const amt = parseFloat(amtInput.value) || 0;
+        if (amt > 0 && prices[coin.id]) {
+          rubInput.value = Math.round(amt * prices[coin.id]);
+        }
+      };
+
+      const ctx = document.getElementById(`chart-${coin.id}`).getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: hist.map((_,i)=>i),
+          datasets: [{
+            label: 'Цена ₽',
+            data: hist,
+            borderColor: '#c084fc',
+            backgroundColor: 'rgba(192,132,252,0.08)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: { display: false },
+            y: {
+              ticks: { color: '#94a3b8', font: { size: 11 }, callback: v => v.toFixed(3) },
+              grid: { color: 'rgba(139,92,246,0.08)' }
+            }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    createParticles();
+    await initPrices();
+  });
+</script>
+</body>
+</html>

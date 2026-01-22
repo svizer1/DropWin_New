@@ -39,7 +39,7 @@
       <label class="input-label">Ставка</label>
       <input type="number" id="bet" value="50" min="10">
     </div>
-    <button class="btn" onclick="spin()">Крутить</button>
+    <button class="btn" id="spinBtn">Крутить</button>
     <div class="result" id="result">Готовы?</div>
   </div>
 </div>
@@ -50,165 +50,192 @@
   <button class="nav-btn" onclick="location.href='../register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
 </div>
 
-<script>
-function createParticles() {
-  const container = document.getElementById('particles');
-  for (let i = 0; i < 50; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
-    p.style.left = Math.random() * 100 + '%';
-    p.style.animationDuration = Math.random() * 20 + 12 + 's';
-    p.style.animationDelay = Math.random() * 6 + 's';
-    container.appendChild(p);
-  }
-}
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-let currentUser = null;
-let currentUsername = null;
-
-function loadCurrentUser() {
-  currentUsername = localStorage.getItem('dropwin_current_username');
-
-  if (!currentUsername) {
-    location.href = '../register.html';
-    return;
-  }
-
-  const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
-  currentUser = users.find(u => u.username === currentUsername);
-
-  if (!currentUser) {
-    localStorage.removeItem('dropwin_current_username');
-    location.href = '../register.html';
-    return;
-  }
-
-  document.getElementById('balance').textContent = currentUser.balance;
-
-  const btn = document.getElementById('authBtn');
-  btn.textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
-  btn.onclick = () => location.href = '../profile.html';
-}
-
-function saveUser() {
-  if (!currentUser) return;
-  const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
-  const idx = users.findIndex(u => u.username === currentUsername);
-  if (idx !== -1) {
-    users[idx] = currentUser;
-    localStorage.setItem('dropwin_users', JSON.stringify(users));
-  }
-}
-
-function addToHistory(game, winAmount) {
-  const entry = {
-    game: game,
-    time: new Date().toLocaleString('ru-RU'),
-    win: winAmount,
-    result: winAmount > 0 ? 'win' : 'loss'
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+    authDomain: "dropwin-8d94b.firebaseapp.com",
+    projectId: "dropwin-8d94b",
+    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    messagingSenderId: "988974289403",
+    appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+    measurementId: "G-BK010MHN8N"
   };
-  currentUser.history = currentUser.history || [];
-  currentUser.history.unshift(entry);
-  if (currentUser.history.length > 20) currentUser.history.pop();
-  saveUser();
-}
 
-const symbols = ['🍒','🍋','🍊','🍉','🔔','⭐','💎','7'];
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-function spin() {
-  if (!currentUser) return alert('Сессия истекла. Войдите заново');
-
-  let bet = Number(document.getElementById('bet').value);
-  if (bet < 10 || bet > currentUser.balance || isNaN(bet)) {
-    alert('Ставка должна быть от 10 ₽ и не больше баланса');
-    return;
+  function createParticles() {
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 50; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDuration = Math.random() * 20 + 12 + 's';
+      p.style.animationDelay = Math.random() * 6 + 's';
+      container.appendChild(p);
+    }
   }
 
-  currentUser.balance -= bet;
-  currentUser.totalBet = (currentUser.totalBet || 0) + bet;
-  currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
-  saveUser();
-  document.getElementById('balance').textContent = currentUser.balance;
+  let currentUser = null;
+  let userId = null;
 
-  document.getElementById('result').textContent = 'Крутим...';
-
-  const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
-  const items = [document.getElementById('slot1'), document.getElementById('slot2'), document.getElementById('slot3')];
-
-  // Запуск анимации вращения
-  reels.forEach(reel => reel.classList.add('spinning'));
-
-  // Интервал смены символов (имитация быстрого вращения)
-  const spinInterval = setInterval(() => {
-    items.forEach(item => {
-      if (item.parentElement.classList.contains('spinning')) {
-        item.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+  function loadCurrentUser() {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        userId = user.uid;
+        getDoc(doc(db, 'users', user.uid)).then((docSnap) => {
+          if (docSnap.exists()) {
+            currentUser = docSnap.data();
+            document.getElementById('balance').textContent = currentUser.balance || 0;
+            const btn = document.getElementById('authBtn');
+            btn.textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
+            btn.onclick = () => location.href = '../profile.html';
+          } else {
+            location.href = '../register.html';
+          }
+        });
+      } else {
+        // Гость
+        const username = localStorage.getItem('dropwin_current_username');
+        if (username !== 'Гость') {
+          location.href = '../register.html';
+          return;
+        }
+        const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+        currentUser = users.find(u => u.username === username);
+        if (!currentUser) {
+          location.href = '../register.html';
+          return;
+        }
+        document.getElementById('balance').textContent = currentUser.balance || 0;
+        const btn = document.getElementById('authBtn');
+        btn.textContent = 'Гость';
+        btn.onclick = () => location.href = '../profile.html';
       }
     });
-  }, 70);
+  }
 
-  // Время полной анимации + разная задержка остановки каждого барабана
-  const totalSpinTime = 2200;
-  const stopDelays = [0, 450, 900]; // мс после начала
-
-  setTimeout(() => stopReel(0, spinInterval), totalSpinTime + stopDelays[0]);
-  setTimeout(() => stopReel(1, spinInterval), totalSpinTime + stopDelays[1]);
-  setTimeout(() => stopReel(2, spinInterval), totalSpinTime + stopDelays[2]);
-
-  function stopReel(index, interval) {
-    const reel = reels[index];
-    const item = items[index];
-
-    reel.classList.remove('spinning');
-    reel.classList.add('stopping');
-
-    // Финальный символ ставим прямо перед «отскоком»
-    setTimeout(() => {
-      item.textContent = symbols[Math.floor(Math.random() * symbols.length)];
-    }, 100);
-
-    if (index === 2) {
-      clearInterval(interval);
-      setTimeout(checkWin, 800); // даём время отыграть анимацию остановки
+  async function saveUser() {
+    if (userId) {
+      await updateDoc(doc(db, 'users', userId), currentUser);
+    } else if (currentUser.isGuest) {
+      let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+      const idx = users.findIndex(u => u.username === currentUser.username);
+      if (idx !== -1) users[idx] = currentUser;
+      localStorage.setItem('dropwin_users', JSON.stringify(users));
     }
   }
 
-  function checkWin() {
-    const s1 = items[0].textContent;
-    const s2 = items[1].textContent;
-    const s3 = items[2].textContent;
+  function addToHistory(game, winAmount) {
+    const entry = {
+      game: game,
+      time: new Date().toLocaleString('ru-RU'),
+      win: winAmount,
+      result: winAmount > 0 ? 'win' : 'loss'
+    };
+    currentUser.history = currentUser.history || [];
+    currentUser.history.unshift(entry);
+    if (currentUser.history.length > 20) currentUser.history.pop();
+    saveUser();
+  }
 
-    let win = 0;
-    if (s1 === s2 && s2 === s3) win = bet * 10;
-    else if (s1 === s2 || s2 === s3 || s1 === s3) win = bet * 2;
+  const symbols = ['🍒','🍋','🍊','🍉','🔔','⭐','💎','7'];
 
-    if (win > 0) {
-      currentUser.balance += win;
-      currentUser.totalWin = (currentUser.totalWin || 0) + win;
-      currentUser.wins = (currentUser.wins || 0) + 1;
-      document.getElementById('result').innerHTML = `<span style="color:#10b981">Выигрыш +${win}₽ 🎉</span>`;
-      addToHistory('Слоты', win);
-    } else {
-      currentUser.losses = (currentUser.losses || 0) + 1;
-      document.getElementById('result').innerHTML = '<span style="color:#ef4444">Проигрыш 😔</span>';
-      addToHistory('Слоты', -bet);
+  async function spin() {
+    if (!currentUser) return alert('Сессия истекла. Войдите заново');
+
+    let bet = Number(document.getElementById('bet').value);
+    if (bet < 10 || bet > currentUser.balance || isNaN(bet)) {
+      alert('Ставка должна быть от 10 ₽ и не больше баланса');
+      return;
     }
 
-    saveUser();
+    currentUser.balance -= bet;
+    currentUser.totalBet = (currentUser.totalBet || 0) + bet;
+    currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
+    await saveUser();
     document.getElementById('balance').textContent = currentUser.balance;
 
-    // Убираем класс stopping через время
-    setTimeout(() => {
-      reels.forEach(r => r.classList.remove('stopping'));
-    }, 1200);
-  }
-}
+    document.getElementById('result').textContent = 'Крутим...';
 
-document.addEventListener('DOMContentLoaded', () => {
-  createParticles();
-  loadCurrentUser();
-});
+    const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
+    const items = [document.getElementById('slot1'), document.getElementById('slot2'), document.getElementById('slot3')];
+
+    reels.forEach(reel => reel.classList.add('spinning'));
+
+    const spinInterval = setInterval(() => {
+      items.forEach(item => {
+        if (item.parentElement.classList.contains('spinning')) {
+          item.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+        }
+      });
+    }, 70);
+
+    const totalSpinTime = 2200;
+    const stopDelays = [0, 450, 900];
+
+    setTimeout(() => stopReel(0, spinInterval), totalSpinTime + stopDelays[0]);
+    setTimeout(() => stopReel(1, spinInterval), totalSpinTime + stopDelays[1]);
+    setTimeout(() => stopReel(2, spinInterval), totalSpinTime + stopDelays[2]);
+
+    function stopReel(index, interval) {
+      const reel = reels[index];
+      const item = items[index];
+
+      reel.classList.remove('spinning');
+      reel.classList.add('stopping');
+
+      setTimeout(() => {
+        item.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+      }, 100);
+
+      if (index === 2) {
+        clearInterval(interval);
+        setTimeout(checkWin, 800);
+      }
+    }
+
+    async function checkWin() {
+      const s1 = items[0].textContent;
+      const s2 = items[1].textContent;
+      const s3 = items[2].textContent;
+
+      let win = 0;
+      if (s1 === s2 && s2 === s3) win = bet * 10;
+      else if (s1 === s2 || s2 === s3 || s1 === s3) win = bet * 2;
+
+      if (win > 0) {
+        currentUser.balance += win;
+        currentUser.totalWin = (currentUser.totalWin || 0) + win;
+        currentUser.wins = (currentUser.wins || 0) + 1;
+        document.getElementById('result').innerHTML = `<span style="color:#10b981">Выигрыш +${win}₽ 🎉</span>`;
+        addToHistory('Слоты', win);
+      } else {
+        currentUser.losses = (currentUser.losses || 0) + 1;
+        document.getElementById('result').innerHTML = '<span style="color:#ef4444">Проигрыш 😔</span>';
+        addToHistory('Слоты', -bet);
+      }
+
+      await saveUser();
+      document.getElementById('balance').textContent = currentUser.balance;
+
+      setTimeout(() => {
+        reels.forEach(r => r.classList.remove('stopping'));
+      }, 1200);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    createParticles();
+    loadCurrentUser();
+  });
+  document.getElementById('spinBtn').addEventListener('click', spin);
 </script>
 </body>
 </html>

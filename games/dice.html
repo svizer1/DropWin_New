@@ -6,6 +6,7 @@
   <title>Кости | DropWin</title>
   <link rel="stylesheet" href="../style.css">
   <style>
+    /* твой стиль для кубиков остаётся без изменений */
     .dice-container {
       display: flex;
       justify-content: center;
@@ -97,138 +98,175 @@
 
     <div class="input-group" style="max-width:300px; margin:30px auto;">
       <label class="input-label">Ставка</label>
-      <input type="number" id="betDice" value="100" min="10">
+      <input type="number" id="betDice" value="100" min="10" step="10">
     </div>
 
-    <button class="btn" id="rollBtn" onclick="rollDice()">Бросить кости</button>
+    <button class="btn" id="rollBtn">Бросить кости</button>
 
     <div class="result" id="diceResult">Готовы к броску? Бот тоже готов!</div>
   </div>
 </div>
 
-<script>
-// Универсальный блок загрузки пользователя (как в других играх)
-let currentUser = null;
-let currentUsername = null;
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-function loadCurrentUser() {
-  currentUsername = localStorage.getItem('dropwin_current_username');
-  if (!currentUsername) {
-    alert('Войдите в аккаунт');
-    location.href = '../register.html';
-    return;
-  }
-
-  let users;
-  try {
-    users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
-  } catch (e) {
-    console.error("localStorage users повреждён", e);
-    localStorage.removeItem('dropwin_users');
-    users = [];
-  }
-
-  currentUser = users.find(u => u.username === currentUsername);
-  if (!currentUser) {
-    localStorage.removeItem('dropwin_current_username');
-    alert('Аккаунт не найден. Войдите заново.');
-    location.href = '../register.html';
-    return;
-  }
-
-  currentUser.balance     = Number(currentUser.balance)     || 0;
-  currentUser.gamesPlayed = Number(currentUser.gamesPlayed) || 0;
-  currentUser.wins        = Number(currentUser.wins)        || 0;
-  currentUser.losses      = Number(currentUser.losses)      || 0;
-  currentUser.totalBet    = Number(currentUser.totalBet)    || 0;
-  currentUser.totalWin    = Number(currentUser.totalWin)    || 0;
-  currentUser.history     = Array.isArray(currentUser.history) ? currentUser.history : [];
-
-  document.getElementById('balance').textContent = currentUser.balance;
-  const btn = document.getElementById('authBtn');
-  btn.textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
-  btn.onclick = () => location.href = '../profile.html';
-}
-
-function saveUser() {
-  if (!currentUser) return;
-  let users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
-  const idx = users.findIndex(u => u.username === currentUser.username);
-  if (idx !== -1) {
-    users[idx] = { ...currentUser };
-  } else {
-    users.push({ ...currentUser });
-  }
-  localStorage.setItem('dropwin_users', JSON.stringify(users));
-}
-
-function addToHistory(game, change) {
-  const entry = {
-    game,
-    time: new Date().toLocaleString('ru-RU'),
-    win: change,
-    result: change > 0 ? 'win' : 'loss'
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+    authDomain: "dropwin-8d94b.firebaseapp.com",
+    projectId: "dropwin-8d94b",
+    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    messagingSenderId: "988974289403",
+    appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+    measurementId: "G-BK010MHN8N"
   };
-  currentUser.history = currentUser.history || [];
-  currentUser.history.unshift(entry);
-  if (currentUser.history.length > 30) currentUser.history = currentUser.history.slice(0, 30);
-  saveUser();
-}
 
-function createParticles() {
-  const container = document.getElementById('particles');
-  for (let i = 0; i < 40; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
-    p.style.left = Math.random() * 100 + '%';
-    p.style.animationDuration = Math.random() * 15 + 10 + 's';
-    p.style.animationDelay = Math.random() * 5 + 's';
-    container.appendChild(p);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let currentUser = null;
+  let isGuest = false;
+  let userId = null;
+
+  // ────────────────────────────────────────────────
+  //  Загрузка пользователя (Firebase или Гость)
+  // ────────────────────────────────────────────────
+  function loadCurrentUser() {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Firebase-юзер
+        userId = user.uid;
+        isGuest = false;
+        getDoc(doc(db, 'users', user.uid)).then(docSnap => {
+          if (docSnap.exists()) {
+            currentUser = docSnap.data();
+            renderUser();
+          } else {
+            goToLogin();
+          }
+        });
+      } else {
+        // Проверяем гостя
+        const username = localStorage.getItem('dropwin_current_username');
+        if (username === 'Гость') {
+          isGuest = true;
+          const users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+          currentUser = users.find(u => u.username === 'Гость');
+          if (currentUser) {
+            renderUser();
+          } else {
+            goToLogin();
+          }
+        } else {
+          goToLogin();
+        }
+      }
+    });
   }
-}
 
-function rollDice() {
-  if (!currentUser) return alert('Войдите в аккаунт');
-  const btn = document.getElementById('rollBtn');
-  if (btn.disabled) return;
-
-  const bet = Number(document.getElementById('betDice').value);
-  if (bet < 10 || bet > currentUser.balance || isNaN(bet)) {
-    return alert('Неверная ставка');
+  function renderUser() {
+    document.getElementById('balance').textContent = currentUser.balance || 0;
+    const btn = document.getElementById('authBtn');
+    btn.textContent = isGuest ? 'Гость' : (currentUser.username || 'Игрок');
+    btn.onclick = () => location.href = '../profile.html';
   }
 
-  btn.disabled = true;
-  currentUser.balance -= bet;
-  saveUser();
-  document.getElementById('balance').textContent = currentUser.balance;
+  function goToLogin() {
+    alert('Пожалуйста, войдите в аккаунт');
+    location.href = '../register.html';
+  }
 
-  document.getElementById('diceResult').innerHTML = 'Бросаем кости...';
-  document.getElementById('dice1').classList.add('rolling');
-  document.getElementById('dice2').classList.add('rolling');
-  document.getElementById('botDice1').classList.add('rolling');
-  document.getElementById('botDice2').classList.add('rolling');
+  function saveUser() {
+    if (!currentUser) return;
 
-  setTimeout(() => {
-    const playerVal1 = Math.floor(Math.random() * 6) + 1;
-    const playerVal2 = Math.floor(Math.random() * 6) + 1;
-    const playerSum = playerVal1 + playerVal2;
+    if (isGuest) {
+      let users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+      const idx = users.findIndex(u => u.username === 'Гость');
+      if (idx !== -1) {
+        users[idx] = { ...currentUser };
+      }
+      localStorage.setItem('dropwin_users', JSON.stringify(users));
+    } else if (userId) {
+      updateDoc(doc(db, 'users', userId), currentUser)
+        .catch(err => console.error("Ошибка сохранения в Firestore:", err));
+    }
+  }
 
-    const botVal1 = Math.floor(Math.random() * 6) + 1;
-    const botVal2 = Math.floor(Math.random() * 6) + 1;
-    const botSum = botVal1 + botVal2;
+  function addToHistory(game, change) {
+    const entry = {
+      game,
+      time: new Date().toLocaleString('ru-RU'),
+      win: change,
+      result: change > 0 ? 'win' : (change < 0 ? 'loss' : 'draw')
+    };
+    currentUser.history = currentUser.history || [];
+    currentUser.history.unshift(entry);
+    if (currentUser.history.length > 30) currentUser.history = currentUser.history.slice(0, 30);
+    saveUser();
+  }
 
-    document.getElementById('dice1').textContent = playerVal1;
-    document.getElementById('dice2').textContent = playerVal2;
-    document.getElementById('botDice1').textContent = botVal1;
-    document.getElementById('botDice2').textContent = botVal2;
+  // ────────────────────────────────────────────────
+  //  Логика игры
+  // ────────────────────────────────────────────────
+  function createParticles() {
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDuration = Math.random() * 15 + 10 + 's';
+      p.style.animationDelay = Math.random() * 5 + 's';
+      container.appendChild(p);
+    }
+  }
 
-    document.getElementById('dice1').classList.remove('rolling');
-    document.getElementById('dice2').classList.remove('rolling');
-    document.getElementById('botDice1').classList.remove('rolling');
-    document.getElementById('botDice2').classList.remove('rolling');
+  async function rollDice() {
+    if (!currentUser) return alert('Войдите в аккаунт');
 
-    let resultText = `Ваша сумма: ${playerSum} | Сумма бота: ${botSum}<br>`;
+    const btn = document.getElementById('rollBtn');
+    if (btn.disabled) return;
+
+    const betInput = document.getElementById('betDice');
+    const bet = Number(betInput.value);
+    if (isNaN(bet) || bet < 10 || bet > currentUser.balance) {
+      return alert('Некорректная ставка (мин 10 ₽, не больше баланса)');
+    }
+
+    btn.disabled = true;
+    currentUser.balance -= bet;
+    document.getElementById('balance').textContent = currentUser.balance;
+    saveUser();
+
+    document.getElementById('diceResult').innerHTML = 'Бросаем кости...';
+
+    // Анимация
+    document.getElementById('dice1').classList.add('rolling');
+    document.getElementById('dice2').classList.add('rolling');
+    document.getElementById('botDice1').classList.add('rolling');
+    document.getElementById('botDice2').classList.add('rolling');
+
+    await new Promise(r => setTimeout(r, 4200));
+
+    // Результаты
+    const p1 = Math.floor(Math.random() * 6) + 1;
+    const p2 = Math.floor(Math.random() * 6) + 1;
+    const playerSum = p1 + p2;
+
+    const b1 = Math.floor(Math.random() * 6) + 1;
+    const b2 = Math.floor(Math.random() * 6) + 1;
+    const botSum = b1 + b2;
+
+    document.getElementById('dice1').textContent = p1;
+    document.getElementById('dice2').textContent = p2;
+    document.getElementById('botDice1').textContent = b1;
+    document.getElementById('botDice2').textContent = b2;
+
+    document.querySelectorAll('.dice').forEach(d => d.classList.remove('rolling'));
+
+    let resultText = `Ваша сумма: <b>${playerSum}</b> | Бот: <b>${botSum}</b><br>`;
     let profit = 0;
 
     currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
@@ -239,36 +277,31 @@ function rollDice() {
       currentUser.balance += profit;
       currentUser.totalWin = (currentUser.totalWin || 0) + profit;
       currentUser.wins = (currentUser.wins || 0) + 1;
-      resultText += `<span style="color:#22c55e; font-weight:bold;">Вы выиграли +${profit}₽!</span>`;
+      resultText += `<span style="color:#22c55e;font-weight:bold">Выиграно +${profit}₽!</span>`;
       addToHistory('Кости', profit - bet);
     } else if (playerSum < botSum) {
       currentUser.losses = (currentUser.losses || 0) + 1;
-      resultText += `<span style="color:#ef4444; font-weight:bold;">Бот выиграл. Проигрыш -${bet}₽</span>`;
+      resultText += `<span style="color:#ef4444;font-weight:bold">Проигрыш −${bet}₽</span>`;
       addToHistory('Кости', -bet);
     } else {
-      currentUser.balance += bet; // возврат ставки
-      resultText += `<span style="color:#fbbf24; font-weight:bold;">Ничья. Ставка возвращена.</span>`;
+      currentUser.balance += bet; // возврат
+      resultText += `<span style="color:#fbbf24;font-weight:bold">Ничья — ставка возвращена</span>`;
       addToHistory('Кости', 0);
     }
 
     document.getElementById('diceResult').innerHTML = resultText;
-    saveUser();
     document.getElementById('balance').textContent = currentUser.balance;
+    saveUser();
 
-    setTimeout(() => { btn.disabled = false; }, 1000);
-  }, 4200);
-}
+    setTimeout(() => { btn.disabled = false; }, 800);
+  }
 
-document.addEventListener('DOMContentLoaded', () => {
-  createParticles();
-  loadCurrentUser();
-
-  window.addEventListener('storage', (e) => {
-    if (e.key === 'dropwin_users' || e.key === 'dropwin_current_username') {
-      loadCurrentUser();
-    }
+  // Запуск
+  document.addEventListener('DOMContentLoaded', () => {
+    createParticles();
+    loadCurrentUser();
+    document.getElementById('rollBtn').addEventListener('click', rollDice);
   });
-});
 </script>
 </body>
 </html>

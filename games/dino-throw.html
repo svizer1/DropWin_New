@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Dino Throw | DropWin ❄️</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    body {
+      background: linear-gradient(to bottom, #0f172a, #1e293b);
+    }
+
+    .dino-board {
+      width: 100%;
+      height: 340px;
+      background: linear-gradient(to bottom, #334155, #0f172a);
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      margin: 20px 0;
+      border: 2px solid #475569;
+      box-shadow: inset 0 0 40px rgba(0,0,0,0.7), 0 0 30px rgba(59,130,246,0.25);
+    }
+
+    /* Снег */
+    .snow {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .snowflake {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.7;
+      animation: fall linear infinite;
+    }
+    @keyframes fall {
+      to { transform: translateY(400px) rotate(360deg); }
+    }
+
+    .houses {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-around;
+      padding: 0 20px;
+      z-index: 5;
+    }
+
+    .house {
+      width: 42%;
+      height: 180px;
+      background: linear-gradient(180deg, #7c8ea8 0%, #64748b 40%, #475569 100%);
+      border-radius: 24px 24px 0 0;
+      position: relative;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.7), inset 0 2px 4px rgba(255,255,255,0.1);
+      border: 2px solid #8fa8c4;
+      border-bottom: none;
+      overflow: visible;
+    }
+
+    .house::before {
+      content: '';
+      position: absolute;
+      top: -32px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 68px solid transparent;
+      border-right: 68px solid transparent;
+      border-bottom: 32px solid #5a6b7f;
+      filter: drop-shadow(0 -6px 12px rgba(0,0,0,0.5));
+    }
+
+    .house::after {
+      content: '';
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 65px solid transparent;
+      border-right: 65px solid transparent;
+      border-bottom: 30px solid #7c8ea8;
+    }
+
+    .windows {
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      max-width: 90%;
+    }
+
+    .window {
+      width: 70px;
+      height: 70px;
+      min-width: 70px;
+      min-height: 70px;
+      background: rgba(30,40,60,0.7);
+      border: 3px solid #60a5fa;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.4rem;
+      font-weight: 900;
+      color: #bfdbfe;
+      transition: all 0.25s ease;
+      cursor: pointer;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.6), 0 6px 20px rgba(59,130,246,0.3);
+      flex-shrink: 0;
+    }
+
+    .window:hover {
+      transform: scale(1.12) translateY(-4px);
+      box-shadow: 0 0 20px #60a5fa80;
+      border-color: #93c5fd;
+    }
+
+    .window.selected {
+      background: rgba(59,130,246,0.35);
+      border-color: #3b82f6;
+      box-shadow: 0 0 25px #3b82f680;
+    }
+
+    .window.reveal {
+      animation: reveal 0.5s ease-out forwards;
+      transform: scale(1) !important;
+    }
+    @keyframes reveal {
+      0% { transform: scale(0.6) rotate(-10deg); opacity: 0.4; }
+      100% { transform: scale(1) rotate(0); opacity: 1; }
+    }
+
+    .window.bomb   { color: #f87171; background: rgba(248,113,113,0.18); border-color: #ef4444; }
+    .window.mult   { color: #4ade80; background: rgba(74,222,128,0.18); border-color: #22c55e; text-shadow: 0 0 12px #4ade80; }
+    .window.empty  { color: #facc15; background: rgba(250,204,21,0.18); border-color: #eab308; }
+
+    .dino {
+      position: absolute;
+      top: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 3.2rem;
+      filter: drop-shadow(0 6px 18px rgba(0,0,0,0.75));
+      z-index: 10;
+      transition: opacity 0.3s ease;
+    }
+
+    .dino.fast {
+      animation: throwDinoFast 0.7s cubic-bezier(0.22, 0.81, 0.38, 1.0) forwards;
+    }
+
+    .dino.normal {
+      animation: throwDinoNormal 1.1s cubic-bezier(0.22, 0.81, 0.38, 1.0) forwards;
+    }
+
+    .dino.disappear {
+      animation: dinoDisappear 0.4s ease-out forwards;
+    }
+
+    @keyframes throwDinoFast {
+      0%   { top: 40px; left: 50%; transform: translateX(-50%) rotate(0deg) scale(1); opacity: 1; }
+      45%  { transform: translateX(-50%) rotate(18deg) scale(1.05); }
+      100% { top: calc(var(--final-top) - 30px); left: calc(var(--final-left)); transform: translateX(-50%) rotate(36deg) scale(0.85); opacity: 1; }
+    }
+
+    @keyframes throwDinoNormal {
+      0%   { top: 40px; left: 50%; transform: translateX(-50%) rotate(0deg) scale(1); opacity: 1; }
+      45%  { transform: translateX(-50%) rotate(18deg) scale(1.05); }
+      100% { top: calc(var(--final-top) - 30px); left: calc(var(--final-left)); transform: translateX(-50%) rotate(36deg) scale(0.85); opacity: 1; }
+    }
+
+    @keyframes dinoDisappear {
+      0% { transform: translateX(-50%) rotate(36deg) scale(0.85); opacity: 1; }
+      50% { transform: translateX(-50%) rotate(45deg) scale(1.1); opacity: 0.8; }
+      100% { transform: translateX(-50%) rotate(60deg) scale(0); opacity: 0; }
+    }
+
+    .mode-selector {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .mode-btn {
+      flex: 1;
+      min-width: 110px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #1e40af, #1e3a8a);
+      color: white;
+      border: none;
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+
+    .mode-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59,130,246,0.4); }
+    .mode-btn.active {
+      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      box-shadow: 0 6px 24px rgba(59,130,246,0.55);
+    }
+
+    .speed-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding: 10px;
+      background: rgba(30,27,71,0.4);
+      border-radius: 12px;
+      border: 1px solid rgba(99,102,241,0.3);
+    }
+
+    .speed-toggle label {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .speed-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      background: rgba(59,130,246,0.2);
+      color: #60a5fa;
+      border: 1px solid rgba(59,130,246,0.4);
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .speed-btn:hover {
+      background: rgba(59,130,246,0.3);
+      transform: scale(1.05);
+    }
+
+    .speed-btn.active {
+      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      color: white;
+      border-color: #3b82f6;
+      box-shadow: 0 0 15px rgba(59,130,246,0.5);
+    }
+  </style>
+</head>
+<body>
+<div class="particles" id="particles"></div>
+<div class="snow" id="snow"></div>
+
+<div class="header">
+  <div class="logo">💎 DROPWIN ❄️</div>
+  <div class="balance-container">
+    <div class="balance">💰 <span id="balance">0</span>₽</div>
+    <button class="auth-btn" id="authBtn">Аккаунт</button>
+  </div>
+</div>
+
+<div class="content">
+  <button class="back-btn" onclick="location.href='../index.html'">← Назад</button>
+
+  <div class="game-card">
+    <div class="game-title">🦖 Dino Throw</div>
+
+    <div class="speed-toggle">
+      <label>⚡ Скорость:</label>
+      <button class="speed-btn active" data-speed="fast" onclick="setSpeed('fast')">Быстрая</button>
+      <button class="speed-btn" data-speed="normal" onclick="setSpeed('normal')">Обычная</button>
+    </div>
+
+    <div class="mode-selector">
+      <button class="mode-btn active" data-mode="1" onclick="selectMode(1)">Лёгкий (1 бомба)</button>
+      <button class="mode-btn" data-mode="2" onclick="selectMode(2)">Средний (2 бомбы)</button>
+      <button class="mode-btn" data-mode="3" onclick="selectMode(3)">Хард (3 бомбы)</button>
+    </div>
+
+    <div class="dino-board" id="dinoBoard"></div>
+
+    <div class="input-group">
+      <label class="input-label">Ставка</label>
+      <input type="number" id="bet" value="50" min="10">
+    </div>
+    <button class="btn" onclick="startGame()">Бросить динозавра!</button>
+    <div class="result" id="result">Выбери режим и кидай!</div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn" onclick="location.href='../index.html'"><span>🏠</span><span class="nav-label">Главная</span></button>
+  <button class="nav-btn" onclick="location.href='../profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
+  <button class="nav-btn" onclick="location.href='../register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+    authDomain: "dropwin-8d94b.firebaseapp.com",
+    projectId: "dropwin-8d94b",
+    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    messagingSenderId: "988974289403",
+    appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+    measurementId: "G-BK010MHN8N"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // ─── Функции, которые вызываются из HTML (делаем их глобальными) ───
+  function setSpeed(speed) {
+    animationSpeed = speed;
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.speed === speed);
+    });
+  }
+
+  function selectMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+  }
+
+  function startGame() {
+    if (!currentUser) return alert('Сессия истекла');
+
+    let bet = Number(document.getElementById('bet').value);
+    if (bet < 10 || bet > currentUser.balance || isNaN(bet)) {
+      alert('Ставка от 10 ₽ и не больше баланса');
+      return;
+    }
+
+    currentUser.balance -= bet;
+    currentUser.totalBet = (currentUser.totalBet || 0) + bet;
+    currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
+    saveUser();
+    document.getElementById('balance').textContent = currentUser.balance;
+
+    document.getElementById('result').textContent = 'Выбирай окошко!';
+
+    const board = document.getElementById('dinoBoard');
+    board.innerHTML = '';
+
+    const houses = document.createElement('div');
+    houses.className = 'houses';
+
+    for (let h = 0; h < 2; h++) {
+      const house = document.createElement('div');
+      house.className = 'house';
+      const wins = document.createElement('div');
+      wins.className = 'windows';
+      for (let w = 0; w < 2; w++) {
+        const idx = h*2 + w;
+        const el = document.createElement('div');
+        el.className = 'window';
+        el.dataset.index = idx;
+        el.textContent = '?';
+        el.onclick = () => selectWindow(idx, bet);
+        wins.appendChild(el);
+      }
+      house.appendChild(wins);
+      houses.appendChild(house);
+    }
+    board.appendChild(houses);
+  }
+
+  // Делаем функции доступными для onclick в HTML
+  window.setSpeed = setSpeed;
+  window.selectMode = selectMode;
+  window.startGame = startGame;
+
+  // ─── Остальные функции и логика ───
+
+  let currentUser = null;
+  let userId = null;
+  let animationSpeed = 'fast';
+  let currentMode = 1;
+  let selectedWindow = -1;
+
+  function loadCurrentUser() {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        userId = user.uid;
+        getDoc(doc(db, 'users', user.uid)).then((docSnap) => {
+          if (docSnap.exists()) {
+            currentUser = docSnap.data();
+            document.getElementById('balance').textContent = currentUser.balance || 0;
+            const btn = document.getElementById('authBtn');
+            btn.textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
+            btn.onclick = () => location.href = '../profile.html';
+          } else {
+            alert('Пожалуйста, войдите в аккаунт');
+            location.href = '../register.html';
+          }
+        });
+      } else {
+        const username = localStorage.getItem('dropwin_current_username');
+        if (username !== 'Гость') {
+          alert('Пожалуйста, войдите в аккаунт');
+          location.href = '../register.html';
+          return;
+        }
+        const users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+        currentUser = users.find(u => u.username === username);
+        if (!currentUser) {
+          alert('Пожалуйста, войдите в аккаунт');
+          location.href = '../register.html';
+          return;
+        }
+        document.getElementById('balance').textContent = currentUser.balance || 0;
+        const btn = document.getElementById('authBtn');
+        btn.textContent = 'Гость';
+        btn.onclick = () => location.href = '../profile.html';
+      }
+    });
+  }
+
+  async function saveUser() {
+    if (userId && currentUser) {
+      await updateDoc(doc(db, 'users', userId), currentUser);
+    } else if (currentUser?.isGuest) {
+      let users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+      const idx = users.findIndex(u => u.username === currentUser.username);
+      if (idx !== -1) {
+        users[idx] = currentUser;
+        localStorage.setItem('dropwin_users', JSON.stringify(users));
+      }
+    }
+  }
+
+  function addToHistory(game, winAmount) {
+    const entry = {
+      game,
+      time: new Date().toLocaleString('ru-RU'),
+      win: winAmount,
+      result: winAmount > 0 ? 'win' : 'loss'
+    };
+    currentUser.history = currentUser.history || [];
+    currentUser.history.unshift(entry);
+    if (currentUser.history.length > 20) currentUser.history.pop();
+    saveUser();
+  }
+
+  function selectWindow(index, bet) {
+    if (selectedWindow !== -1) return;
+    selectedWindow = index;
+
+    document.querySelectorAll('.window').forEach(w => w.onclick = null);
+    const targetWindow = document.querySelector(`.window[data-index="${index}"]`);
+    targetWindow.classList.add('selected');
+
+    document.getElementById('result').textContent = '🚀 Динозавр летит...';
+
+    const board = document.getElementById('dinoBoard');
+    const dino = document.createElement('div');
+    dino.className = `dino ${animationSpeed}`;
+    dino.textContent = '🦖';
+
+    const rect = targetWindow.getBoundingClientRect();
+    const boardRect = board.getBoundingClientRect();
+
+    const finalLeft = rect.left - boardRect.left + rect.width / 2;
+    const finalTop = rect.top - boardRect.top + rect.height / 2;
+
+    dino.style.setProperty('--final-left', finalLeft + 'px');
+    dino.style.setProperty('--final-top', finalTop + 'px');
+
+    board.appendChild(dino);
+
+    const throwDuration = animationSpeed === 'fast' ? 700 : 1100;
+
+    setTimeout(() => {
+      dino.classList.add('disappear');
+      setTimeout(() => {
+        dino.remove();
+        revealWindows(bet, index);
+      }, 400);
+    }, throwDuration);
+  }
+
+  function revealWindows(bet, chosenIndex) {
+    const outcomes = new Array(4).fill('');
+
+    const modeSettings = {
+      1: { bombs: 1, emptyChance: 0.35, mults: [1.2, 1.5] },
+      2: { bombs: 2, emptyChance: 0.20, mults: [1.5, 2, 3] },
+      3: { bombs: 3, emptyChance: 0.10, mults: [2, 3, 4, 5]}
+    };
+
+    const cfg = modeSettings[currentMode];
+
+    let positions = [0,1,2,3];
+    positions.sort(() => Math.random() - 0.5);
+    const bombPos = positions.slice(0, cfg.bombs);
+    bombPos.forEach(i => outcomes[i] = '💣');
+
+    for (let i = 0; i < 4; i++) {
+      if (outcomes[i] === '💣') continue;
+      const r = Math.random();
+      if (r < cfg.emptyChance) {
+        outcomes[i] = '';
+      } else {
+        const m = cfg.mults[Math.floor(Math.random() * cfg.mults.length)];
+        outcomes[i] = `x${m}`;
+      }
+    }
+
+    document.querySelectorAll('.window').forEach((w, i) => {
+      w.textContent = outcomes[i] || '?';
+      w.classList.add('reveal');
+      if (outcomes[i] === '💣') w.classList.add('bomb');
+      else if (outcomes[i] === '') w.classList.add('empty');
+      else w.classList.add('mult');
+    });
+
+    const outcome = outcomes[chosenIndex];
+    let win = 0;
+
+    if (outcome === '💣') {
+      currentUser.losses = (currentUser.losses || 0) + 1;
+      document.getElementById('result').innerHTML = '<span style="color:#f87171">БУМ! Бомба… −' + bet + '₽</span>';
+      addToHistory('Dino Throw', -bet);
+    } else if (outcome === '') {
+      win = bet;
+      currentUser.balance += win;
+      document.getElementById('result').innerHTML = '<span style="color:#facc15">Пусто… ставка вернулась</span>';
+      addToHistory('Dino Throw', 0);
+    } else {
+      const mult = parseFloat(outcome.slice(1));
+      win = Math.floor(bet * mult);
+      currentUser.balance += win;
+      currentUser.totalWin = (currentUser.totalWin || 0) + win;
+      currentUser.wins = (currentUser.wins || 0) + 1;
+      document.getElementById('result').innerHTML = `<span style="color:#4ade80">+${win}₽ (${outcome}) 🔥</span>`;
+      addToHistory('Dino Throw', win);
+    }
+
+    saveUser();
+    document.getElementById('balance').textContent = currentUser.balance;
+    selectedWindow = -1;
+  }
+
+  function createSnow() {
+    const snowContainer = document.getElementById('snow');
+    for (let i = 0; i < 50; i++) {
+      const flake = document.createElement('div');
+      flake.className = 'snowflake';
+      flake.style.left = Math.random() * 100 + '%';
+      flake.style.animationDuration = (Math.random() * 8 + 8) + 's';
+      flake.style.animationDelay = Math.random() * 5 + 's';
+      flake.style.opacity = Math.random() * 0.4 + 0.4;
+      flake.style.width = flake.style.height = (Math.random() * 5 + 3) + 'px';
+      snowContainer.appendChild(flake);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof createParticles === 'function') createParticles();
+    createSnow();
+    loadCurrentUser();
+  });
+</script>
+</body>
+</html>

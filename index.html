@@ -25,6 +25,10 @@
     <div class="game-icon" onclick="location.href='games/cards.html'"><div class="game-icon-emoji">🃏</div><div class="game-icon-name">Карты</div></div>
     <div class="game-icon" onclick="location.href='games/dice.html'"><div class="game-icon-emoji">🎲</div><div class="game-icon-name">Кости</div></div>
     <div class="game-icon" onclick="location.href='games/crash.html'"><div class="game-icon-emoji">🚀</div><div class="game-icon-name">Краш</div></div>
+    <div class="game-icon" onclick="location.href='games/plinko.html'"><div class="game-icon-emoji">🎯</div><div class="game-icon-name">Plinko</div></div>
+    <div class="game-icon" onclick="location.href='games/dino-throw.html'"><div class="game-icon-emoji">🦖</div><div class="game-icon-name">Dino Throw</div></div>
+    <div class="game-icon" onclick="location.href='crypto.html'"><div class="game-icon-emoji">📈</div><div class="game-icon-name">Акции: Крипта</div></div>
+    <div class="game-icon" onclick="location.href='games/battles.html'"><div class="game-icon-emoji">⚔️</div><div class="game-icon-name">Баттлы Кейсов</div></div>
   </div>
 </div>
 
@@ -34,48 +38,78 @@
   <button class="nav-btn" onclick="location.href='register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
 </div>
 
-<script>
-function createParticles() {
-  const container = document.getElementById('particles');
-  for (let i = 0; i < 40; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
-    p.style.left = Math.random() * 100 + '%';
-    p.style.animationDuration = Math.random() * 15 + 10 + 's';
-    p.style.animationDelay = Math.random() * 5 + 's';
-    container.appendChild(p);
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+    authDomain: "dropwin-8d94b.firebaseapp.com",
+    projectId: "dropwin-8d94b",
+    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    messagingSenderId: "988974289403",
+    appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+    measurementId: "G-BK010MHN8N"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  function createParticles() {
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDuration = Math.random() * 15 + 10 + 's';
+      p.style.animationDelay = Math.random() * 5 + 's';
+      container.appendChild(p);
+    }
   }
-}
-createParticles();
+  createParticles();
 
-let currentUser = null;
+  let currentUser = null;
 
-function loadCurrentUser() {
-  const username = localStorage.getItem('dropwin_current_username');
-  if (!username) {
-    document.getElementById('balance').textContent = '0';
-    document.getElementById('authBtn').textContent = 'Войти';
-    document.getElementById('authBtn').onclick = () => location.href = 'register.html';
-    return;
+  function loadCurrentUser() {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        getDoc(doc(db, 'users', user.uid)).then((docSnap) => {
+          if (docSnap.exists()) {
+            currentUser = docSnap.data();
+            document.getElementById('balance').textContent = currentUser.balance || 0;
+            document.getElementById('authBtn').textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
+            document.getElementById('authBtn').onclick = () => location.href = 'profile.html';
+          } else {
+            document.getElementById('balance').textContent = '0';
+            document.getElementById('authBtn').textContent = 'Войти';
+            document.getElementById('authBtn').onclick = () => location.href = 'register.html';
+          }
+        }).catch((error) => {
+          console.error('Error loading user:', error);
+        });
+      } else {
+        const username = localStorage.getItem('dropwin_current_username');
+        if (username === 'Гость') {
+          const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+          currentUser = users.find(u => u.username === username);
+          if (currentUser) {
+            document.getElementById('balance').textContent = currentUser.balance || 0;
+            document.getElementById('authBtn').textContent = 'Гость';
+            document.getElementById('authBtn').onclick = () => location.href = 'profile.html';
+          }
+        } else {
+          document.getElementById('balance').textContent = '0';
+          document.getElementById('authBtn').textContent = 'Войти';
+          document.getElementById('authBtn').onclick = () => location.href = 'register.html';
+        }
+      }
+    });
   }
 
-  const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
-  currentUser = users.find(u => u.username === username);
-
-  if (currentUser) {
-    document.getElementById('balance').textContent = currentUser.balance;
-    document.getElementById('authBtn').textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
-    document.getElementById('authBtn').onclick = () => location.href = 'profile.html';
-  } else {
-    localStorage.removeItem('dropwin_current_username');
-    document.getElementById('balance').textContent = '0';
-    document.getElementById('authBtn').textContent = 'Войти';
-    document.getElementById('authBtn').onclick = () => location.href = 'register.html';
-  }
-}
-
-document.addEventListener('DOMContentLoaded', loadCurrentUser);
+  document.addEventListener('DOMContentLoaded', loadCurrentUser);
 </script>
 </body>
 </html>

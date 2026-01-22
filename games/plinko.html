@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Plinko | DropWin</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    .plinko-board {
+      width: 100%;
+      height: 420px;
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      margin: 24px 0;
+      border: 2px solid rgba(99,102,241,0.5);
+      box-shadow: 0 10px 35px rgba(0,0,0,0.6);
+    }
+
+    .pins {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: repeat(11, 1fr);
+      grid-template-rows: repeat(12, 1fr);
+      pointer-events: none;
+    }
+
+    .pin {
+      width: 10px;
+      height: 10px;
+      background: #94a3b8;
+      border-radius: 50%;
+      justify-self: center;
+      align-self: center;
+      box-shadow: 0 0 8px rgba(255,255,255,0.3);
+    }
+
+    .ball {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: #fbbf24;
+      border-radius: 50%;
+      border: 3px solid #d97706;
+      box-shadow: 0 0 20px #fbbf24;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+      animation: dropBall 4s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    }
+
+    @keyframes dropBall {
+      0%   { top: 5%; left: 50%; }
+      100% { top: 90%; left: var(--final-left); }
+    }
+
+    .bucket {
+      position: absolute;
+      bottom: 0;
+      width: 9.09%;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: white;
+      text-shadow: 0 0 10px black;
+      border-top: 2px solid rgba(255,255,255,0.3);
+      transition: all 0.3s;
+    }
+
+    .bucket:hover { transform: translateY(-5px); }
+    .bucket.x05  { background: #991b1b; left: 0%; }
+    .bucket.x1   { background: #7f1d1d; left: 9.09%; }
+    .bucket.x2   { background: #854d0e; left: 18.18%; }
+    .bucket.x5   { background: #065f46; left: 27.27%; }
+    .bucket.x10  { background: #047857; left: 36.36%; }
+    .bucket.x20  { background: #1e40af; left: 45.45%; }
+    .bucket.x50  { background: #1e3a8a; left: 54.54%; }
+    .bucket.x100 { background: #312e81; left: 63.63%; }
+    .bucket.x200 { background: #4338ca; left: 72.72%; }
+    .bucket.x500 { background: #5b21b6; left: 81.81%; }
+    .bucket.x1000{ background: #7c3aed; left: 90.9%; }
+
+    .risk-selector {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .risk-btn {
+      flex: 1;
+      padding: 14px;
+      border-radius: 14px;
+      background: #334155;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      transition: all 0.3s;
+    }
+
+    .risk-btn.active { background: #6366f1; box-shadow: 0 0 20px rgba(99,102,241,0.6); transform: scale(1.05); }
+  </style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<div class="header">
+  <div class="logo">💎 DROPWIN</div>
+  <div class="balance-container">
+    <div class="balance">💰 <span id="balance">0</span>₽</div>
+    <button class="auth-btn" id="authBtn">Аккаунт</button>
+  </div>
+</div>
+
+<div class="content">
+  <button class="back-btn" onclick="location.href='../index.html'">← Назад</button>
+
+  <div class="game-card">
+    <div class="game-title">🎯 Plinko</div>
+
+    <div class="risk-selector">
+      <button class="risk-btn active" data-risk="low"    onclick="setRisk('low')">Низкий</button>
+      <button class="risk-btn"        data-risk="medium" onclick="setRisk('medium')">Средний</button>
+      <button class="risk-btn"        data-risk="high"   onclick="setRisk('high')">Высокий</button>
+    </div>
+
+    <div class="plinko-board" id="plinkoBoard"></div>
+
+    <div class="input-group">
+      <label class="input-label">Ставка</label>
+      <input type="number" id="bet" value="50" min="10" step="10">
+    </div>
+
+    <button class="btn" onclick="dropBall()">Бросить шарик</button>
+
+    <div class="result" id="result">Выбери риск и бросай!</div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn" onclick="location.href='../index.html'"><span>🏠</span><span class="nav-label">Главная</span></button>
+  <button class="nav-btn" onclick="location.href='../profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
+  <button class="nav-btn" onclick="location.href='../register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
+</div>
+
+<script>
+// ─── Particles ──────────────────────────────────────────────────
+function createParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 60; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.width = p.style.height = (Math.random()*4 + 1.5)+'px';
+    p.style.left = Math.random()*100 + '%';
+    p.style.animationDuration  = (Math.random()*25 + 15)+'s';
+    p.style.animationDelay     = Math.random()*10 + 's';
+    container.appendChild(p);
+  }
+}
+
+let currentUser = null;
+let currentUsername = null;
+
+function loadCurrentUser() {
+  currentUsername = localStorage.getItem('dropwin_current_username');
+  if (!currentUsername) return location.href = '../register.html';
+
+  const users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+  currentUser = users.find(u => u.username === currentUsername);
+  if (!currentUser) {
+    localStorage.removeItem('dropwin_current_username');
+    return location.href = '../register.html';
+  }
+
+  document.getElementById('balance').textContent = currentUser.balance || 0;
+
+  const btn = document.getElementById('authBtn');
+  btn.textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
+  btn.onclick = () => location.href = '../profile.html';
+}
+
+function saveUser() {
+  if (!currentUser) return;
+  const users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+  const idx = users.findIndex(u => u.username === currentUsername);
+  if (idx !== -1) users[idx] = { ...currentUser };
+  localStorage.setItem('dropwin_users', JSON.stringify(users));
+}
+
+function addToHistory(game, change) {
+  currentUser.history = currentUser.history || [];
+  currentUser.history.unshift({
+    game,
+    time: new Date().toLocaleString('ru-RU'),
+    change,
+    result: change > 0 ? 'win' : change < 0 ? 'loss' : 'draw'
+  });
+  if (currentUser.history.length > 30) currentUser.history.pop();
+  saveUser();
+}
+
+let currentRisk = 'low';
+
+function setRisk(risk) {
+  currentRisk = risk;
+  document.querySelectorAll('.risk-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-risk="${risk}"]`).classList.add('active');
+}
+
+function dropBall() {
+  if (!currentUser) return alert('Сессия истекла.');
+
+  let bet = Number(document.getElementById('bet').value);
+  if (bet < 10 || bet > currentUser.balance || isNaN(bet)) {
+    return alert('Ставка от 10 ₽ и не больше баланса');
+  }
+
+  currentUser.balance -= bet;
+  currentUser.totalBet = (currentUser.totalBet||0) + bet;
+  currentUser.gamesPlayed = (currentUser.gamesPlayed||0) + 1;
+  saveUser();
+  document.getElementById('balance').textContent = currentUser.balance;
+
+  document.getElementById('result').textContent = 'Шарик падает...';
+
+  const board = document.getElementById('plinkoBoard');
+  board.innerHTML = '';
+
+  // Pins
+  const pins = document.createElement('div');
+  pins.className = 'pins';
+  for (let row = 0; row < 12; row++) {
+    for (let col = 0; col < 11; col++) {
+      if (row % 2 === col % 2) {
+        const pin = document.createElement('div');
+        pin.className = 'pin';
+        pins.appendChild(pin);
+      }
+    }
+  }
+  board.appendChild(pins);
+
+  // Buckets
+  const multipliers = {
+    low:    [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000],
+    medium: [0.3, 0.5, 1, 2, 4, 10, 25, 80, 150, 400, 800],
+    high:   [0.1, 0.2, 0.5, 1, 3, 8, 30, 100, 300, 600, 1200]
+  }[currentRisk];
+
+  for (let i = 0; i < 11; i++) {
+    const bucket = document.createElement('div');
+    bucket.className = `bucket x${multipliers[i]}`;
+    bucket.textContent = `x${multipliers[i]}`;
+    bucket.style.left = `${i * 9.09}%`;
+    board.appendChild(bucket);
+  }
+
+  // Ball
+  const ball = document.createElement('div');
+  ball.className = 'ball';
+  const finalBucket = Math.floor(Math.random() * 11);
+  const finalLeft = ((finalBucket + 0.5) / 11 * 100) + '%';
+  ball.style.setProperty('--final-left', finalLeft);
+  board.appendChild(ball);
+
+  setTimeout(() => {
+    const mult = multipliers[finalBucket];
+    let win = Math.round(bet * mult);
+    let message = '';
+
+    if (mult >= 1) {
+      currentUser.balance += win;
+      currentUser.totalWin = (currentUser.totalWin||0) + (win - bet);
+      currentUser.wins = (currentUser.wins||0) + 1;
+      message = `<span style="color:#34d399">+${win - bet}₽ (x${mult}) 🔥</span>`;
+      addToHistory('Plinko', win - bet);
+    } else {
+      currentUser.losses = (currentUser.losses||0) + 1;
+      message = `<span style="color:#f87171">Проигрыш −${bet}₽ (x${mult})</span>`;
+      addToHistory('Plinko', -bet);
+    }
+
+    document.getElementById('result').innerHTML = message;
+    document.getElementById('balance').textContent = currentUser.balance;
+    saveUser();
+  }, 4200);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  createParticles();
+  loadCurrentUser();
+});
+</script>
+</body>
+</html>

@@ -101,6 +101,22 @@
       margin-top: 6px;
       opacity: 0.8;
     }
+    /* Новый стиль для истории транзакций */
+    .crypto-transactions {
+      margin-top: 24px;
+    }
+    .transaction-item {
+      background: rgba(255,255,255,0.03);
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.95rem;
+    }
+    .transaction-buy  { border-left: 4px solid #10b981; }
+    .transaction-sell { border-left: 4px solid #ef4444; }
   </style>
 </head>
 <body>
@@ -123,7 +139,7 @@
       <div class="input-group">
         <label class="input-label">Промокод</label>
         <input type="text" id="promoCode" placeholder="Kavexs / Kavexs2026">
-        <button class="btn" onclick="activatePromo()" style="margin-top:12px;">Активировать</button>
+        <button class="btn" id="promoBtn" style="margin-top:12px;">Активировать</button>
       </div>
 
       <div class="stats-grid">
@@ -151,12 +167,19 @@
       </div>
 
       <div class="history-list">
-        <div class="game-title" style="margin-top:28px; margin-bottom:12px;">История</div>
+        <div class="game-title" style="margin-top:28px; margin-bottom:12px;">История игр</div>
         <div id="historyList"></div>
       </div>
+
+      <!-- Новый раздел: История крипто-транзакций -->
+      <div class="crypto-transactions">
+        <div class="game-title" style="margin-top:28px; margin-bottom:12px;">История крипто-транзакций</div>
+        <div id="cryptoTransactionList"></div>
+      </div>
+
     </div>
 
-    <button class="btn logout-btn" onclick="logout()" style="margin: 32px auto; display:block; width:90%; max-width:400px;">
+    <button class="btn logout-btn" id="logoutBtn" style="margin: 32px auto; display:block; width:90%; max-width:400px;">
       Выйти
     </button>
   </div>
@@ -167,188 +190,291 @@
     <button class="nav-btn" onclick="location.href='register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
   </div>
 
-<script>
-function createParticles() {
-  const container = document.getElementById('particles');
-  for (let i = 0; i < 40; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
-    p.style.left = Math.random() * 100 + '%';
-    p.style.animationDuration = Math.random() * 15 + 10 + 's';
-    p.style.animationDelay = Math.random() * 5 + 's';
-    container.appendChild(p);
-  }
-}
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-let currentUser = null;
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+    authDomain: "dropwin-8d94b.firebaseapp.com",
+    projectId: "dropwin-8d94b",
+    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    messagingSenderId: "988974289403",
+    appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+    measurementId: "G-BK010MHN8N"
+  };
 
-function calculateMaxStreaks(history) {
-  if (!history || history.length === 0) return { maxWin: 0, maxLoss: 0 };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-  let currentWin = 0, currentLoss = 0;
-  let maxWin = 0, maxLoss = 0;
-
-  for (const item of history) {
-    if ((item.result || 'loss') === 'win') {
-      currentWin++;
-      currentLoss = 0;
-      maxWin = Math.max(maxWin, currentWin);
-    } else {
-      currentLoss++;
-      currentWin = 0;
-      maxLoss = Math.max(maxLoss, currentLoss);
+  function createParticles() {
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDuration = Math.random() * 15 + 10 + 's';
+      p.style.animationDelay = Math.random() * 5 + 's';
+      container.appendChild(p);
     }
   }
 
-  return { maxWin, maxLoss };
-}
+  let currentUser = null;
+  let userId = null;
 
-function loadCurrentUser() {
-  const username = localStorage.getItem('dropwin_current_username');
-  if (!username) {
-    showGuestMode();
-    return;
+  function calculateMaxStreaks(history) {
+    if (!history || history.length === 0) return { maxWin: 0, maxLoss: 0 };
+
+    let currentWin = 0, currentLoss = 0;
+    let maxWin = 0, maxLoss = 0;
+
+    for (const item of history) {
+      if (item.result === 'win') {
+        currentWin++;
+        currentLoss = 0;
+        maxWin = Math.max(maxWin, currentWin);
+      } else {
+        currentLoss++;
+        currentWin = 0;
+        maxLoss = Math.max(maxLoss, currentLoss);
+      }
+    }
+
+    return { maxWin, maxLoss };
   }
 
-  const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
-  currentUser = users.find(u => u.username === username);
+  function loadCurrentUser() {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        userId = user.uid;
+        getDoc(doc(db, 'users', user.uid)).then((docSnap) => {
+          if (docSnap.exists()) {
+            currentUser = docSnap.data();
+            let displayName = currentUser.isGuest ? 'Гость' : currentUser.username;
+            document.getElementById('usernameDisplay').textContent = displayName;
+            document.getElementById('balance').textContent = currentUser.balance || 0;
 
-  if (!currentUser) {
-    localStorage.removeItem('dropwin_current_username');
-    showGuestMode();
-    return;
-  }
+            document.getElementById('gamesPlayed').textContent = currentUser.gamesPlayed || 0;
+            document.getElementById('totalBet').textContent = (currentUser.totalBet || 0) + '₽';
+            document.getElementById('totalWin').textContent = (currentUser.totalWin || 0) + '₽';
 
-  let displayName = currentUser.isGuest ? 'Гость' : currentUser.username;
-  document.getElementById('usernameDisplay').textContent = displayName;
-  document.getElementById('balance').textContent = currentUser.balance || 0;
+            const wins = currentUser.wins || 0;
+            const games = currentUser.gamesPlayed || 0;
+            const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
+            document.getElementById('winRate').textContent = winRate + '%';
 
-  document.getElementById('gamesPlayed').textContent = currentUser.gamesPlayed || 0;
-  document.getElementById('totalBet').textContent   = (currentUser.totalBet || 0) + '₽';
-  document.getElementById('totalWin').textContent   = (currentUser.totalWin || 0) + '₽';
+            const { maxWin, maxLoss } = calculateMaxStreaks(currentUser.history || []);
+            document.getElementById('maxWinStreak').textContent = maxWin;
+            document.getElementById('maxLossStreak').textContent = maxLoss;
 
-  const wins = currentUser.wins || 0;
-  const games = currentUser.gamesPlayed || 0;
-  const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
-  document.getElementById('winRate').textContent = winRate + '%';
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            if (!currentUser.history || currentUser.history.length === 0) {
+              historyList.innerHTML = '<div class="empty-state">История пуста</div>';
+            } else {
+              currentUser.history.forEach(item => {
+                const div = document.createElement('div');
+                div.className = `history-item ${item.result || 'loss'}`;
+                div.innerHTML = `
+                  <div>
+                    <div class="history-game">${item.game || 'Игра'}</div>
+                    <div class="history-time">${item.time || ''}</div>
+                  </div>
+                  <div class="history-amount ${item.result}">
+                    ${item.win > 0 ? '+' : ''}${item.win || 0}₽
+                  </div>
+                `;
+                historyList.appendChild(div);
+              });
+            }
 
-  // Максимальные серии
-  const { maxWin, maxLoss } = calculateMaxStreaks(currentUser.history || []);
-  document.getElementById('maxWinStreak').textContent = maxWin;
-  document.getElementById('maxLossStreak').textContent = maxLoss;
+            const streakBar = document.getElementById('streakBar');
+            streakBar.innerHTML = '';
+            if (!currentUser.history || currentUser.history.length === 0) {
+              streakBar.innerHTML = '<div class="streak-empty">Нет сыгранных игр</div>';
+            } else {
+              const recent = currentUser.history.slice(-12);
+              recent.forEach(item => {
+                const el = document.createElement('div');
+                el.className = `streak-item ${item.result || 'loss'}`;
+                const resultText = item.result === 'win' ? 'Выигрыш' : 'Проигрыш';
+                const amount = item.win > 0 ? `+${item.win}₽` : `${item.win}₽`;
+                el.innerHTML = `
+                  <div class="streak-tooltip">
+                    ${item.game || 'Игра'}<br>
+                    ${resultText} • ${amount}<br>
+                    <small>${item.time || ''}</small>
+                  </div>
+                `;
+                streakBar.appendChild(el);
+              });
+            }
 
-  // История (полный список)
-  const historyList = document.getElementById('historyList');
-  historyList.innerHTML = '';
-
-  if (!currentUser.history || currentUser.history.length === 0) {
-    historyList.innerHTML = '<div class="empty-state">История пуста</div>';
-  } else {
-    currentUser.history.forEach(item => {
-      const div = document.createElement('div');
-      div.className = `history-item ${item.result || 'loss'}`;
-      div.innerHTML = `
-        <div>
-          <div class="history-game">${item.game || 'Игра'}</div>
-          <div class="history-time">${item.time || ''}</div>
-        </div>
-        <div class="history-amount ${item.result}">
-          ${item.win > 0 ? '+' : ''}${item.win || 0}₽
-        </div>
-      `;
-      historyList.appendChild(div);
+            // Новый раздел: История крипто-транзакций
+            const transactionList = document.getElementById('cryptoTransactionList');
+            transactionList.innerHTML = '';
+            const transactions = currentUser.cryptoTransactions || [];
+            if (transactions.length === 0) {
+              transactionList.innerHTML = '<div class="empty-state">Нет транзакций</div>';
+            } else {
+              transactions.slice(-10).reverse().forEach(tr => { // Последние 10, в хронологическом порядке
+                const div = document.createElement('div');
+                div.className = `transaction-item transaction-${tr.type}`;
+                div.innerHTML = `
+                  <div>
+                    <div>${tr.coin.toUpperCase()} - ${tr.type.toUpperCase()}</div>
+                    <div class="history-time">${new Date(tr.timestamp).toLocaleString('ru-RU')}</div>
+                  </div>
+                  <div class="history-amount ${tr.type === 'buy' ? 'loss' : 'profit'}">
+                    ${tr.type === 'buy' ? '-' : '+'}${Math.round(tr.type === 'buy' ? tr.cost : tr.revenue)}₽<br>
+                    <small>${tr.amount.toFixed(4)} шт @ ${Math.round(tr.price)}₽</small>
+                  </div>
+                `;
+                transactionList.appendChild(div);
+              });
+            }
+          } else {
+            showGuestMode();
+          }
+        });
+      } else {
+        showGuestMode();
+      }
     });
   }
 
-  // Полоска последних 12 игр — слева старые → справа новые
-  const streakBar = document.getElementById('streakBar');
-  streakBar.innerHTML = '';
+  function showGuestMode() {
+    // Твой старый код для гостя
+    const username = localStorage.getItem('dropwin_current_username');
+    if (username !== 'Гость') {
+      location.href = 'register.html';
+      return;
+    }
+    const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+    currentUser = users.find(u => u.username === username);
+    if (!currentUser) {
+      location.href = 'register.html';
+      return;
+    }
 
-  if (!currentUser.history || currentUser.history.length === 0) {
+    document.getElementById('usernameDisplay').textContent = 'Гость';
+    document.getElementById('balance').textContent = currentUser.balance;
+    document.getElementById('gamesPlayed').textContent = currentUser.gamesPlayed || 0;
+    document.getElementById('totalBet').textContent = (currentUser.totalBet || 0) + '₽';
+    document.getElementById('totalWin').textContent = (currentUser.totalWin || 0) + '₽';
+    const wins = currentUser.wins || 0;
+    const games = currentUser.gamesPlayed || 0;
+    const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
+    document.getElementById('winRate').textContent = winRate + '%';
+
+    const { maxWin, maxLoss } = calculateMaxStreaks(currentUser.history || []);
+    document.getElementById('maxWinStreak').textContent = maxWin;
+    document.getElementById('maxLossStreak').textContent = maxLoss;
+
+    const historyList = document.getElementById('historyList');
+    historyList.innerHTML = '<div class="empty-state">История пуста</div>';
+    if (currentUser.history && currentUser.history.length > 0) {
+      historyList.innerHTML = '';
+      currentUser.history.forEach(item => {
+        const div = document.createElement('div');
+        div.className = `history-item ${item.result || 'loss'}`;
+        div.innerHTML = `
+          <div>
+            <div class="history-game">${item.game || 'Игра'}</div>
+            <div class="history-time">${item.time || ''}</div>
+          </div>
+          <div class="history-amount ${item.result}">
+            ${item.win > 0 ? '+' : ''}${item.win || 0}₽
+          </div>
+        `;
+        historyList.appendChild(div);
+      });
+    }
+
+    const streakBar = document.getElementById('streakBar');
     streakBar.innerHTML = '<div class="streak-empty">Нет сыгранных игр</div>';
-    return;
+    if (currentUser.history && currentUser.history.length > 0) {
+      streakBar.innerHTML = '';
+      const recent = currentUser.history.slice(-12);
+      recent.forEach(item => {
+        const el = document.createElement('div');
+        el.className = `streak-item ${item.result || 'loss'}`;
+        const resultText = item.result === 'win' ? 'Выигрыш' : 'Проигрыш';
+        const amount = item.win > 0 ? `+${item.win}₽` : `${item.win}₽`;
+        el.innerHTML = `
+          <div class="streak-tooltip">
+            ${item.game || 'Игра'}<br>
+            ${resultText} • ${amount}<br>
+            <small>${item.time || ''}</small>
+          </div>
+        `;
+        streakBar.appendChild(el);
+      });
+    }
+
+    // Для гостя крипто-транзакции не поддерживаются
+    document.getElementById('cryptoTransactionList').innerHTML = '<div class="empty-state">Нет транзакций (для гостей не доступно)</div>';
   }
 
-  const recent = currentUser.history.slice(-12); // последние 12, порядок хронологический
+  async function saveUser() {
+    if (currentUser && userId) {
+      await updateDoc(doc(db, 'users', userId), currentUser);
+    } else if (currentUser && currentUser.isGuest) {
+      let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+      const idx = users.findIndex(u => u.username === currentUser.username);
+      if (idx !== -1) users[idx] = currentUser;
+      localStorage.setItem('dropwin_users', JSON.stringify(users));
+    }
+  }
 
-  recent.forEach(item => {
-    const el = document.createElement('div');
-    el.className = `streak-item ${item.result || 'loss'}`;
+  async function activatePromo() {
+    if (!currentUser) return alert('Войдите в аккаунт');
+    const code = document.getElementById('promoCode').value.trim().toUpperCase();
+    if (!code) return alert('Введите промокод');
 
-    const resultText = item.result === 'win' ? 'Выигрыш' : 'Проигрыш';
-    const amount = item.win > 0 ? `+${item.win}₽` : `${item.win}₽`;
+    const today = new Date().toDateString();
+    if (currentUser.lastPromoDate === today) {
+      return alert('Сегодня вы уже активировали промокод');
+    }
 
-    el.innerHTML = `
-      <div class="streak-tooltip">
-        ${item.game || 'Игра'}<br>
-        ${resultText} • ${amount}<br>
-        <small>${item.time || ''}</small>
-      </div>
-    `;
+    let sum = 0;
+    if (code === 'KAVEXS' || code === 'KAVEXS2026') {
+      sum = 100;
+    } else {
+      return alert('Неверный промокод');
+    }
 
-    streakBar.appendChild(el);
+    currentUser.balance = (currentUser.balance || 0) + sum;
+    currentUser.lastPromoDate = today;
+    await saveUser();
+
+    document.getElementById('balance').textContent = currentUser.balance;
+    alert(`+${sum}₽ успешно добавлено на баланс!`);
+    document.getElementById('promoCode').value = '';
+  }
+
+  function logout() {
+    if (currentUser.isGuest) {
+      localStorage.removeItem('dropwin_current_username');
+      location.href = 'index.html';
+    } else {
+      signOut(auth).then(() => {
+        location.href = 'index.html';
+      }).catch((error) => {
+        alert('Ошибка выхода: ' + error.message);
+      });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    createParticles();
+    loadCurrentUser();
   });
-}
-
-function showGuestMode() {
-  document.getElementById('usernameDisplay').textContent = 'Гость';
-  document.getElementById('balance').textContent = '0';
-  document.getElementById('gamesPlayed').textContent = '0';
-  document.getElementById('winRate').textContent = '0%';
-  document.getElementById('totalBet').textContent = '0₽';
-  document.getElementById('totalWin').textContent = '0₽';
-  document.getElementById('maxWinStreak').textContent = '0';
-  document.getElementById('maxLossStreak').textContent = '0';
-  document.getElementById('historyList').innerHTML = '<div class="empty-state">История пуста</div>';
-  document.getElementById('streakBar').innerHTML = '<div class="streak-empty">Нет сыгранных игр</div>';
-}
-
-function saveUsers() {
-  if (!currentUser) return;
-  const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
-  const idx = users.findIndex(u => u.username === currentUser.username);
-  if (idx !== -1) {
-    users[idx] = currentUser;
-    localStorage.setItem('dropwin_users', JSON.stringify(users));
-  }
-}
-
-function activatePromo() {
-  if (!currentUser) return alert('Войдите в аккаунт');
-  const code = document.getElementById('promoCode').value.trim().toUpperCase();
-  if (!code) return alert('Введите промокод');
-
-  const today = new Date().toDateString();
-  if (currentUser.lastPromoDate === today) {
-    return alert('Сегодня вы уже активировали промокод');
-  }
-
-  let sum = 0;
-  if (code === 'KAVEXS' || code === 'KAVEXS2026') {
-    sum = 100;
-  } else {
-    return alert('Неверный промокод');
-  }
-
-  currentUser.balance = (currentUser.balance || 0) + sum;
-  currentUser.lastPromoDate = today;
-  saveUsers();
-
-  document.getElementById('balance').textContent = currentUser.balance;
-  alert(`+${sum}₽ успешно добавлено на баланс!`);
-  document.getElementById('promoCode').value = '';
-}
-
-function logout() {
-  localStorage.removeItem('dropwin_current_username');
-  location.href = 'index.html';
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  createParticles();
-  loadCurrentUser();
-});
+  document.getElementById('promoBtn').addEventListener('click', activatePromo);
+  document.getElementById('logoutBtn').addEventListener('click', logout);
 </script>
 </body>
 </html>

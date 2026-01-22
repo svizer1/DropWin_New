@@ -5,6 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Вход / Регистрация | DropWin</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .form-toggle {
+      text-align: center;
+      margin-top: 16px;
+      color: #c084fc;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .form-toggle:hover {
+      text-decoration: underline;
+    }
+    #loginForm {
+      display: none;
+    }
+    .password-group {
+      position: relative;
+    }
+    .error-msg {
+      color: #ef4444;
+      font-size: 0.9rem;
+      margin-top: 4px;
+      display: none;
+    }
+  </style>
 </head>
 <body>
 <div class="particles" id="particles"></div>
@@ -17,106 +41,225 @@
   <button class="back-btn" onclick="location.href='index.html'">← На главную</button>
 
   <div class="game-card">
-    <div class="game-title">Вход / Регистрация</div>
+    <div class="game-title" id="formTitle">Регистрация</div>
 
-    <div class="input-group">
-      <label class="input-label">Никнейм</label>
-      <input type="text" id="username" placeholder="Ваш ник">
-    </div>
-    <div class="input-group">
-      <label class="input-label">Пароль</label>
-      <input type="password" id="password" placeholder="Пароль">
+    <!-- Форма регистрации (показывается первой) -->
+    <div id="registerForm">
+      <div class="input-group">
+        <label class="input-label">Никнейм</label>
+        <input type="text" id="regUsername" placeholder="Ваш ник" required>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Email</label>
+        <input type="email" id="regEmail" placeholder="example@dropwin.com" required>
+      </div>
+      <div class="input-group password-group">
+        <label class="input-label">Пароль</label>
+        <input type="password" id="regPassword" placeholder="Минимум 6 символов" required>
+      </div>
+      <div class="input-group password-group">
+        <label class="input-label">Повторите пароль</label>
+        <input type="password" id="regPasswordConfirm" placeholder="Повторите пароль" required>
+      </div>
+      <div class="error-msg" id="regError"></div>
+      <button class="btn" id="registerBtn">Зарегистрироваться</button>
     </div>
 
-    <button class="btn" onclick="loginOrRegister()">Войти / Зарегистрироваться</button>
-    <button class="btn" onclick="guestLogin()" style="margin-top:12px; background: linear-gradient(135deg, #6b7280, #4b5563);">Гостевой вход</button>
+    <!-- Форма входа (скрыта по умолчанию) -->
+    <div id="loginForm">
+      <div class="input-group">
+        <label class="input-label">Email</label>
+        <input type="email" id="loginEmail" placeholder="example@dropwin.com" required>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Пароль</label>
+        <input type="password" id="loginPassword" placeholder="Пароль" required>
+      </div>
+      <div class="error-msg" id="loginError"></div>
+      <button class="btn" id="loginBtn">Войти</button>
+    </div>
+
+    <div class="form-toggle" id="toggleLink">Уже есть аккаунт? Войти</div>
+
+    <button class="btn" onclick="guestLogin()" style="margin-top:16px; background: linear-gradient(135deg, #6b7280, #4b5563);">
+      Гостевой вход
+    </button>
   </div>
 </div>
 
-<script>
-function createParticles() {
-  const container = document.getElementById('particles');
-  for (let i = 0; i < 40; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
-    p.style.left = Math.random() * 100 + '%';
-    p.style.animationDuration = Math.random() * 15 + 10 + 's';
-    p.style.animationDelay = Math.random() * 5 + 's';
-    container.appendChild(p);
-  }
-}
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+    authDomain: "dropwin-8d94b.firebaseapp.com",
+    projectId: "dropwin-8d94b",
+    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    messagingSenderId: "988974289403",
+    appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+    measurementId: "G-BK010MHN8N"
+  };
 
-function saveUsers() {
-  localStorage.setItem('dropwin_users', JSON.stringify(users));
-}
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-function login(username) {
-  localStorage.setItem('dropwin_current_username', username);
-  location.href = 'index.html';
-}
-
-function loginOrRegister() {
-  const username = document.getElementById('username').value.trim();
-  const password = document.getElementById('password').value.trim();
-  if (!username || password.length < 3) return alert('Ник и пароль минимум 3 символа');
-
-  let user = users.find(u => u.username === username);
-
-  if (user) {
-    if (user.password === password) {
-      login(username);
-      alert('Добро пожаловать обратно!');
-    } else {
-      alert('Неверный пароль');
+  function createParticles() {
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDuration = Math.random() * 15 + 10 + 's';
+      p.style.animationDelay = Math.random() * 5 + 's';
+      container.appendChild(p);
     }
-  } else {
-    user = {
-      username,
-      password,
-      balance: 1000,
-      gamesPlayed: 0,
-      wins: 0,
-      losses: 0,
-      totalBet: 0,
-      totalWin: 0,
-      history: [],
-      lastPromoDate: ''
-    };
-    users.push(user);
-    saveUsers();
-    login(username);
-    alert('Аккаунт создан! Баланс 1000₽');
   }
-}
 
-function guestLogin() {
-  const guestName = 'Гость';
-  let guest = users.find(u => u.username === guestName);
-  if (!guest) {
-    guest = {
-      username: guestName,
-      password: 'guest',
-      balance: 500,
-      gamesPlayed: 0,
-      wins: 0,
-      losses: 0,
-      totalBet: 0,
-      totalWin: 0,
-      history: [],
-      lastPromoDate: '',
-      isGuest: true
-    };
-    users.push(guest);
-    saveUsers();
+  // Переключение форм
+  const registerForm = document.getElementById('registerForm');
+  const loginForm = document.getElementById('loginForm');
+  const formTitle = document.getElementById('formTitle');
+  const toggleLink = document.getElementById('toggleLink');
+
+  toggleLink.addEventListener('click', () => {
+    if (registerForm.style.display !== 'none') {
+      // Переключаем на вход
+      registerForm.style.display = 'none';
+      loginForm.style.display = 'block';
+      formTitle.textContent = 'Вход';
+      toggleLink.textContent = 'Нет аккаунта? Зарегистрироваться';
+    } else {
+      // Переключаем на регистрацию
+      loginForm.style.display = 'none';
+      registerForm.style.display = 'block';
+      formTitle.textContent = 'Регистрация';
+      toggleLink.textContent = 'Уже есть аккаунт? Войти';
+    }
+  });
+
+  // Регистрация
+  document.getElementById('registerBtn').addEventListener('click', async () => {
+    const username = document.getElementById('regUsername').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value.trim();
+    const confirm = document.getElementById('regPasswordConfirm').value.trim();
+    const errorEl = document.getElementById('regError');
+
+    errorEl.style.display = 'none';
+    errorEl.textContent = '';
+
+    if (!username || !email || !password || !confirm) {
+      errorEl.textContent = 'Заполните все поля';
+      errorEl.style.display = 'block';
+      return;
+    }
+    if (password.length < 6) {
+      errorEl.textContent = 'Пароль минимум 6 символов';
+      errorEl.style.display = 'block';
+      return;
+    }
+    if (password !== confirm) {
+      errorEl.textContent = 'Пароли не совпадают';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      await setDoc(doc(db, 'users', user.uid), {
+        username,
+        email,
+        balance: 1000,
+        gamesPlayed: 0,
+        wins: 0,
+        losses: 0,
+        totalBet: 0,
+        totalWin: 0,
+        history: [],
+        lastPromoDate: '',
+        isGuest: false
+      });
+
+      alert('Аккаунт создан! Баланс 1000₽');
+      location.href = 'index.html';
+    } catch (error) {
+      console.error(error);
+      if (error.code === 'auth/email-already-in-use') {
+        errorEl.textContent = 'Этот email уже зарегистрирован';
+      } else if (error.code === 'auth/invalid-email') {
+        errorEl.textContent = 'Неверный формат email';
+      } else {
+        errorEl.textContent = 'Ошибка: ' + error.message;
+      }
+      errorEl.style.display = 'block';
+    }
+  });
+
+  // Вход
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+    const errorEl = document.getElementById('loginError');
+
+    errorEl.style.display = 'none';
+    errorEl.textContent = '';
+
+    if (!email || !password) {
+      errorEl.textContent = 'Заполните email и пароль';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      alert('Добро пожаловать!');
+      location.href = 'index.html';
+    } catch (error) {
+      console.error(error);
+      if (error.code === 'auth/user-not-found') {
+        errorEl.textContent = 'Пользователь не найден';
+      } else if (error.code === 'auth/wrong-password') {
+        errorEl.textContent = 'Неверный пароль';
+      } else {
+        errorEl.textContent = 'Ошибка: ' + error.message;
+      }
+      errorEl.style.display = 'block';
+    }
+  });
+
+  function guestLogin() {
+    const guestName = 'Гость';
+    let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+    let guest = users.find(u => u.username === guestName);
+    if (!guest) {
+      guest = {
+        username: guestName,
+        password: 'guest',
+        balance: 500,
+        gamesPlayed: 0,
+        wins: 0,
+        losses: 0,
+        totalBet: 0,
+        totalWin: 0,
+        history: [],
+        lastPromoDate: '',
+        isGuest: true
+      };
+      users.push(guest);
+      localStorage.setItem('dropwin_users', JSON.stringify(users));
+    }
+    localStorage.setItem('dropwin_current_username', guestName);
+    alert('Вошли как Гость! Баланс 500₽');
+    location.href = 'index.html';
   }
-  login(guestName);
-  alert('Вошли как Гость! Баланс 500₽ (прогресс не сохраняется после очистки данных браузера)');
-}
 
-document.addEventListener('DOMContentLoaded', createParticles);
+  document.addEventListener('DOMContentLoaded', createParticles);
 </script>
 </body>
 </html>

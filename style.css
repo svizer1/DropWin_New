@@ -314,42 +314,11 @@ body::before {
     20% { transform: translateX(-10px); }
     40% { transform: translateX(10px); }
     60% { transform: translateX(-10px); }
-    80% { transform: translateX(10px); }
+    80% { transform: translateX(5px); }
 }
 
-/* Минер */
-.miner-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-    margin: 20px 0;
-}
-.miner-cell {
-    aspect-ratio: 1;
-    background: rgba(255,255,255,0.05);
-    border-radius: 12px;
-    border: 2px solid rgba(99,102,241,0.3);
-    font-size: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s;
-    cursor: pointer;
-}
-.miner-cell:active {
-    transform: scale(0.9);
-}
-.miner-cell.revealed {
-    background: rgba(99,102,241,0.2);
-}
-.miner-cell.gem {
-    background: linear-gradient(135deg, #10b981, #059669);
-    animation: gemShine 1.5s infinite;
-    border-color: #10b981;
-}
-.miner-cell.bomb {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    border-color: #ef4444;
+.gem.win {
+    animation: gemShine 0.8s infinite alternate;
 }
 @keyframes gemShine {
     0%, 100% { box-shadow: 0 0 15px rgba(16,185,129,0.5); }
@@ -688,4 +657,24 @@ input:focus, select:focus {
 @keyframes winGlow {
     from { text-shadow: 0 0 10px #fbbf24, 0 0 30px #fbbf24; }
     to   { text-shadow: 0 0 25px #fbbf24, 0 0 60px #fbbf24; }
+}
+
+/* Крипто стили (добавь в конец, если не было) */
+.crypto-item {
+  background: rgba(30,27,71,0.5);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(139,92,246,0.3);
+}
+
+.crypto-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.crypto-price {
+  font-size: 1.5rem;
+  color: #10b981;
+  margin-bottom: 10px;
 }

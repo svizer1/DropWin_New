@@ -13,16 +13,17 @@ body {
     color: #e0e0ff;
     min-height: 100vh;
     overflow-x: hidden;
-    background-attachment: fixed;
     position: relative;
+    /* Removed background-attachment: fixed to fix iOS rendering issues */
 }
 
 body::before {
     content: "";
     position: fixed;
     inset: 0;
-    background: radial-gradient(circle at 20% 30%, rgba(99,102,241,0.12) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(217,70,239,0.10) 0%, transparent 60%);
+    /* Increased opacity slightly for better mobile visibility */
+    background: radial-gradient(circle at 20% 30%, rgba(99,102,241,0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(217,70,239,0.12) 0%, transparent 60%);
     pointer-events: none;
     z-index: -1;
 }
@@ -38,14 +39,22 @@ body::before {
     z-index: -1;
 }
 .particle {
+    /* Changed to purple-ish to blend better and avoid "white" washout */
     position: absolute;
-    background: rgba(255,255,255,0.15);
+    background: rgba(168,85,247,0.12);
     border-radius: 50%;
     animation: float 15s infinite linear;
 }
 @keyframes float {
     0% { transform: translateY(0) scale(1); opacity: 0.8; }
     100% { transform: translateY(-100vh) scale(0.5); opacity: 0; }
+}
+
+/* Media query for mobile: reduce particle intensity if needed */
+@media (max-width: 768px) {
+    .particle {
+        opacity: 0.6; /* Slightly lower on mobile to prevent over-brightness */
+    }
 }
 
 /* ─── HEADER (самое изменённое место) ──────────────────────────────────────── */
@@ -314,27 +323,14 @@ body::before {
     20% { transform: translateX(-10px); }
     40% { transform: translateX(10px); }
     60% { transform: translateX(-10px); }
-    80% { transform: translateX(5px); }
-}
-
-.gem.win {
-    animation: gemShine 0.8s infinite alternate;
-}
-@keyframes gemShine {
-    0%, 100% { box-shadow: 0 0 15px rgba(16,185,129,0.5); }
-    50% { box-shadow: 0 0 30px rgba(16,185,129,0.8); }
+    80% { transform: translateX(10px); }
 }
 
 /* Результат */
 .result {
-    margin-top: 20px;
-    padding: 20px;
-    border-radius: 16px;
-    background: rgba(99,102,241,0.1);
+    font-size: 1.5rem;
     text-align: center;
-    font-weight: 700;
-    font-size: 16px;
-    border: 2px solid rgba(99,102,241,0.3);
+    margin-top: 20px;
     min-height: 60px;
     display: flex;
     align-items: center;

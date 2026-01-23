@@ -1033,11 +1033,10 @@ document.addEventListener('DOMContentLoaded', () => {
     createParticles();
     loadCurrentUser();
 
-    // Рендерим сетки кейсов
     renderCaseGrid('botCaseGrid', type => addSelectedCase('bot', type));
     renderCaseGrid('playerCaseGrid', type => addSelectedCase('player', type));
 
-    // ─── Переключение режимов Vs Bot / Vs Player ────────────────────────
+    // Переключение режимов
     const vsBotBtn      = document.getElementById('vsBotBtn');
     const vsPlayerBtn   = document.getElementById('vsPlayerBtn');
     const botSection    = document.getElementById('vsBotSection');
@@ -1059,24 +1058,49 @@ document.addEventListener('DOMContentLoaded', () => {
         vsBotBtn.classList.remove('active');
         botSection.style.display = 'none';
         playerSection.style.display = 'block';
-        loadBattles();           // загружаем список баттлов только при переходе
+        loadBattles();
     }
 
-    // Вешаем клики
     vsBotBtn.addEventListener('click', setBotMode);
     vsPlayerBtn.addEventListener('click', setPlayerMode);
+    setBotMode(); // начальное состояние
 
-    // Начальное состояние — Vs Bot активно
-    setBotMode();
+    // ─── Кнопки "Играть" и "Быстро" — защита от дублирования ───────
+    const playBtn = document.getElementById('playVsBot');
+    const quickBtn = document.getElementById('quickVsBot');
 
-    // ─── Кнопка «Шансы кейсов» ───────────────────────────────────────────
+    if (playBtn) {
+        // Клонируем → убираем все старые слушатели
+        const cleanPlay = playBtn.cloneNode(true);
+        playBtn.parentNode.replaceChild(cleanPlay, playBtn);
+        cleanPlay.addEventListener('click', () => playVsBot(false));
+    }
+
+    if (quickBtn) {
+        const cleanQuick = quickBtn.cloneNode(true);
+        quickBtn.parentNode.replaceChild(cleanQuick, quickBtn);
+        cleanQuick.addEventListener('click', () => playVsBot(true));
+    }
+
+    // остальные слушатели
+    document.getElementById('createBattleBtn')?.addEventListener('click', () => {
+        document.getElementById('createForm').style.display = 'block';
+    });
+
+    document.getElementById('confirmCreate')?.addEventListener('click', createBattle);
+
+    document.getElementById('charityMode')?.addEventListener('change', e => {
+        isCharityMode = e.target.checked;
+        updateTotalCost('player');
+    });
+
+    // кнопка шансов
     document.getElementById('showChancesBtn')?.addEventListener('click', () => {
         const modal = document.getElementById('chancesModal');
         const content = document.getElementById('chancesContent');
         if (!modal || !content) return;
 
         content.innerHTML = '';
-
         sortedCaseKeys.forEach(key => {
             const c = cases[key];
             let html = `<div style="margin:14px 0; padding:14px; background:rgba(35,30,60,0.65); border-radius:10px; border-left:4px solid ${c.color}">
@@ -1089,46 +1113,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span style="color:#fde047; font-weight:600;">${it.value}₽ — ${percent}%</span>
                 </div>`;
             });
-
             html += '</div>';
             content.innerHTML += html;
         });
-
         modal.style.display = 'flex';
     });
 
-    // Закрытие модалки
     document.getElementById('closeChances')?.addEventListener('click', () => {
         document.getElementById('chancesModal').style.display = 'none';
     });
-
-    // ─── Остальные кнопки (добавь свои, если не хватает) ────────────────
-    document.getElementById('playVsBot')?.addEventListener('click', () => playVsBot(false));
-    document.getElementById('quickVsBot')?.addEventListener('click', () => playVsBot(true));
-
-    document.getElementById('createBattleBtn')?.addEventListener('click', () => {
-        document.getElementById('createForm').style.display = 'block';
-    });
-
-    document.getElementById('confirmCreate')?.addEventListener('click', createBattle);
-
-    document.getElementById('charityMode')?.addEventListener('change', e => {
-        isCharityMode = e.target.checked;
-        updateTotalCost('player');
-    });
-
-            renderCaseGrid('botCaseGrid', (type) => addSelectedCase('bot', type));
-            renderCaseGrid('playerCaseGrid', (type) => addSelectedCase('player', type));
-
-            document.getElementById('playVsBot').addEventListener('click', () => playVsBot(false));
-            document.getElementById('quickVsBot').addEventListener('click', () => playVsBot(true));
-
-            document.getElementById('createBattleBtn').addEventListener('click', () => {
-                document.getElementById('createForm').style.display = 'block';
-            });
-
-            document.getElementById('confirmCreate').addEventListener('click', createBattle);
-        });
+});
     </script>
 </body>
 </html>

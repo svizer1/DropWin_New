@@ -3,120 +3,113 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <!-- Добавляем мета-теги для iOS, чтобы статус-бар и pull-down не белели -->
-  <meta name="theme-color" content="#0f0c29">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>DropWin Casino</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Фиксированный слой с градиентом — основной фикс для iOS -->
-  <div id="bg-layer"></div>
-  
-  <!-- Частицы поверх градиента -->
-  <div class="particles" id="particles"></div>
+<div class="particles" id="particles"></div>
 
-  <div class="header">
-    <div class="logo">💎 DROPWIN</div>
-    <div class="balance-container">
-      <div class="balance">💰 <span id="balance">0</span>₽</div>
-      <button class="auth-btn" id="authBtn">Войти</button>
-    </div>
+<div class="header">
+  <div class="logo">💎 DROPWIN</div>
+  <div class="balance-container">
+    <div class="balance">💰 <span id="balance">0</span>₽</div>
+    <button class="auth-btn" id="authBtn">Войти</button>
   </div>
+</div>
 
-  <div class="content">
-    <div class="games-list">
-      <div class="game-icon" onclick="location.href='games/slots.html'"><div class="game-icon-emoji">🎰</div><div class="game-icon-name">Слоты</div></div>
-      <div class="game-icon" onclick="location.href='games/miner.html'"><div class="game-icon-emoji">💎</div><div class="game-icon-name">Минёр</div></div>
-      <div class="game-icon" onclick="location.href='games/roulette.html'"><div class="game-icon-emoji">🎡</div><div class="game-icon-name">Рулетка</div></div>
-      <div class="game-icon" onclick="location.href='games/cards.html'"><div class="game-icon-emoji">🃏</div><div class="game-icon-name">Карты</div></div>
-      <div class="game-icon" onclick="location.href='games/dice.html'"><div class="game-icon-emoji">🎲</div><div class="game-icon-name">Кости</div></div>
-      <div class="game-icon" onclick="location.href='games/crash.html'"><div class="game-icon-emoji">🚀</div><div class="game-icon-name">Краш</div></div>
-      <div class="game-icon" onclick="location.href='games/plinko.html'"><div class="game-icon-emoji">🎯</div><div class="game-icon-name">Plinko</div></div>
-      <div class="game-icon" onclick="location.href='games/dino-throw.html'"><div class="game-icon-emoji">🦖</div><div class="game-icon-name">Dino Throw</div></div>
-      <div class="game-icon" onclick="location.href='crypto.html'"><div class="game-icon-emoji">📈</div><div class="game-icon-name">Акции: Крипта</div></div>
-      <div class="game-icon" onclick="location.href='games/battles.html'"><div class="game-icon-emoji">⚔️</div><div class="game-icon-name">Баттлы Кейсов</div></div>
-    </div>
+<div class="content">
+  <div class="games-list">
+    <div class="game-icon" onclick="location.href='games/slots.html'"><div class="game-icon-emoji">🎰</div><div class="game-icon-name">Слоты</div></div>
+    <div class="game-icon" onclick="location.href='games/miner.html'"><div class="game-icon-emoji">💎</div><div class="game-icon-name">Минёр</div></div>
+    <div class="game-icon" onclick="location.href='games/roulette.html'"><div class="game-icon-emoji">🎡</div><div class="game-icon-name">Рулетка</div></div>
+    <div class="game-icon" onclick="location.href='games/cards.html'"><div class="game-icon-emoji">🃏</div><div class="game-icon-name">Карты</div></div>
+    <div class="game-icon" onclick="location.href='games/dice.html'"><div class="game-icon-emoji">🎲</div><div class="game-icon-name">Кости</div></div>
+    <div class="game-icon" onclick="location.href='games/crash.html'"><div class="game-icon-emoji">🚀</div><div class="game-icon-name">Краш</div></div>
+    <div class="game-icon" onclick="location.href='games/plinko.html'"><div class="game-icon-emoji">🎯</div><div class="game-icon-name">Plinko</div></div>
+    <div class="game-icon" onclick="location.href='games/dino-throw.html'"><div class="game-icon-emoji">🦖</div><div class="game-icon-name">Dino Throw</div></div>
+    <div class="game-icon" onclick="location.href='crypto.html'"><div class="game-icon-emoji">📈</div><div class="game-icon-name">Акции: Крипта</div></div>
+    <div class="game-icon" onclick="location.href='games/battles.html'"><div class="game-icon-emoji">⚔️</div><div class="game-icon-name">Баттлы Кейсов</div></div>
   </div>
+</div>
 
-  <div class="nav">
-    <button class="nav-btn active"><span>🏠</span><span class="nav-label">Главная</span></button>
-    <button class="nav-btn" onclick="location.href='profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
-    <button class="nav-btn" onclick="location.href='register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
-  </div>
+<div class="nav">
+  <button class="nav-btn active"><span>🏠</span><span class="nav-label">Главная</span></button>
+  <button class="nav-btn" onclick="location.href='profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
+  <button class="nav-btn" onclick="location.href='register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
+</div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
-      authDomain: "dropwin-8d94b.firebaseapp.com",
-      projectId: "dropwin-8d94b",
-      storageBucket: "dropwin-8d94b.firebasestorage.app",
-      messagingSenderId: "988974289403",
-      appId: "1:988974289403:web:886d34e6f65920a105fb5e",
-      measurementId: "G-BK010MHN8N"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+    authDomain: "dropwin-8d94b.firebaseapp.com",
+    projectId: "dropwin-8d94b",
+    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    messagingSenderId: "988974289403",
+    appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+    measurementId: "G-BK010MHN8N"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-    function createParticles() {
-      const container = document.getElementById('particles');
-      for (let i = 0; i < 40; i++) {
-        const p = document.createElement('div');
-        p.className = 'particle';
-        p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
-        p.style.left = Math.random() * 100 + '%';
-        p.style.animationDuration = Math.random() * 15 + 10 + 's';
-        p.style.animationDelay = Math.random() * 5 + 's';
-        container.appendChild(p);
-      }
+  function createParticles() {
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDuration = Math.random() * 15 + 10 + 's';
+      p.style.animationDelay = Math.random() * 5 + 's';
+      container.appendChild(p);
     }
-    createParticles();
+  }
+  createParticles();
 
-    let currentUser = null;
+  let currentUser = null;
 
-    function loadCurrentUser() {
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          getDoc(doc(db, 'users', user.uid)).then((docSnap) => {
-            if (docSnap.exists()) {
-              currentUser = docSnap.data();
-              document.getElementById('balance').textContent = currentUser.balance || 0;
-              document.getElementById('authBtn').textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
-              document.getElementById('authBtn').onclick = () => location.href = 'profile.html';
-            } else {
-              document.getElementById('balance').textContent = '0';
-              document.getElementById('authBtn').textContent = 'Войти';
-              document.getElementById('authBtn').onclick = () => location.href = 'register.html';
-            }
-          }).catch((error) => {
-            console.error('Error loading user:', error);
-          });
-        } else {
-          const username = localStorage.getItem('dropwin_current_username');
-          if (username === 'Гость') {
-            const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
-            currentUser = users.find(u => u.username === username);
-            if (currentUser) {
-              document.getElementById('balance').textContent = currentUser.balance || 0;
-              document.getElementById('authBtn').textContent = 'Гость';
-              document.getElementById('authBtn').onclick = () => location.href = 'profile.html';
-            }
+  function loadCurrentUser() {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        getDoc(doc(db, 'users', user.uid)).then((docSnap) => {
+          if (docSnap.exists()) {
+            currentUser = docSnap.data();
+            document.getElementById('balance').textContent = currentUser.balance || 0;
+            document.getElementById('authBtn').textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
+            document.getElementById('authBtn').onclick = () => location.href = 'profile.html';
           } else {
             document.getElementById('balance').textContent = '0';
             document.getElementById('authBtn').textContent = 'Войти';
             document.getElementById('authBtn').onclick = () => location.href = 'register.html';
           }
+        }).catch((error) => {
+          console.error('Error loading user:', error);
+        });
+      } else {
+        const username = localStorage.getItem('dropwin_current_username');
+        if (username === 'Гость') {
+          const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+          currentUser = users.find(u => u.username === username);
+          if (currentUser) {
+            document.getElementById('balance').textContent = currentUser.balance || 0;
+            document.getElementById('authBtn').textContent = 'Гость';
+            document.getElementById('authBtn').onclick = () => location.href = 'profile.html';
+          }
+        } else {
+          document.getElementById('balance').textContent = '0';
+          document.getElementById('authBtn').textContent = 'Войти';
+          document.getElementById('authBtn').onclick = () => location.href = 'register.html';
         }
-      });
-    }
+      }
+    });
+  }
 
-    document.addEventListener('DOMContentLoaded', loadCurrentUser);
-  </script>
+  document.addEventListener('DOMContentLoaded', loadCurrentUser);
+</script>
 </body>
 </html>

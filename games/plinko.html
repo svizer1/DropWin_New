@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Plinko | DropWin</title>
   <link rel="stylesheet" href="../style.css">
+
   <style>
     .plinko-board {
       width: 100%;
@@ -72,17 +73,18 @@
     }
 
     .bucket:hover { transform: translateY(-5px); }
-    .bucket.x05  { background: #991b1b; left: 0%; }
-    .bucket.x1   { background: #7f1d1d; left: 9.09%; }
-    .bucket.x2   { background: #854d0e; left: 18.18%; }
-    .bucket.x5   { background: #065f46; left: 27.27%; }
-    .bucket.x10  { background: #047857; left: 36.36%; }
-    .bucket.x20  { background: #1e40af; left: 45.45%; }
-    .bucket.x50  { background: #1e3a8a; left: 54.54%; }
-    .bucket.x100 { background: #312e81; left: 63.63%; }
-    .bucket.x200 { background: #4338ca; left: 72.72%; }
-    .bucket.x500 { background: #5b21b6; left: 81.81%; }
-    .bucket.x1000{ background: #7c3aed; left: 90.9%; }
+
+    .bucket.x05   { background: #991b1b; left: 0%; }
+    .bucket.x1    { background: #7f1d1d; left: 9.09%; }
+    .bucket.x2    { background: #854d0e; left: 18.18%; }
+    .bucket.x5    { background: #065f46; left: 27.27%; }
+    .bucket.x10   { background: #047857; left: 36.36%; }
+    .bucket.x20   { background: #1e40af; left: 45.45%; }
+    .bucket.x50   { background: #1e3a8a; left: 54.54%; }
+    .bucket.x100  { background: #312e81; left: 63.63%; }
+    .bucket.x200  { background: #4338ca; left: 72.72%; }
+    .bucket.x500  { background: #5b21b6; left: 81.81%; }
+    .bucket.x1000 { background: #7c3aed; left: 90.9%; }
 
     .risk-selector {
       display: flex;
@@ -102,7 +104,11 @@
       transition: all 0.3s;
     }
 
-    .risk-btn.active { background: #6366f1; box-shadow: 0 0 20px rgba(99,102,241,0.6); transform: scale(1.05); }
+    .risk-btn.active {
+      background: #6366f1;
+      box-shadow: 0 0 20px rgba(99,102,241,0.6);
+      transform: scale(1.05);
+    }
   </style>
 </head>
 <body>
@@ -124,9 +130,9 @@
     <div class="game-title">🎯 Plinko</div>
 
     <div class="risk-selector">
-      <button class="risk-btn active" data-risk="low"    onclick="setRisk('low')">Низкий</button>
-      <button class="risk-btn"        data-risk="medium" onclick="setRisk('medium')">Средний</button>
-      <button class="risk-btn"        data-risk="high"   onclick="setRisk('high')">Высокий</button>
+      <button class="risk-btn active" data-risk="low"    id="riskLow">Низкий</button>
+      <button class="risk-btn"        data-risk="medium" id="riskMedium">Средний</button>
+      <button class="risk-btn"        data-risk="high"   id="riskHigh">Высокий</button>
     </div>
 
     <div class="plinko-board" id="plinkoBoard"></div>
@@ -136,7 +142,7 @@
       <input type="number" id="bet" value="50" min="10" step="10">
     </div>
 
-    <button class="btn" onclick="dropBall()">Бросить шарик</button>
+    <button class="btn" id="dropBtn">Бросить шарик</button>
 
     <div class="result" id="result">Выбери риск и бросай!</div>
   </div>
@@ -148,153 +154,229 @@
   <button class="nav-btn" onclick="location.href='../register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
 </div>
 
-<script>
-// ─── Particles ──────────────────────────────────────────────────
-function createParticles() {
-  const container = document.getElementById('particles');
-  for (let i = 0; i < 60; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.width = p.style.height = (Math.random()*4 + 1.5)+'px';
-    p.style.left = Math.random()*100 + '%';
-    p.style.animationDuration  = (Math.random()*25 + 15)+'s';
-    p.style.animationDelay     = Math.random()*10 + 's';
-    container.appendChild(p);
-  }
-}
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-let currentUser = null;
-let currentUsername = null;
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+    authDomain: "dropwin-8d94b.firebaseapp.com",
+    projectId: "dropwin-8d94b",
+    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    messagingSenderId: "988974289403",
+    appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+    measurementId: "G-BK010MHN8N"
+  };
 
-function loadCurrentUser() {
-  currentUsername = localStorage.getItem('dropwin_current_username');
-  if (!currentUsername) return location.href = '../register.html';
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-  const users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
-  currentUser = users.find(u => u.username === currentUsername);
-  if (!currentUser) {
-    localStorage.removeItem('dropwin_current_username');
-    return location.href = '../register.html';
-  }
+  let currentUser = null;
+  let isGuest = false;
+  let userId = null;
 
-  document.getElementById('balance').textContent = currentUser.balance || 0;
-
-  const btn = document.getElementById('authBtn');
-  btn.textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
-  btn.onclick = () => location.href = '../profile.html';
-}
-
-function saveUser() {
-  if (!currentUser) return;
-  const users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
-  const idx = users.findIndex(u => u.username === currentUsername);
-  if (idx !== -1) users[idx] = { ...currentUser };
-  localStorage.setItem('dropwin_users', JSON.stringify(users));
-}
-
-function addToHistory(game, change) {
-  currentUser.history = currentUser.history || [];
-  currentUser.history.unshift({
-    game,
-    time: new Date().toLocaleString('ru-RU'),
-    change,
-    result: change > 0 ? 'win' : change < 0 ? 'loss' : 'draw'
-  });
-  if (currentUser.history.length > 30) currentUser.history.pop();
-  saveUser();
-}
-
-let currentRisk = 'low';
-
-function setRisk(risk) {
-  currentRisk = risk;
-  document.querySelectorAll('.risk-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector(`[data-risk="${risk}"]`).classList.add('active');
-}
-
-function dropBall() {
-  if (!currentUser) return alert('Сессия истекла.');
-
-  let bet = Number(document.getElementById('bet').value);
-  if (bet < 10 || bet > currentUser.balance || isNaN(bet)) {
-    return alert('Ставка от 10 ₽ и не больше баланса');
+  // ─── Particles ──────────────────────────────────────────────────
+  function createParticles() {
+    const container = document.getElementById('particles');
+    if (!container) return;
+    for (let i = 0; i < 60; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.width = p.style.height = (Math.random()*4 + 1.5)+'px';
+      p.style.left = Math.random()*100 + '%';
+      p.style.animationDuration  = (Math.random()*25 + 15)+'s';
+      p.style.animationDelay     = Math.random()*10 + 's';
+      container.appendChild(p);
+    }
   }
 
-  currentUser.balance -= bet;
-  currentUser.totalBet = (currentUser.totalBet||0) + bet;
-  currentUser.gamesPlayed = (currentUser.gamesPlayed||0) + 1;
-  saveUser();
-  document.getElementById('balance').textContent = currentUser.balance;
+  // ─── User loading ───────────────────────────────────────────────
+  function loadCurrentUser() {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        userId = user.uid;
+        isGuest = false;
+        getDoc(doc(db, 'users', user.uid)).then(docSnap => {
+          if (docSnap.exists()) {
+            currentUser = docSnap.data();
+            renderUser();
+          } else {
+            goToLogin();
+          }
+        }).catch(err => console.error("Firestore load error:", err));
+      } else {
+        const username = localStorage.getItem('dropwin_current_username');
+        if (username === 'Гость') {
+          isGuest = true;
+          const users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+          currentUser = users.find(u => u.username === 'Гость');
+          if (currentUser) {
+            renderUser();
+          } else {
+            goToLogin();
+          }
+        } else {
+          goToLogin();
+        }
+      }
+    });
+  }
 
-  document.getElementById('result').textContent = 'Шарик падает...';
+  function renderUser() {
+    document.getElementById('balance').textContent = Math.floor(currentUser.balance || 0);
+    const btn = document.getElementById('authBtn');
+    btn.textContent = isGuest ? 'Гость' : (currentUser.username || 'Игрок');
+    btn.onclick = () => location.href = '../profile.html';
+  }
 
-  const board = document.getElementById('plinkoBoard');
-  board.innerHTML = '';
+  function goToLogin() {
+    alert('Пожалуйста, войдите в аккаунт');
+    location.href = '../register.html';
+  }
 
-  // Pins
-  const pins = document.createElement('div');
-  pins.className = 'pins';
-  for (let row = 0; row < 12; row++) {
-    for (let col = 0; col < 11; col++) {
-      if (row % 2 === col % 2) {
-        const pin = document.createElement('div');
-        pin.className = 'pin';
-        pins.appendChild(pin);
+  function saveUser(updates = {}) {
+    if (!currentUser) return;
+    Object.assign(currentUser, updates);
+
+    if (isGuest) {
+      let users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+      const idx = users.findIndex(u => u.username === 'Гость');
+      if (idx !== -1) {
+        users[idx] = { ...currentUser };
+      }
+      localStorage.setItem('dropwin_users', JSON.stringify(users));
+    } else if (userId) {
+      updateDoc(doc(db, 'users', userId), updates)
+        .catch(err => console.error("Firestore save error:", err));
+    }
+  }
+
+  function addToHistory(game, change) {
+    const entry = {
+      game,
+      time: new Date().toLocaleString('ru-RU'),
+      win: change,
+      result: change > 0 ? 'win' : (change < 0 ? 'loss' : 'draw')
+    };
+    currentUser.history = currentUser.history || [];
+    currentUser.history.unshift(entry);
+    if (currentUser.history.length > 30) currentUser.history = currentUser.history.slice(0, 30);
+    saveUser({ history: currentUser.history });
+  }
+
+  // ─── Plinko logic ───────────────────────────────────────────────
+  let currentRisk = 'low';
+
+  function setRisk(risk) {
+    currentRisk = risk;
+    document.querySelectorAll('.risk-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`#risk${risk.charAt(0).toUpperCase() + risk.slice(1)}`).classList.add('active');
+  }
+
+  function dropBall() {
+    if (!currentUser) return alert('Сессия истекла. Войдите заново.');
+
+    const betInput = document.getElementById('bet');
+    const bet = Number(betInput.value);
+    if (isNaN(bet) || bet < 10 || bet > currentUser.balance) {
+      return alert('Ставка от 10 ₽ и не больше баланса');
+    }
+
+    currentUser.balance = (currentUser.balance || 0) - bet;
+    currentUser.totalBet = (currentUser.totalBet || 0) + bet;
+    currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
+
+    saveUser({
+      balance: currentUser.balance,
+      totalBet: currentUser.totalBet,
+      gamesPlayed: currentUser.gamesPlayed
+    });
+
+    document.getElementById('balance').textContent = Math.floor(currentUser.balance);
+    document.getElementById('result').textContent = 'Шарик падает...';
+
+    const board = document.getElementById('plinkoBoard');
+    board.innerHTML = '';
+
+    // Pins
+    const pinsDiv = document.createElement('div');
+    pinsDiv.className = 'pins';
+    for (let row = 0; row < 12; row++) {
+      for (let col = 0; col < 11; col++) {
+        if (row % 2 === col % 2) {
+          const pin = document.createElement('div');
+          pin.className = 'pin';
+          pinsDiv.appendChild(pin);
+        }
       }
     }
-  }
-  board.appendChild(pins);
+    board.appendChild(pinsDiv);
 
-  // Buckets
-  const multipliers = {
-    low:    [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000],
-    medium: [0.3, 0.5, 1, 2, 4, 10, 25, 80, 150, 400, 800],
-    high:   [0.1, 0.2, 0.5, 1, 3, 8, 30, 100, 300, 600, 1200]
-  }[currentRisk];
+    // Buckets + multipliers
+    const multipliers = {
+      low:    [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000],
+      medium: [0.3, 0.5, 1, 2, 4, 10, 25, 80, 150, 400, 800],
+      high:   [0.1, 0.2, 0.5, 1, 3, 8, 30, 100, 300, 600, 1200]
+    }[currentRisk];
 
-  for (let i = 0; i < 11; i++) {
-    const bucket = document.createElement('div');
-    bucket.className = `bucket x${multipliers[i]}`;
-    bucket.textContent = `x${multipliers[i]}`;
-    bucket.style.left = `${i * 9.09}%`;
-    board.appendChild(bucket);
-  }
-
-  // Ball
-  const ball = document.createElement('div');
-  ball.className = 'ball';
-  const finalBucket = Math.floor(Math.random() * 11);
-  const finalLeft = ((finalBucket + 0.5) / 11 * 100) + '%';
-  ball.style.setProperty('--final-left', finalLeft);
-  board.appendChild(ball);
-
-  setTimeout(() => {
-    const mult = multipliers[finalBucket];
-    let win = Math.round(bet * mult);
-    let message = '';
-
-    if (mult >= 1) {
-      currentUser.balance += win;
-      currentUser.totalWin = (currentUser.totalWin||0) + (win - bet);
-      currentUser.wins = (currentUser.wins||0) + 1;
-      message = `<span style="color:#34d399">+${win - bet}₽ (x${mult}) 🔥</span>`;
-      addToHistory('Plinko', win - bet);
-    } else {
-      currentUser.losses = (currentUser.losses||0) + 1;
-      message = `<span style="color:#f87171">Проигрыш −${bet}₽ (x${mult})</span>`;
-      addToHistory('Plinko', -bet);
+    for (let i = 0; i < 11; i++) {
+      const bucket = document.createElement('div');
+      bucket.className = `bucket x${multipliers[i]}`;
+      bucket.textContent = `x${multipliers[i]}`;
+      bucket.style.left = `${i * 9.09}%`;
+      board.appendChild(bucket);
     }
 
-    document.getElementById('result').innerHTML = message;
-    document.getElementById('balance').textContent = currentUser.balance;
-    saveUser();
-  }, 4200);
-}
+    // Ball drop
+    const ball = document.createElement('div');
+    ball.className = 'ball';
+    const finalBucketIndex = Math.floor(Math.random() * 11);
+    const finalLeft = ((finalBucketIndex + 0.5) / 11 * 100) + '%';
+    ball.style.setProperty('--final-left', finalLeft);
+    board.appendChild(ball);
 
-document.addEventListener('DOMContentLoaded', () => {
-  createParticles();
-  loadCurrentUser();
-});
+    // Result after animation
+    setTimeout(() => {
+      const mult = multipliers[finalBucketIndex];
+      let win = Math.round(bet * mult);
+      let net = win - bet;
+      let message = '';
+
+      if (mult >= 1) {
+        currentUser.balance = (currentUser.balance || 0) + win;
+        currentUser.totalWin = (currentUser.totalWin || 0) + net;
+        currentUser.wins = (currentUser.wins || 0) + 1;
+        message = `<span style="color:#34d399">+${net}₽ (x${mult}) 🔥</span>`;
+      } else {
+        currentUser.losses = (currentUser.losses || 0) + 1;
+        message = `<span style="color:#f87171">Проигрыш −${bet}₽ (x${mult})</span>`;
+      }
+
+      document.getElementById('result').innerHTML = message;
+      document.getElementById('balance').textContent = Math.floor(currentUser.balance);
+
+      addToHistory('Plinko', net);
+      saveUser({
+        balance: currentUser.balance,
+        totalWin: currentUser.totalWin,
+        wins: currentUser.wins,
+        losses: currentUser.losses
+      });
+    }, 4200);
+  }
+
+  // ─── Init ───────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    createParticles();
+    loadCurrentUser();
+
+    document.getElementById('riskLow').onclick    = () => setRisk('low');
+    document.getElementById('riskMedium').onclick = () => setRisk('medium');
+    document.getElementById('riskHigh').onclick   = () => setRisk('high');
+    document.getElementById('dropBtn').onclick    = dropBall;
+  });
 </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c273cb0c9e111cb',t:'MTc2OTE3MDc0Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

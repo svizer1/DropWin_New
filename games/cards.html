@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>21 (Блэкджек) | DropWin</title>
   <link rel="stylesheet" href="../style.css">
+
   <style>
     .card-container {
       display: flex;
@@ -24,10 +25,7 @@
       background: linear-gradient(135deg, #fefefe, #f1f5f9);
       border-radius: 14px;
       border: 1px solid #cbd5e1;
-      box-shadow:
-        0 6px 16px rgba(0,0,0,0.38),
-        0 2px 6px rgba(0,0,0,0.22),
-        inset 0 1px 2px rgba(255,255,255,0.8);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.38), 0 2px 6px rgba(0,0,0,0.22), inset 0 1px 2px rgba(255,255,255,0.8);
       position: relative;
       overflow: hidden;
       color: #111827;
@@ -45,7 +43,6 @@
     .card.red   { color: #dc2626; }
     .card.black { color: #111827; }
 
-    /* Уголки — масть + номинал */
     .card::before,
     .card::after {
       position: absolute;
@@ -72,7 +69,6 @@
       transform: rotate(180deg);
     }
 
-    /* Большой центральный символ масти */
     .card .center-suit {
       position: absolute;
       top: 50%;
@@ -94,7 +90,6 @@
       opacity: 0.26;
     }
 
-    /* Карта дилера (закрытая) */
     .card-back {
       background: linear-gradient(145deg, #1e293b 0%, #111827 100%);
       color: #64748b;
@@ -113,6 +108,7 @@
   </style>
 </head>
 <body>
+
 <div class="particles" id="particles"></div>
 
 <div class="header">
@@ -141,9 +137,9 @@
     </div>
 
     <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-      <button class="btn" onclick="start21()" id="startBtn">Начать</button>
-      <button class="btn" onclick="hit()" id="hitBtn" style="display:none">Ещё</button>
-      <button class="btn cashout-btn" onclick="stand()" id="standBtn" style="display:none">Хватит</button>
+      <button class="btn" id="startBtn">Начать</button>
+      <button class="btn" id="hitBtn" style="display:none">Ещё</button>
+      <button class="btn cashout-btn" id="standBtn" style="display:none">Хватит</button>
     </div>
 
     <div class="result" id="result21" style="margin-top:24px; text-align:center; min-height:60px;">Готовы сыграть?</div>
@@ -156,221 +152,301 @@
   <button class="nav-btn" onclick="location.href='../register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
 </div>
 
-<script>
-// Particles (оставляем как было)
-function createParticles() {
-  const container = document.getElementById('particles');
-  for (let i = 0; i < 40; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
-    p.style.left = Math.random() * 100 + '%';
-    p.style.animationDuration = Math.random() * 15 + 10 + 's';
-    p.style.animationDelay = Math.random() * 5 + 's';
-    container.appendChild(p);
-  }
-}
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-let currentUser = null;
-let currentUsername = null;
-
-function loadCurrentUser() {
-  currentUsername = localStorage.getItem('dropwin_current_username');
-  if (!currentUsername) {
-    location.href = '../register.html';
-    return;
-  }
-
-  const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
-  currentUser = users.find(u => u.username === currentUsername);
-
-  if (!currentUser) {
-    localStorage.removeItem('dropwin_current_username');
-    location.href = '../register.html';
-    return;
-  }
-
-  document.getElementById('balance').textContent = currentUser.balance;
-
-  const btn = document.getElementById('authBtn');
-  btn.textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
-  btn.onclick = () => location.href = '../profile.html';
-}
-
-function saveUser() {
-  if (!currentUser) return;
-  const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
-  const idx = users.findIndex(u => u.username === currentUsername);
-  if (idx !== -1) {
-    users[idx] = currentUser;
-    localStorage.setItem('dropwin_users', JSON.stringify(users));
-  }
-}
-
-function addToHistory(game, winAmount) {
-  const entry = {
-    game: game,
-    time: new Date().toLocaleString('ru-RU'),
-    win: winAmount,
-    result: winAmount > 0 ? 'win' : 'loss'
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+    authDomain: "dropwin-8d94b.firebaseapp.com",
+    projectId: "dropwin-8d94b",
+    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    messagingSenderId: "988974289403",
+    appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+    measurementId: "G-BK010MHN8N"
   };
-  currentUser.history = currentUser.history || [];
-  currentUser.history.unshift(entry);
-  if (currentUser.history.length > 20) currentUser.history.pop();
-  saveUser();
-}
 
-const suits = ['♥','♦','♣','♠'];
-const values = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-function getCardValue(card) {
-  if (['J','Q','K'].includes(card.value)) return 10;
-  if (card.value === 'A') return 11;
-  return Number(card.value);
-}
+  let currentUser = null;
+  let isGuest = false;
+  let userId = null;
 
-function calculateScore(cards) {
-  let score = 0, aces = 0;
-  cards.forEach(c => {
-    const val = getCardValue(c);
-    if (val === 11) aces++;
-    score += val;
-  });
-  while (score > 21 && aces > 0) { score -= 10; aces--; }
-  return score;
-}
+  // ────────────────────────────────────────────────
+  //  Частицы
+  // ────────────────────────────────────────────────
+  function createParticles() {
+    const container = document.getElementById('particles');
+    if (!container) return;
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDuration = Math.random() * 15 + 10 + 's';
+      p.style.animationDelay = Math.random() * 5 + 's';
+      container.appendChild(p);
+    }
+  }
 
-function drawCard() {
-  const value = values[Math.floor(Math.random() * values.length)];
-  const suit = suits[Math.floor(Math.random() * suits.length)];
-  return { value, suit };
-}
+  // ────────────────────────────────────────────────
+  //  Авторизация / загрузка пользователя
+  // ────────────────────────────────────────────────
+  function loadCurrentUser() {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        userId = user.uid;
+        isGuest = false;
+        getDoc(doc(db, 'users', user.uid)).then(docSnap => {
+          if (docSnap.exists()) {
+            currentUser = docSnap.data();
+            renderUser();
+          } else {
+            goToLogin();
+          }
+        }).catch(err => console.error("Firestore error:", err));
+      } else {
+        // Гость
+        const username = localStorage.getItem('dropwin_current_username');
+        if (username === 'Гость') {
+          isGuest = true;
+          const users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+          currentUser = users.find(u => u.username === 'Гость');
+          if (currentUser) {
+            renderUser();
+          } else {
+            goToLogin();
+          }
+        } else {
+          goToLogin();
+        }
+      }
+    });
+  }
 
-function renderCards(containerId, cards, hideFirst = false) {
-  const container = document.getElementById(containerId);
-  container.innerHTML = '';
+  function renderUser() {
+    document.getElementById('balance').textContent = Math.floor(currentUser.balance || 0);
+    const btn = document.getElementById('authBtn');
+    btn.textContent = isGuest ? 'Гость' : (currentUser.username || 'Игрок');
+    btn.onclick = () => location.href = '../profile.html';
+  }
 
-  cards.forEach((card, i) => {
-    const isHidden = hideFirst && i === 0;
+  function goToLogin() {
+    alert('Пожалуйста, войдите в аккаунт');
+    location.href = '../register.html';
+  }
 
-    const div = document.createElement('div');
+  function saveUser(updates = {}) {
+    if (!currentUser) return;
+    Object.assign(currentUser, updates);
 
-    if (isHidden) {
-      div.className = 'card card-back';
-      div.innerHTML = '<div style="font-size:4.8rem; opacity:0.35;">?</div>';
-    } else {
-      div.className = 'card' + ((card.suit === '♥' || card.suit === '♦') ? ' red' : ' black');
-      div.dataset.value = card.value;
-      div.dataset.suit  = card.suit;
+    if (isGuest) {
+      let users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+      const idx = users.findIndex(u => u.username === 'Гость');
+      if (idx !== -1) {
+        users[idx] = { ...currentUser };
+      }
+      localStorage.setItem('dropwin_users', JSON.stringify(users));
+    } else if (userId) {
+      updateDoc(doc(db, 'users', userId), updates)
+        .catch(err => console.error("Ошибка сохранения:", err));
+    }
+  }
 
-      const center = document.createElement('div');
-      center.className = 'center-suit';
-      center.textContent = card.suit;
-      div.appendChild(center);
+  function addToHistory(game, change) {
+    const entry = {
+      game,
+      time: new Date().toLocaleString('ru-RU'),
+      win: change,
+      result: change > 0 ? 'win' : (change < 0 ? 'loss' : 'draw')
+    };
+    currentUser.history = currentUser.history || [];
+    currentUser.history.unshift(entry);
+    if (currentUser.history.length > 30) currentUser.history = currentUser.history.slice(0, 30);
+    saveUser({ history: currentUser.history });
+  }
+
+  // ────────────────────────────────────────────────
+  //  Логика блэкджека
+  // ────────────────────────────────────────────────
+  const suits = ['♥','♦','♣','♠'];
+  const values = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+
+  function getCardValue(card) {
+    if (['J','Q','K'].includes(card.value)) return 10;
+    if (card.value === 'A') return 11;
+    return Number(card.value);
+  }
+
+  function calculateScore(cards) {
+    let score = 0, aces = 0;
+    cards.forEach(c => {
+      const val = getCardValue(c);
+      if (val === 11) aces++;
+      score += val;
+    });
+    while (score > 21 && aces > 0) { score -= 10; aces--; }
+    return score;
+  }
+
+  function drawCard() {
+    const value = values[Math.floor(Math.random() * values.length)];
+    const suit  = suits[Math.floor(Math.random() * suits.length)];
+    return { value, suit };
+  }
+
+  function renderCards(containerId, cards, hideFirst = false) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+
+    cards.forEach((card, i) => {
+      const isHidden = hideFirst && i === 0;
+      const div = document.createElement('div');
+
+      if (isHidden) {
+        div.className = 'card card-back';
+        div.innerHTML = '<div style="font-size:4.8rem; opacity:0.35;">?</div>';
+      } else {
+        div.className = `card ${ (card.suit === '♥' || card.suit === '♦') ? 'red' : 'black' }`;
+        div.dataset.value = card.value;
+        div.dataset.suit  = card.suit;
+
+        const center = document.createElement('div');
+        center.className = 'center-suit';
+        center.textContent = card.suit;
+        div.appendChild(center);
+      }
+
+      container.appendChild(div);
+    });
+  }
+
+  let playerHand = [], dealerHand = [], bet21 = 0;
+
+  function start21() {
+    if (!currentUser) return alert('Сессия истекла. Войдите заново.');
+
+    bet21 = Number(document.getElementById('bet21').value);
+    if (bet21 < 10 || bet21 > (currentUser.balance || 0) || isNaN(bet21)) {
+      return alert('Неверная ставка (мин 10 ₽, не больше баланса)');
     }
 
-    container.appendChild(div);
+    currentUser.balance = (currentUser.balance || 0) - bet21;
+    currentUser.totalBet   = (currentUser.totalBet   || 0) + bet21;
+    currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
+
+    saveUser({
+      balance: currentUser.balance,
+      totalBet: currentUser.totalBet,
+      gamesPlayed: currentUser.gamesPlayed
+    });
+
+    document.getElementById('balance').textContent = Math.floor(currentUser.balance);
+
+    playerHand = [drawCard(), drawCard()];
+    dealerHand = [drawCard(), drawCard()];
+
+    renderCards('playerCards', playerHand);
+    renderCards('dealerCards', dealerHand, true);
+
+    document.getElementById('playerScore').textContent = `Ваш счёт: ${calculateScore(playerHand)}`;
+    document.getElementById('dealerScore').textContent = `Счёт дилера: ?`;
+
+    document.getElementById('startBtn').style.display = 'none';
+    document.getElementById('hitBtn').style.display   = 'inline-block';
+    document.getElementById('standBtn').style.display = 'inline-block';
+
+    document.getElementById('result21').textContent = 'Ваш ход...';
+
+    if (calculateScore(playerHand) === 21) stand();
+  }
+
+  function hit() {
+    playerHand.push(drawCard());
+    renderCards('playerCards', playerHand);
+    const score = calculateScore(playerHand);
+    document.getElementById('playerScore').textContent = `Ваш счёт: ${score}`;
+
+    if (score > 21) {
+      document.getElementById('result21').innerHTML = '<span style="color:#ef4444">Перебор! Вы проиграли</span>';
+      currentUser.losses = (currentUser.losses || 0) + 1;
+      addToHistory('21 (Блэкджек)', -bet21);
+      saveUser({ losses: currentUser.losses });
+      endGame();
+    }
+  }
+
+  function stand() {
+    document.getElementById('hitBtn').style.display = 'none';
+    document.getElementById('standBtn').style.display = 'none';
+
+    let dealerScore = calculateScore(dealerHand);
+    while (dealerScore < 17) {
+      dealerHand.push(drawCard());
+      dealerScore = calculateScore(dealerHand);
+    }
+
+    renderCards('dealerCards', dealerHand, false);
+    document.getElementById('dealerScore').textContent = `Счёт дилера: ${dealerScore}`;
+
+    const playerScore = calculateScore(playerHand);
+    let resultText = '';
+    let net = 0;
+
+    if (playerScore > 21) {
+      resultText = '<span style="color:#ef4444">Перебор! Проигрыш</span>';
+      net = -bet21;
+      currentUser.losses = (currentUser.losses || 0) + 1;
+    } else if (dealerScore > 21 || playerScore > dealerScore) {
+      const win = bet21 * 2;
+      resultText = `<span style="color:#10b981">Вы выиграли! +${bet21}₽</span>`;
+      currentUser.balance = (currentUser.balance || 0) + win;
+      currentUser.wins = (currentUser.wins || 0) + 1;
+      currentUser.totalWin = (currentUser.totalWin || 0) + win;
+      net = bet21;
+    } else if (playerScore < dealerScore) {
+      resultText = '<span style="color:#ef4444">Проигрыш</span>';
+      net = -bet21;
+      currentUser.losses = (currentUser.losses || 0) + 1;
+    } else {
+      resultText = 'Ничья — ставка возвращена';
+      currentUser.balance = (currentUser.balance || 0) + bet21;
+      net = 0;
+    }
+
+    document.getElementById('result21').innerHTML = resultText;
+    addToHistory('21 (Блэкджек)', net);
+
+    saveUser({
+      balance: currentUser.balance,
+      wins: currentUser.wins,
+      losses: currentUser.losses,
+      totalWin: currentUser.totalWin
+    });
+
+    document.getElementById('balance').textContent = Math.floor(currentUser.balance);
+
+    document.getElementById('startBtn').style.display = 'inline-block';
+  }
+
+  function endGame() {
+    document.getElementById('hitBtn').style.display = 'none';
+    document.getElementById('standBtn').style.display = 'none';
+    document.getElementById('startBtn').style.display = 'inline-block';
+  }
+
+  // ─── Запуск ────────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    createParticles();
+    loadCurrentUser();
+
+    document.getElementById('startBtn').onclick = start21;
+    document.getElementById('hitBtn').onclick   = hit;
+    document.getElementById('standBtn').onclick = stand;
   });
-}
-
-let playerHand = [], dealerHand = [], bet21 = 0;
-
-function start21() {
-  if (!currentUser) return alert('Сессия истекла. Войдите заново.');
-  bet21 = Number(document.getElementById('bet21').value);
-  if (bet21 < 10 || bet21 > currentUser.balance || isNaN(bet21)) return alert('Неверная ставка');
-
-  currentUser.balance -= bet21;
-  currentUser.totalBet = (currentUser.totalBet || 0) + bet21;
-  currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
-  saveUser();
-  document.getElementById('balance').textContent = currentUser.balance;
-
-  playerHand = [drawCard(), drawCard()];
-  dealerHand = [drawCard(), drawCard()];
-
-  renderCards('playerCards', playerHand);
-  renderCards('dealerCards', dealerHand, true);
-
-  document.getElementById('playerScore').textContent = `Ваш счёт: ${calculateScore(playerHand)}`;
-  document.getElementById('dealerScore').textContent = `Счёт дилера: ?`;
-
-  document.getElementById('startBtn').style.display = 'none';
-  document.getElementById('hitBtn').style.display = 'inline-block';
-  document.getElementById('standBtn').style.display = 'inline-block';
-
-  document.getElementById('result21').textContent = 'Ваш ход...';
-
-  if (calculateScore(playerHand) === 21) stand();
-}
-
-function hit() {
-  playerHand.push(drawCard());
-  renderCards('playerCards', playerHand);
-  const score = calculateScore(playerHand);
-  document.getElementById('playerScore').textContent = `Ваш счёт: ${score}`;
-  if (score > 21) {
-    document.getElementById('result21').innerHTML = '<span style="color:#ef4444">Перебор! Вы проиграли</span>';
-    currentUser.losses = (currentUser.losses || 0) + 1;
-    addToHistory('21 (Блэкджек)', -bet21);
-    endGame();
-  }
-}
-
-function stand() {
-  document.getElementById('hitBtn').style.display = 'none';
-  document.getElementById('standBtn').style.display = 'none';
-
-  let dealerScore = calculateScore(dealerHand);
-  while (dealerScore < 17) {
-    dealerHand.push(drawCard());
-    dealerScore = calculateScore(dealerHand);
-  }
-  renderCards('dealerCards', dealerHand, false);
-  document.getElementById('dealerScore').textContent = `Счёт дилера: ${dealerScore}`;
-
-  const playerScore = calculateScore(playerHand);
-  let resultText = '';
-  let net = 0;
-
-  if (playerScore > 21) {
-    resultText = '<span style="color:#ef4444">Перебор! Проигрыш</span>';
-    net = -bet21;
-    currentUser.losses = (currentUser.losses || 0) + 1;
-  } else if (dealerScore > 21 || playerScore > dealerScore) {
-    resultText = `<span style="color:#10b981">Вы выиграли! +${bet21}₽</span>`;
-    currentUser.balance += bet21 * 2;
-    currentUser.wins = (currentUser.wins || 0) + 1;
-    currentUser.totalWin = (currentUser.totalWin || 0) + bet21 * 2;
-    net = bet21;
-  } else if (playerScore < dealerScore) {
-    resultText = '<span style="color:#ef4444">Проигрыш</span>';
-    net = -bet21;
-    currentUser.losses = (currentUser.losses || 0) + 1;
-  } else {
-    resultText = 'Ничья — ставка возвращена';
-    currentUser.balance += bet21;
-    net = 0;
-  }
-
-  document.getElementById('result21').innerHTML = resultText;
-  addToHistory('21 (Блэкджек)', net);
-  saveUser();
-  document.getElementById('balance').textContent = currentUser.balance;
-
-  document.getElementById('startBtn').style.display = 'inline-block';
-}
-
-function endGame() {
-  document.getElementById('hitBtn').style.display = 'none';
-  document.getElementById('standBtn').style.display = 'none';
-  document.getElementById('startBtn').style.display = 'inline-block';
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  createParticles();
-  loadCurrentUser();
-});
 </script>
 </body>
 </html>

@@ -23,56 +23,21 @@
             box-shadow: 0 4px 12px rgba(167, 139, 250, 0.4);
             transition: all 0.3s ease;
         }
-        .mode-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(167, 139, 250, 0.6);
-        }
+        .mode-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(167, 139, 250, 0.6); }
         .mode-btn.active {
             background: linear-gradient(135deg, #a855f7, #8b5cf6);
             box-shadow: 0 6px 16px rgba(192, 132, 252, 0.6);
         }
-        .battle-form {
-            margin: 20px 0;
-        }
-        .battle-list {
-            margin: 20px 0;
-        }
-        .battle-item {
-            background: linear-gradient(135deg, rgba(59, 7, 100, 0.8), rgba(106, 27, 154, 0.8));
-            padding: 16px;
-            border-radius: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 20px rgba(192, 132, 252, 0.3);
-            transition: transform 0.2s;
-        }
-        .battle-item:hover {
-            transform: scale(1.03);
-        }
-        .open-results {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-        .player-opens, .opponent-opens {
-            width: 48%;
-            min-width: 200px;
-        }
-        .total-value {
-            font-weight: 700;
-            margin-top: 12px;
-            color: #c084fc;
-            text-align: center;
-        }
+
         .case-select-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px;
             margin: 16px 0;
         }
         .case-card {
             background: transparent;
-            padding: 8px;
+            padding: 10px;
             border-radius: 16px;
             text-align: center;
             cursor: pointer;
@@ -95,182 +60,216 @@
         }
         .case-card .name {
             position: absolute;
-            bottom: 36px;
-            left: 0;
-            right: 0;
-            font-weight: 700;
-            color: white;
-            text-shadow: 0 0 6px black;
-            font-size: 1.1rem;
+            bottom: 36px; left: 0; right: 0;
+            font-weight: 700; color: white;
+            text-shadow: 0 0 6px black; font-size: 1.1rem;
         }
         .case-card .price {
             position: absolute;
-            bottom: 8px;
-            left: 0;
-            right: 0;
-            color: #fde047;
-            text-shadow: 0 0 6px black;
-            font-size: 1.05rem;
+            bottom: 8px; left: 0; right: 0;
+            color: #fde047; text-shadow: 0 0 6px black; font-size: 1.05rem;
         }
+
+        .open-results {
+            display: flex;
+            justify-content: space-between;
+            gap: 24px;
+            margin: 24px 0;
+            flex-wrap: wrap;
+        }
+        .player-opens, .opponent-opens {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(30, 30, 50, 0.75);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+        }
+        .player-opens   { border: 2px solid #8b5cf6; }
+        .opponent-opens { border: 2px solid #5b21b6; }
+
+        .case-opening-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            min-height: 160px;
+        }
+
         .case-box {
-            width: 140px;
-            height: 140px;
+            width: 95px;
+            height: 95px;
             background-size: cover;
             background-position: center;
-            background-repeat: no-repeat;
-            position: relative;
-            cursor: pointer;
-            border-radius: 14px;
-            overflow: hidden;
-            box-shadow: 0 5px 18px rgba(0,0,0,0.6);
-            transition: transform 0.35s ease;
-        }
-        .case-box:hover {
-            transform: scale(1.09);
-        }
-        .case-box.opening {
-            animation: shakeAndOpen 3.2s ease-in-out forwards;
-        }
-        @keyframes shakeAndOpen {
-            0% { transform: scale(1) rotate(0deg); }
-            10% { transform: scale(1.05) rotate(2deg); }
-            20% { transform: scale(1.05) rotate(-2deg); }
-            30% { transform: scale(1.05) rotate(2deg); }
-            40% { transform: scale(1.05) rotate(-2deg); }
-            50% { transform: scale(1.1) rotate(0deg); opacity: 0.7; }
-            70% { transform: scale(0.9) rotate(180deg); opacity: 0.4; }
-            100% { transform: scale(1) rotate(360deg); opacity: 1; }
-        }
-        .case-box .item-reveal {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 4rem;
-            display: none;
-            z-index: 2;
-            text-shadow: 0 0 10px rgba(0,0,0,0.8);
-        }
-        .case-box.revealed .item-reveal {
-            display: block;
-            animation: popIn 0.8s ease-out;
-        }
-        @keyframes popIn {
-            0% { transform: translate(-50%, -50%) scale(0) rotate(-180deg); opacity: 0; }
-            60% { transform: translate(-50%, -50%) scale(1.3) rotate(20deg); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-        }
-        .case-box .value-label {
-            position: absolute;
-            bottom: 8px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 4px 10px;
             border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+            opacity: 0;
+            transform: scale(0.92);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            margin: 4px;
+        }
+
+        .case-box.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .case-box.revealed {
+            transform: scale(1.12);
+            box-shadow: 0 0 28px rgba(168, 85, 247, 0.75);
+        }
+
+        .case-box.opening {
+            animation: dramaticOpen 2.8s ease-out forwards;
+        }
+
+        @keyframes dramaticOpen {
+            0%   { transform: scale(0.75) rotate(-10deg); filter: brightness(0.7); }
+            30%  { transform: scale(1.25) rotate(8deg);   filter: brightness(1.5); }
+            55%  { transform: scale(1.05) rotate(-5deg);  filter: brightness(1.25); }
+            80%  { transform: scale(1.12) rotate(4deg);   filter: brightness(1.4);  }
+            100% { transform: scale(1.12) rotate(0deg);   filter: brightness(1.2);  }
+        }
+
+        .item-reveal {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3.6rem;
+            opacity: 0;
+            text-shadow: 0 0 16px rgba(0,0,0,0.9);
+            animation: popIn 1s ease-out forwards;
+            animation-delay: 0.7s;
+        }
+
+        @keyframes popIn {
+            0%   { transform: translate(-50%, -50%) scale(0.4) rotate(-60deg); opacity: 0; }
+            50%  { transform: translate(-50%, -50%) scale(1.55) rotate(20deg); opacity: 1; }
+            80%  { transform: translate(-50%, -50%) scale(0.95) rotate(-8deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg);     opacity: 1; }
+        }
+
+        .value-label {
+            position: absolute;
+            bottom: 8px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85);
+            color: #fde047;
+            padding: 5px 12px;
+            border-radius: 10px;
             font-weight: bold;
             font-size: 1.1rem;
             display: none;
+            box-shadow: 0 2px 8px black;
         }
-        .case-box.revealed .value-label {
-            display: block;
-        }
+        .case-box.revealed .value-label { display: block; }
+
         .remove-btn {
             background: linear-gradient(135deg, #ef4444, #b91c1c);
             color: white;
-            padding: 6px 12px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-left: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            transition: transform 0.2s;
-        }
-        .remove-btn:hover {
-            transform: scale(1.05);
-        }
-        .delete-battle-btn {
-            background: linear-gradient(135deg, #ef4444, #b91c1c);
-            color: white;
-            padding: 8px 16px;
+            padding: 6px 14px;
             border: none;
             border-radius: 10px;
             cursor: pointer;
             font-weight: 700;
-            margin-top: 8px;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+            margin-left: 12px;
             transition: all 0.2s;
         }
-        .delete-battle-btn:hover {
-            transform: scale(1.05);
-            background: #dc2626;
-        }
+        .remove-btn:hover { transform: scale(1.08); box-shadow: 0 0 14px #ef444499; }
+
         .claim-btn {
             background: linear-gradient(135deg, #34d399, #059669);
             color: white;
-            padding: 12px 24px;
+            padding: 14px 36px;
             border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            font-weight: 800;
+            margin: 24px auto;
+            display: block;
+            box-shadow: 0 6px 20px rgba(16,185,129,0.6);
+            transition: all 0.3s;
+        }
+        .claim-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(16,185,129,0.8); }
+        .claim-btn.disabled { background: #4b5563; cursor: not-allowed; box-shadow: none; }
+
+        .btn, .join-btn {
+            padding: 12px 28px;
             border-radius: 12px;
             cursor: pointer;
+            font-weight: 700;
+            border: none;
+            transition: all 0.25s;
+        }
+        .btn { background: linear-gradient(135deg, #a855f7, #7e22ce); color: white; box-shadow: 0 5px 16px #a855f755; }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 24px #a855f788; }
+
+        .join-btn { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; box-shadow: 0 4px 14px #3b82f655; }
+        .join-btn:hover { transform: scale(1.07); box-shadow: 0 8px 20px #3b82f688; }
+
+        .battle-item {
+            background: rgba(45, 40, 75, 0.8);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 16px 0;
+            border-left: 6px solid #8b5cf6;
+        }
+        .battle-price {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin: 12px 0;
+        }
+        .battle-price.free  { color: #34d399; }
+        .battle-price.paid  { color: #c4b5fd; }
+
+        .delete-battle-btn {
+            background: linear-gradient(135deg, #ef4444, #991b1b);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 12px;
             font-weight: 700;
             margin-top: 16px;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-            transition: all 0.3s ease;
-        }
-        .claim-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.6);
-        }
-        .claim-btn.disabled {
-            background: linear-gradient(135deg, #6b7280, #4b5563);
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-        .btn {
-            padding: 12px 24px;
-            border-radius: 12px;
             cursor: pointer;
-            font-weight: 700;
-            background: linear-gradient(135deg, #a855f7, #7e22ce);
-            color: white;
-            border: none;
-            box-shadow: 0 4px 12px rgba(167, 139, 250, 0.4);
-            transition: all 0.3s ease;
-            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.25s;
         }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(167, 139, 250, 0.6);
+        .delete-battle-btn:hover {
+            transform: scale(1.06);
+            box-shadow: 0 0 20px #ef4444bb;
         }
-        .add-case-btn {
-            display: block;
-            margin: 16px auto;
-        }
-        .join-btn {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+
+        .charity-label {
+            background: linear-gradient(135deg, #10b981, #047857);
             color: white;
             padding: 8px 16px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 700;
-            box-shadow: 0 3px 6px rgba(59, 130, 246, 0.4);
-            transition: all 0.2s;
-        }
-        .join-btn:hover {
-            transform: scale(1.05);
-            background: #2563eb;
-        }
-        .nickname {
+            border-radius: 12px;
+            font-size: 1rem;
             font-weight: bold;
-            color: #a855f7;
+            margin-left: 14px;
         }
+
+        .charity-toggle {
+            margin: 24px auto;
+            text-align: center;
+            font-size: 1.2rem;
+            color: #e5e7eb;
+        }
+        .charity-toggle input[type="checkbox"] {
+            transform: scale(1.6);
+            margin-right: 14px;
+        }
+
+        .nickname { color: #c084fc; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="particles" id="particles"></div>
+
     <div class="header">
         <div class="logo">💎 DROPWIN</div>
         <div class="balance-container">
@@ -278,39 +277,51 @@
             <button class="auth-btn" id="authBtn">Аккаунт</button>
         </div>
     </div>
+
     <div class="content">
         <button class="back-btn" onclick="location.href='../index.html'">← Назад</button>
+
         <div class="game-card">
             <div class="game-title">⚔️ Баттлы Кейсов</div>
+
             <div class="mode-select">
                 <button class="mode-btn active" id="vsBotBtn">Vs Бот</button>
                 <button class="mode-btn" id="vsPlayerBtn">Vs Игрок</button>
             </div>
-            <!-- Vs Bot Section -->
+
             <div id="vsBotSection">
                 <div class="case-select-grid" id="botCaseGrid"></div>
                 <button class="btn add-case-btn" id="addBotCase">Добавить кейс</button>
                 <div class="selected-cases" id="selectedBotCases"></div>
-                <div id="botTotalCost" style="text-align:center; margin:8px 0;">Итого: 0₽</div>
+                <div id="botTotalCost" style="text-align:center; margin:12px 0; font-size:1.3rem;">Итого: 0₽</div>
                 <button class="btn" id="playVsBot">Играть</button>
                 <button class="btn" id="quickVsBot" style="background: linear-gradient(135deg, #fbbf24, #d97706);">Быстрое открытие</button>
-                <div id="botResults" style="margin-top:20px;"></div>
+                <div id="botResults" style="margin-top:24px;"></div>
             </div>
-            <!-- Vs Player Section -->
+
             <div id="vsPlayerSection" style="display:none;">
                 <button class="btn" id="createBattleBtn">Создать баттл</button>
+
                 <div class="battle-form" id="createForm" style="display:none;">
+                    <div class="charity-toggle">
+                        <input type="checkbox" id="charityMode">
+                        <label for="charityMode">Благотворительный баттл (оплачиваю за двоих)</label>
+                    </div>
+
                     <div class="case-select-grid" id="playerCaseGrid"></div>
                     <button class="btn add-case-btn" id="addPlayerCase">Добавить кейс</button>
                     <div class="selected-cases" id="selectedPlayerCases"></div>
-                    <div id="playerTotalCost" style="text-align:center; margin:8px 0;">Итого: 0₽</div>
+                    <div id="playerTotalCost" style="text-align:center; margin:16px 0; font-size:1.4rem;">Итого: 0₽</div>
                     <button class="btn" id="confirmCreate">Создать</button>
                 </div>
+
                 <div class="battle-list" id="battleList"></div>
             </div>
-            <div id="status" style="margin-top:16px; text-align:center; min-height:24px;"></div>
+
+            <div id="status" style="margin-top:20px; text-align:center; min-height:28px; font-size:1.2rem;"></div>
         </div>
     </div>
+
     <div class="nav">
         <button class="nav-btn" onclick="location.href='../index.html'"><span>🏠</span><span class="nav-label">Главная</span></button>
         <button class="nav-btn" onclick="location.href='../profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
@@ -353,10 +364,26 @@
         let currentUser = null;
         let userId = null;
         let isGuest = false;
+        let isCharityMode = false;
 
         const cases = {
-            'vibe': {
-                price: 50,
+            bomj: {
+                price: 5,
+                items: [
+                    {emoji: '🧦', name: 'Дырявый носок', value: 1, prob: 0.42},
+                    {emoji: '🍞', name: 'Чёрствый хлеб', value: 3, prob: 0.24},
+                    {emoji: '🗑️', name: 'Мусорный пакет', value: 7, prob: 0.14},
+                    {emoji: '🍺', name: 'Тёплое пиво 0.5', value: 12, prob: 0.09},
+                    {emoji: '🪙', name: 'Горстка мелочи', value: 25, prob: 0.055},
+                    {emoji: '🧥', name: 'Старая куртка', value: 50, prob: 0.025},
+                    {emoji: '📱', name: 'Сломанный Nokia', value: 100, prob: 0.015},
+                    {emoji: '💸', name: 'Заначка под матрасом', value: 180, prob: 0.006},
+                ],
+                color: '#6b7280',
+                icon: '🗑️'
+            },
+            vibe: {
+                price: 45,
                 items: [
                     {emoji: '💖', name: 'Сердце', value: 15, prob: 0.65},
                     {emoji: '🌹', name: 'Роза', value: 25, prob: 0.17},
@@ -372,21 +399,36 @@
                 color: '#ec4899',
                 icon: '💖'
             },
-            'schoolboy': {
-                price: 350,
+            dvornik: {
+                price: 25,
                 items: [
-                    {emoji: '📚', name: 'Учебник', value: 100, prob: 0.45},
-                    {emoji: '🎒', name: 'Рюкзак', value: 200, prob: 0.2},
-                    {emoji: '📱', name: 'Смартфон', value: 500, prob: 0.15},
-                    {emoji: '💻', name: 'Ноутбук', value: 800, prob: 0.1},
-                    {emoji: '🎮', name: 'PlayStation', value: 1200, prob: 0.04},
-                    {emoji: '🚗', name: 'Машинка', value: 1500, prob: 0.025},
-                    {emoji: '🏠', name: 'Квартира', value: 5000, prob: 0.01},
+                    {emoji: '🧹', name: 'Метла', value: 5, prob: 0.30},
+                    {emoji: '🪣', name: 'Ведро', value: 10, prob: 0.25},
+                    {emoji: '🧼', name: 'Мыло', value: 15, prob: 0.18},
+                    {emoji: '🪓', name: 'Топор старый', value: 35, prob: 0.12},
+                    {emoji: '🧤', name: 'Перчатки рабочие', value: 50, prob: 0.08},
+                    {emoji: '⛏️', name: 'Лопата', value: 80, prob: 0.04},
+                    {emoji: '🛠️', name: 'Набор инструментов', value: 150, prob: 0.025},
+                    {emoji: '🚲', name: 'Велосипед б/у', value: 400, prob: 0.005},
+                ],
+                color: '#eab308',
+                icon: '🧹'
+            },
+            schoolboy: {
+                price: 250,
+                items: [
+                    {emoji: '📚', name: 'Учебник', value: 80, prob: 0.50},
+                    {emoji: '🎒', name: 'Рюкзак', value: 150, prob: 0.25},
+                    {emoji: '📱', name: 'Смартфон', value: 400, prob: 0.12},
+                    {emoji: '💻', name: 'Ноутбук', value: 700, prob: 0.07},
+                    {emoji: '🎮', name: 'PlayStation', value: 1000, prob: 0.03},
+                    {emoji: '🚗', name: 'Машинка', value: 1300, prob: 0.02},
+                    {emoji: '🏠', name: 'Квартира', value: 4000, prob: 0.005},
                 ],
                 color: '#3b82f6',
                 icon: '📚'
             },
-            'event': {
+            event: {
                 price: 500,
                 items: [
                     {emoji: '🎉', name: 'Конфетти', value: 150, prob: 0.4},
@@ -400,16 +442,16 @@
                 color: '#ef4444',
                 icon: '🎉'
             },
-            'milioner': {
+            milioner: {
                 price: 1000,
                 items: [
-                    {emoji: '💵', name: 'Деньги', value: 500,   prob: 0.48},     // ↑
-                    {emoji: '🏦', name: 'Банк', value: 1000,   prob: 0.24},     // ↑
-                    {emoji: '💰', name: 'Мешок денег', value: 2000, prob: 0.18},   // ↑
-                    {emoji: '📈', name: 'График роста', value: 3000, prob: 0.08},  // ↓ было 0.1
-                    {emoji: '🤑', name: 'Миллионер', value: 5000,  prob: 0.015},  // сильно ↓ (было 0.04)
-                    {emoji: '🚀', name: 'Ракета', value: 10000, prob: 0.007},     // сильно ↓ (было 0.025)
-                    {emoji: '🏰', name: 'Дворец', value: 50000, prob: 0.003},     // сильно ↓ (было 0.01)
+                    {emoji: '💵', name: 'Деньги', value: 500, prob: 0.48},
+                    {emoji: '🏦', name: 'Банк', value: 1000, prob: 0.24},
+                    {emoji: '💰', name: 'Мешок денег', value: 2000, prob: 0.18},
+                    {emoji: '📈', name: 'График роста', value: 3000, prob: 0.08},
+                    {emoji: '🤑', name: 'Миллионер', value: 5000, prob: 0.015},
+                    {emoji: '🚀', name: 'Ракета', value: 10000, prob: 0.007},
+                    {emoji: '🏰', name: 'Дворец', value: 50000, prob: 0.003},
                 ],
                 color: '#fbbf24',
                 icon: '💰'
@@ -417,11 +459,252 @@
         };
 
         const caseBackgrounds = {
-            'vibe': '../images/vibe.png',
-            'schoolboy': '../images/schoolboy.png',
-            'event': '../images/event.png',
-            'milioner': '../images/milioner.png'
+            bomj:     '/images/bomj.png',
+            vibe:     '/images/vibe.png',
+            dvornik:  '/images/dvornik.png',
+            schoolboy:'/images/schoolboy.png',
+            event:    '/images/event.png',
+            milioner: '/images/milioner.png'
         };
+
+        const caseOpenedBackgrounds = {
+            bomj:     '/images/bomj1.png',
+            vibe:     '/images/vibe1.png',
+            dvornik:  '/images/dvornik1.png',
+            schoolboy:'/images/schoolboy1.png',
+            event:    '/images/event1.png',
+            milioner: '/images/milioner1.png'
+        };
+
+        const caseDisplayNames = {
+            bomj:     "Бомж",
+            vibe:     "Vibe",
+            dvornik:  "Дворник",
+            schoolboy:"Школьник",
+            event:    "Ивент",
+            milioner: "Миллионер"
+        };
+
+        const sortedCaseKeys = Object.keys(cases).sort((a, b) => cases[a].price - cases[b].price);
+
+        function renderCaseGrid(containerId, onSelect) {
+            const grid = document.getElementById(containerId);
+            grid.innerHTML = '';
+            sortedCaseKeys.forEach(key => {
+                const c = cases[key];
+                const card = document.createElement('div');
+                card.className = `case-card ${key}`;
+                card.innerHTML = `
+                    <img src="${caseBackgrounds[key]}" alt="${key}">
+                    <div class="name">${caseDisplayNames[key] || key}</div>
+                    <div class="price">${c.price}₽</div>
+                `;
+                card.onclick = () => onSelect(key);
+                grid.appendChild(card);
+            });
+        }
+
+        let selectedBotCases = [];
+        let selectedPlayerCases = [];
+
+        function addSelectedCase(section, caseType) {
+            const arr = section === 'bot' ? selectedBotCases : selectedPlayerCases;
+            arr.push(caseType);
+            updateSelectedCases(section);
+            updateTotalCost(section);
+        }
+
+        function updateSelectedCases(section) {
+            const cont = document.getElementById(section === 'bot' ? 'selectedBotCases' : 'selectedPlayerCases');
+            cont.innerHTML = '<h4>Выбранные кейсы:</h4>';
+            const arr = section === 'bot' ? selectedBotCases : selectedPlayerCases;
+            arr.forEach((type, i) => {
+                const div = document.createElement('div');
+                div.textContent = `${caseDisplayNames[type] || type} (${cases[type].price}₽)`;
+                const btn = document.createElement('button');
+                btn.className = 'remove-btn';
+                btn.textContent = 'Удалить';
+                btn.onclick = () => {
+                    arr.splice(i, 1);
+                    updateSelectedCases(section);
+                    updateTotalCost(section);
+                };
+                div.appendChild(btn);
+                cont.appendChild(div);
+            });
+        }
+
+        function updateTotalCost(section) {
+            const arr = section === 'bot' ? selectedBotCases : selectedPlayerCases;
+            const total = arr.reduce((s, t) => s + cases[t].price, 0);
+            const el = document.getElementById(section === 'bot' ? 'botTotalCost' : 'playerTotalCost');
+
+            if (section === 'player' && isCharityMode) {
+                el.innerHTML = `Итого: ${total * 2}₽ <span class="charity-label">за двоих!</span>`;
+            } else {
+                el.textContent = `Итого: ${total}₽`;
+            }
+        }
+
+        function openCase(caseType) {
+            const items = cases[caseType].items;
+            const r = Math.random();
+            let sum = 0;
+            for (let it of items) {
+                sum += it.prob;
+                if (r <= sum) return { ...it, caseType };
+            }
+            return { ...items[0], caseType };
+        }
+
+     async function playVsBot(quick = false) {
+    const totalCost = selectedBotCases.reduce((sum, type) => sum + cases[type].price, 0);
+    if (currentUser.balance < totalCost) {
+        alert('Недостаточно баланса');
+        return;
+    }
+    if (selectedBotCases.length === 0) {
+        alert('Выберите хотя бы один кейс');
+        return;
+    }
+
+    currentUser.balance -= totalCost;
+    await saveUser();
+    updateBalance();
+
+    const playerItems = selectedBotCases.map(type => openCase(type));
+    const playerTotal = playerItems.reduce((sum, item) => sum + item.value, 0);
+    const botItems    = selectedBotCases.map(type => openCase(type));
+    const botTotal    = botItems.reduce((sum, item) => sum + item.value, 0);
+
+    const resultsDiv = document.getElementById('botResults');
+    if (!resultsDiv) return;
+
+    resultsDiv.innerHTML = `
+        <div class="open-results">
+            <div class="player-opens">
+                <h4>Ваши кейсы (${currentUser?.username || 'Гость'}):</h4>
+                <div class="case-opening-container" id="playerCases"></div>
+                <div class="total-value" id="playerTotal">Итого: 0₽</div>
+            </div>
+            <div class="opponent-opens">
+                <h4>Бот:</h4>
+                <div class="case-opening-container" id="botCases"></div>
+                <div class="total-value" id="botTotal">Итого: 0₽</div>
+            </div>
+        </div>
+        <div id="resultText" style="text-align:center; margin-top:20px; font-size:1.4rem; min-height:40px;"></div>
+    `;
+
+    // Запускаем анимацию параллельно
+    await Promise.all([
+        animateBatchedOpenings('playerCases', selectedBotCases, playerItems, playerTotal, 'player', quick),
+        animateBatchedOpenings('botCases', selectedBotCases, botItems, botTotal, 'bot', quick)
+    ]);
+
+    // Показываем результат только после завершения обеих анимаций
+    showBotResult(playerTotal, botTotal, totalCost);
+}
+
+async function animateBatchedOpenings(containerId, caseTypes, items, total, side, quick = false) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    const totalEl = document.getElementById(containerId === 'playerCases' ? 'playerTotal' : 'botTotal');
+    if (totalEl) totalEl.textContent = `Итого: ${total}₽`;
+
+    // Создаём все кейсы сразу
+    caseTypes.forEach((type, index) => {
+        const item = items[index];
+        const box = document.createElement('div');
+        box.className = `case-box ${type}`;
+        box.dataset.type = type;
+        box.style.backgroundImage = `url('${caseBackgrounds[type] || ''}')`;
+        box.innerHTML = `
+            <div class="item-reveal">${item.emoji}</div>
+            <div class="value-label">${item.value}₽</div>
+        `;
+        container.appendChild(box);
+
+        // Плавное появление
+        setTimeout(() => box.classList.add('visible'), index * 80 + 100);
+    });
+
+    if (quick) {
+        // Быстрое открытие — всё почти одновременно
+        setTimeout(() => {
+            container.querySelectorAll('.case-box').forEach(box => {
+                const type = box.dataset.type;
+                const opened = caseOpenedBackgrounds[type];
+                if (opened) box.style.backgroundImage = `url('${opened}')`;
+                box.classList.add('opening', 'revealed');
+            });
+        }, 600);
+    } else {
+        // Нормальная анимация — по одному с задержкой
+        for (let i = 0; i < caseTypes.length; i++) {
+            await new Promise(resolve => setTimeout(resolve, 700));
+            const box = container.children[i];
+            if (!box) continue;
+            const type = box.dataset.type;
+            const opened = caseOpenedBackgrounds[type];
+            if (opened) box.style.backgroundImage = `url('${opened}')`;
+            box.classList.add('opening');
+            setTimeout(() => box.classList.add('revealed'), 1400);
+        }
+    }
+}
+
+function showBotResult(playerTotal, botTotal, totalCost) {
+    const resultTextEl = document.getElementById('resultText');
+    if (!resultTextEl) return;
+
+    let resultText = '';
+    let prize = 0;
+
+    if (playerTotal > botTotal) {
+        prize = playerTotal + botTotal;
+        resultText = `<span style="color:#34d399">Победа! +${prize}₽</span>`;
+    } else if (playerTotal < botTotal) {
+        resultText = `<span style="color:#f87171">Проигрыш</span>`;
+    } else {
+        prize = playerTotal;
+        resultText = `Ничья — возврат ${prize}₽`;
+    }
+
+    resultTextEl.innerHTML = resultText;
+
+    if (prize > 0) {
+        currentUser.balance += prize;
+        saveUser();
+        updateBalance();
+        resultTextEl.innerHTML += `<br><div style="color:#a78bfa; margin-top:12px;">Приз получен автоматически (+${prize}₽)</div>`;
+    }
+}
+
+        async function saveUser() {
+            try {
+                if (isGuest) {
+                    let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+                    const idx = users.findIndex(u => u.username === 'Гость');
+                    if (idx !== -1) users[idx] = currentUser;
+                    localStorage.setItem('dropwin_users', JSON.stringify(users));
+                } else if (userId) {
+                    await updateDoc(doc(db, 'users', userId), { balance: currentUser.balance });
+                }
+            } catch (err) {
+                console.error("Ошибка сохранения:", err);
+                alert("Не удалось сохранить баланс.");
+            }
+        }
+
+        function updateBalance() {
+            document.getElementById('balance').textContent = currentUser ? currentUser.balance || 0 : 0;
+            document.getElementById('authBtn').textContent = isGuest ? 'Гость' : (currentUser ? currentUser.username : 'Войти');
+            document.getElementById('authBtn').onclick = () => location.href = '../profile.html';
+        }
 
         function loadCurrentUser() {
             onAuthStateChanged(auth, async (user) => {
@@ -455,247 +738,21 @@
             });
         }
 
-        function updateBalance() {
-            document.getElementById('balance').textContent = currentUser ? currentUser.balance || 0 : 0;
-            document.getElementById('authBtn').textContent = isGuest ? 'Гость' : (currentUser ? currentUser.username : 'Войти');
-            document.getElementById('authBtn').onclick = () => location.href = '../profile.html';
-        }
-
-        async function saveUser() {
-            try {
-                if (isGuest) {
-                    let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
-                    const idx = users.findIndex(u => u.username === 'Гость');
-                    if (idx !== -1) users[idx] = currentUser;
-                    localStorage.setItem('dropwin_users', JSON.stringify(users));
-                } else if (userId) {
-                    await updateDoc(doc(db, 'users', userId), { balance: currentUser.balance });
-                }
-            } catch (err) {
-                console.error("Ошибка сохранения:", err);
-                alert("Не удалось сохранить баланс.");
-            }
-        }
-
-        function openCase(caseType) {
-            const items = cases[caseType].items;
-            const rand = Math.random();
-            let cumulative = 0;
-            for (let item of items) {
-                cumulative += item.prob;
-                if (rand <= cumulative) return { ...item, caseType };
-            }
-            return { ...items[0], caseType };
-        }
-
-        function openCaseBot(caseType) {
-            const items = cases[caseType].items.map(item => {
-                // Боту чуть больше шансов на дорогие вещи
-                const boost = item.value > cases[caseType].price * 1.8 ? 1.35 : 1.05;
-                return { ...item, adjustedProb: item.prob * boost };
-            });
-            const totalProb = items.reduce((sum, item) => sum + item.adjustedProb, 0);
-            const normalizedItems = items.map(item => ({
-                ...item,
-                prob: item.adjustedProb / totalProb
-            }));
-            const rand = Math.random();
-            let cumulative = 0;
-            for (let item of normalizedItems) {
-                cumulative += item.prob;
-                if (rand <= cumulative) return { emoji: item.emoji, name: item.name, value: item.value, caseType };
-            }
-            return { emoji: normalizedItems[0].emoji, name: normalizedItems[0].name, value: normalizedItems[0].value, caseType };
-        }
-
-        function renderCaseGrid(containerId, onSelect) {
-            const grid = document.getElementById(containerId);
-            grid.innerHTML = '';
-            Object.keys(cases).forEach(key => {
-                const caseData = cases[key];
-                const card = document.createElement('div');
-                card.className = 'case-card';
-                card.innerHTML = `
-                    <img src="${caseBackgrounds[key]}" alt="${key}">
-                    <div class="name">${key.charAt(0).toUpperCase() + key.slice(1)}</div>
-                    <div class="price">${caseData.price}₽</div>
-                `;
-                card.onclick = () => onSelect(key);
-                grid.appendChild(card);
-            });
-        }
-
-        let selectedBotCases = [];
-        let selectedPlayerCases = [];
-
-        function addSelectedCase(section, caseType) {
-            const selected = section === 'bot' ? selectedBotCases : selectedPlayerCases;
-            selected.push(caseType);
-            updateSelectedCases(section);
-            updateTotalCost(section);
-        }
-
-        function updateSelectedCases(section) {
-            const container = document.getElementById(section === 'bot' ? 'selectedBotCases' : 'selectedPlayerCases');
-            container.innerHTML = '<h4>Выбранные кейсы:</h4>';
-            const selected = section === 'bot' ? selectedBotCases : selectedPlayerCases;
-            selected.forEach((type, idx) => {
-                const div = document.createElement('div');
-                div.textContent = `${type} (${cases[type].price}₽)`;
-                const removeBtn = document.createElement('button');
-                removeBtn.className = 'remove-btn';
-                removeBtn.textContent = 'Удалить';
-                removeBtn.onclick = () => {
-                    selected.splice(idx, 1);
-                    updateSelectedCases(section);
-                    updateTotalCost(section);
-                };
-                div.appendChild(removeBtn);
-                container.appendChild(div);
-            });
-        }
-
-        function updateTotalCost(section) {
-            const selected = section === 'bot' ? selectedBotCases : selectedPlayerCases;
-            const total = selected.reduce((sum, type) => sum + cases[type].price, 0);
-            document.getElementById(section === 'bot' ? 'botTotalCost' : 'playerTotalCost').textContent = `Итого: ${total}₽`;
-        }
-
-        async function playVsBot(quick = false) {
-            const totalCost = selectedBotCases.reduce((sum, type) => sum + cases[type].price, 0);
-            if (currentUser.balance < totalCost) return alert('Недостаточно баланса');
-            if (selectedBotCases.length === 0) return alert('Выберите кейсы');
-
-            currentUser.balance -= totalCost;
-            await saveUser();
-            updateBalance();
-
-            const playerItems = selectedBotCases.map(type => openCase(type));
-            const playerTotal = playerItems.reduce((sum, item) => sum + item.value, 0);
-            const botItems = selectedBotCases.map(type => openCaseBot(type));
-            const botTotal = botItems.reduce((sum, item) => sum + item.value, 0);
-
-            const resultsDiv = document.getElementById('botResults');
-            resultsDiv.innerHTML = `
-                <div class="open-results">
-                    <div class="player-opens">
-                        <h4>Ваши кейсы (<span class="nickname">${currentUser.username || 'Гость'}</span>):</h4>
-                        <div class="case-opening-container" id="playerCases"></div>
-                        <div class="total-value" id="playerTotal">Итого: 0₽</div>
-                    </div>
-                    <div class="opponent-opens">
-                        <h4>Бот кейсы:</h4>
-                        <div class="case-opening-container" id="botCases"></div>
-                        <div class="total-value" id="botTotal">Итого: 0₽</div>
-                    </div>
-                </div>
-                <div id="resultText" style="text-align:center; margin-top:20px; font-size:1.4rem;"></div>
-                <button class="claim-btn disabled" id="claimBotPrize">Забрать приз</button>
-            `;
-
-            animateSimultaneousOpenings('playerCases', selectedBotCases, playerItems, playerTotal, 'player', quick);
-            animateSimultaneousOpenings('botCases', selectedBotCases, botItems, botTotal, 'bot', quick);
-
-            if (quick) {
-                showBotResult(playerTotal, botTotal, totalCost);
-            } else {
-                setTimeout(() => {
-                    showBotResult(playerTotal, botTotal, totalCost);
-                }, 4200);
-            }
-        }
-
-        function animateSimultaneousOpenings(containerId, caseTypes, items, total, side, quick = false) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-
-            container.innerHTML = '';
-            caseTypes.forEach((type, index) => {
-                const item = items[index];
-                const box = document.createElement('div');
-                box.className = 'case-box';
-                box.style.backgroundImage = `url('${caseBackgrounds[type]}')`;
-                box.innerHTML = `
-                    <div class="item-reveal">${item.emoji}</div>
-                    <div class="value-label">${item.value}₽</div>
-                `;
-                container.appendChild(box);
-            });
-
-            const totalEl = document.getElementById(containerId === 'playerCases' ? 'playerTotal' : 'botTotal');
-
-            if (quick) {
-                container.querySelectorAll('.case-box').forEach(box => box.classList.add('revealed'));
-                if (totalEl) totalEl.textContent = `Итого: ${total}₽`;
-            } else {
-                setTimeout(() => {
-                    container.querySelectorAll('.case-box').forEach(box => box.classList.add('opening'));
-                }, 300);
-                setTimeout(() => {
-                    container.querySelectorAll('.case-box').forEach(box => box.classList.add('revealed'));
-                    if (totalEl) totalEl.textContent = `Итого: ${total}₽`;
-                }, 1100);
-            }
-        }
-
-        function showBotResult(playerTotal, botTotal, totalCost) {
-            let resultText = '';
-            let prize = 0;
-            const resultsContainer = document.getElementById('botResults');
-            const claimBtn = document.getElementById('claimBotPrize');
-
-            if (playerTotal > botTotal) {
-                prize = playerTotal + botTotal;
-                resultText = `<span style="color:#34d399">Победа! +${prize}₽</span>`;
-            } else if (playerTotal < botTotal) {
-                resultText = `<span style="color:#f87171">Проигрыш</span>`;
-            } else {
-                prize = playerTotal;
-                resultText = `Ничья — возврат ${prize}₽`;
-            }
-
-            document.getElementById('resultText').innerHTML = resultText;
-
-            if (prize > 0) {
-                claimBtn.textContent = `Забрать ${prize}₽`;
-                claimBtn.classList.remove('disabled');
-                claimBtn.onclick = () => {
-                    claimBtn.disabled = true;
-                    claimBtn.classList.add('disabled');
-                    currentUser.balance += prize;
-                    saveUser();
-                    updateBalance();
-                    resultsContainer.innerHTML = `
-                        <div style="text-align:center; padding:40px; color:#a78bfa; font-size:1.3rem;">
-                            Приз успешно забран ✓<br><br>
-                            <button class="btn" onclick="document.getElementById('botResults').innerHTML = '';">Закрыть</button>
-                        </div>`;
-                };
-            } else {
-                claimBtn.remove();
-                resultsContainer.innerHTML += '<div style="text-align:center; padding:20px; color:#f87171;">Вы проиграли :(</div>';
-                setTimeout(() => {
-                    document.getElementById('botResults').innerHTML = '';
-                }, 5000);
-            }
-        }
-
-        // ───────────────────────────────────────────────
-        // Vs Player (оставил без изменений, только защита от дублирования забора)
-        // ───────────────────────────────────────────────
-
         async function createBattle() {
             try {
                 if (isGuest) throw new Error('Только для зарегистрированных');
                 if (selectedPlayerCases.length === 0) throw new Error('Выберите кейсы');
-                const totalCost = selectedPlayerCases.reduce((sum, type) => sum + cases[type].price, 0);
-                if (currentUser.balance < totalCost) throw new Error('Недостаточно баланса');
+
+                const singleCost = selectedPlayerCases.reduce((sum, type) => sum + cases[type].price, 0);
+                const costToPay = isCharityMode ? singleCost * 2 : singleCost;
+
+                if (currentUser.balance < costToPay) throw new Error('Недостаточно баланса');
 
                 const existingQ = query(collection(db, 'battles'), where('creator', '==', userId), where('status', '==', 'open'));
                 const existingSnap = await getDocs(existingQ);
                 if (!existingSnap.empty) throw new Error('У вас уже есть открытый баттл. Удалите его сначала.');
 
-                currentUser.balance -= totalCost;
+                currentUser.balance -= costToPay;
                 await saveUser();
                 updateBalance();
 
@@ -703,7 +760,9 @@
                     creator: userId,
                     creatorName: currentUser.username,
                     caseTypes: selectedPlayerCases,
-                    totalCost,
+                    totalCost: singleCost,          // стоимость одного игрока
+                    isCharity: isCharityMode,
+                    creatorPaid: costToPay,         // сколько заплатил создатель
                     player1: userId,
                     player1Name: currentUser.username,
                     player2: null,
@@ -719,6 +778,14 @@
                 });
 
                 subscribeToBattle(battleDoc.id);
+
+                // Сброс формы после создания
+                selectedPlayerCases = [];
+                updateSelectedCases('player');
+                updateTotalCost('player');
+                document.getElementById('createForm').style.display = 'none';
+                document.getElementById('charityMode').checked = false;
+                isCharityMode = false;
             } catch (err) {
                 console.error("Ошибка создания баттла:", err);
                 alert(err.message || "Ошибка создания баттла");
@@ -798,8 +865,8 @@
                             </button>
                         `;
 
-                        animateSimultaneousOpenings('myBattleCases', data.caseTypes, myItems, myTotal, 'my');
-                        animateSimultaneousOpenings('oppBattleCases', data.caseTypes, oppItems, oppTotal, 'opp');
+                        await animateBatchedOpenings('myBattleCases', data.caseTypes, myItems, myTotal, 'my', false);
+                        await animateBatchedOpenings('oppBattleCases', data.caseTypes, oppItems, oppTotal, 'opp', false);
 
                         const claimBtn = document.getElementById('claimPrizeBtn');
                         if (myClaimed || prize === 0) {
@@ -825,16 +892,15 @@
                                 await saveUser();
                                 updateBalance();
 
-                      await saveUser();                    // ← обновление users/{uid}
-            await updateDoc(battleRef, {         // ← обновление battles/{battleId}
-        [isPlayer1 ? 'player1Claimed' : 'player2Claimed']: true
+                                await updateDoc(snap.ref, {
+                                    [isPlayer1 ? 'player1Claimed' : 'player2Claimed']: true
                                 });
 
                                 statusDiv.innerHTML = `
-                                    <div style="text-align:center; padding:40px; color:#a78bfa; font-size:1.3rem;">
-                                        Приз успешно забран ✓<br><br>
-                                        <button class="btn" onclick="location.reload()">Вернуться</button>
+                                    <div style="text-align:center; padding:30px; color:#a78bfa; font-size:1.4rem;">
+                                        Приз получен (+${prize}₽)
                                     </div>`;
+                                setTimeout(() => { statusDiv.innerHTML = ''; }, 2200);
                             };
                         }
                     }
@@ -857,18 +923,26 @@
                     }
                     querySnap.forEach(snap => {
                         const data = snap.data();
+                        const priceText = data.isCharity
+                            ? '<span class="battle-price free">Бесплатно</span>'
+                            : `<span class="battle-price paid">${data.totalCost}₽</span>`;
+
+                        const charityBadge = data.isCharity
+                            ? '<span class="charity-label">Благотворительный</span>'
+                            : '';
+
                         const div = document.createElement('div');
                         div.className = 'battle-item';
                         div.innerHTML = `
-                            <div>Создатель: <span class="nickname">${data.creatorName || '???'}</span></div>
-                            <div>Кейсы: ${data.caseTypes.map(t => `${t} (${cases[t]?.price || '?'}₽)`).join(', ')}</div>
-                            <div>Стоимость: ${data.totalCost}₽</div>
+                            <div>Создатель: <span class="nickname">${data.creatorName || '???'}</span> ${charityBadge}</div>
+                            <div>Кейсы: ${data.caseTypes.map(t => `${caseDisplayNames[t] || t} (${cases[t]?.price || '?'}₽)`).join(', ')}</div>
+                            <div>${priceText}</div>
                             <button class="join-btn" data-battle-id="${snap.id}">Присоединиться</button>
                         `;
                         if (data.creator === userId) {
                             const delBtn = document.createElement('button');
                             delBtn.className = 'delete-battle-btn';
-                            delBtn.textContent = 'Удалить';
+                            delBtn.innerHTML = '🗑️ Удалить';
                             delBtn.onclick = () => deleteBattle(snap.id);
                             div.appendChild(delBtn);
                         }
@@ -891,12 +965,14 @@
                 const data = battleSnap.data();
                 if (!data || data.status !== 'open') throw new Error('Баттл уже закрыт');
                 if (data.creator === userId) throw new Error('Нельзя присоединиться к своему баттлу');
-                const totalCost = data.totalCost;
-                if (currentUser.balance < totalCost) throw new Error('Недостаточно средств');
 
-                currentUser.balance -= totalCost;
-                await saveUser();
-                updateBalance();
+                if (!data.isCharity) {
+                    const totalCost = data.totalCost;
+                    if (currentUser.balance < totalCost) throw new Error('Недостаточно средств');
+                    currentUser.balance -= totalCost;
+                    await saveUser();
+                    updateBalance();
+                }
 
                 await updateDoc(battleRef, {
                     player2: userId,
@@ -919,11 +995,12 @@
                 if (!data || data.creator !== userId || data.status !== 'open') {
                     throw new Error('Нельзя удалить этот баттл');
                 }
-                currentUser.balance += data.totalCost;
+                const refund = data.creatorPaid || data.totalCost;
+                currentUser.balance += refund;
                 await saveUser();
                 updateBalance();
                 await deleteDoc(battleRef);
-                alert('Баттл удалён, средства возвращены');
+                alert(`Баттл удалён, возвращено ${refund}₽`);
             } catch (err) {
                 console.error("Ошибка удаления:", err);
                 alert(err.message || "Ошибка удаления баттла");
@@ -956,6 +1033,11 @@
                 loadBattles();
             });
 
+            document.getElementById('charityMode')?.addEventListener('change', (e) => {
+                isCharityMode = e.target.checked;
+                updateTotalCost('player');
+            });
+
             renderCaseGrid('botCaseGrid', (type) => addSelectedCase('bot', type));
             renderCaseGrid('playerCaseGrid', (type) => addSelectedCase('player', type));
 
@@ -970,5 +1052,4 @@
         });
     </script>
 </body>
-
 </html>

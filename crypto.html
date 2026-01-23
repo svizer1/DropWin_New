@@ -89,6 +89,30 @@
       margin-top: 6px;
       font-weight: 600;
     }
+    .popular-badge {
+      font-size: 0.9rem;
+      background: #fbbf24;
+      color: #1e1b47;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-left: 8px;
+      font-weight: 700;
+    }
+    .new-exclusive {
+      font-size: 0.9rem;
+      background: #34d399;
+      color: #1e1b47;
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-left: 8px;
+      font-weight: 700;
+    }
+    .expired-msg {
+      color: #f87171;
+      font-size: 0.9rem;
+      margin-top: 6px;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -120,7 +144,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, updateDoc, onSnapshot, setDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, updateDoc, onSnapshot, setDoc, arrayUnion, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
@@ -157,15 +181,18 @@
   const coins = [
     { id: 'wincoin',      name: 'WinCoin',      startPrice: 1.00     },
     { id: 'tgcoin',       name: 'TgCoin',       startPrice: 15.00    },
-    { id: 'bomjcoin',     name: 'BomjCoin',     startPrice: 0.0005   },
+    { id: 'bomjcoin',     name: 'BomjCoin',     startPrice: 0.01     },
     { id: 'milionercoin', name: 'MilionerCoin', startPrice: 50.00    },
-    { id: 'crashcoin',    name: 'CrashCoin',    startPrice: 100.00   }
+    { id: 'crashcoin',    name: 'CrashCoin',    startPrice: 100.00   },
+    { id: 'dropwincoin',  name: 'DropWinCoin',  startPrice: 75.00    },
+    { id: 'limosycoin',   name: 'LimosyCoin',   startPrice: 15.00    }
   ];
 
   const prices = {};
   const histories = {};
   const prevPrices = {};
   const volumes = {};
+  const creationTimes = {};
 
   onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -187,11 +214,15 @@
       const ref = doc(db, 'cryptoPrices', coin.id);
       const snap = await getDoc(ref);
       if (!snap.exists()) {
-        await setDoc(ref, {
+        const data = {
           price: coin.startPrice,
           history: [coin.startPrice],
           volume: 0
-        });
+        };
+        if (coin.id === 'limosycoin') {
+          data.creationTime = serverTimestamp();
+        }
+        await setDoc(ref, data);
       }
     }
   }
@@ -204,6 +235,9 @@
         prices[coin.id] = data.price;
         histories[coin.id] = data.history || [];
         volumes[coin.id] = data.volume || 0;
+        if (data.creationTime) {
+          creationTimes[coin.id] = data.creationTime.toMillis();
+        }
         renderList();
       }
     });
@@ -261,6 +295,15 @@
     if (cost > currentUser.balance) {
       alert('Недостаточно средств');
       return;
+    }
+
+    // Проверка на эксклюзив для LimosyCoin
+    if (coinId === 'limosycoin') {
+      const creationTime = creationTimes[coinId];
+      if (creationTime && Date.now() - creationTime > 5 * 24 * 60 * 60 * 1000) {
+        alert('Покупка LimosyCoin недоступна! Эксклюзивный период истек.');
+        return;
+      }
     }
 
     currentUser.balance -= cost;
@@ -406,6 +449,16 @@
 
   window.buyAll = async function(coinId) {
     if (!currentUser || currentUser.balance <= 0) return;
+
+    // Проверка на эксклюзив для LimosyCoin
+    if (coinId === 'limosycoin') {
+      const creationTime = creationTimes[coinId];
+      if (creationTime && Date.now() - creationTime > 5 * 24 * 60 * 60 * 1000) {
+        alert('Покупка LimosyCoin недоступна! Эксклюзивный период истек.');
+        return;
+      }
+    }
+
     const amount = currentUser.balance / prices[coinId];
     document.getElementById(`${coinId}-amt`).value = amount.toFixed(6);
     document.getElementById(`${coinId}-rub`).value = Math.round(currentUser.balance);
@@ -418,7 +471,7 @@
 
     const sortedCoins = [...coins].sort((a, b) => (volumes[b.id] || 0) - (volumes[a.id] || 0));
 
-    sortedCoins.forEach(coin => {
+    sortedCoins.forEach((coin, index) => {
       const price = prices[coin.id] || coin.startPrice;
       const prev = prevPrices[coin.id] || price;
       const changePercent = ((price - prev) / prev * 100);
@@ -442,10 +495,27 @@
         cooldownMsg = `<div class="cooldown-msg" style="color:#34d399">Продажа разблокирована!</div>`;
       }
 
+      let popularBadge = '';
+      if (index === 0) {
+        popularBadge = `<span class="popular-badge">🔥 Популярный</span>`;
+      }
+
+      let newExclusive = '';
+      let expiredMsg = '';
+      let buyDisabled = '';
+      if (coin.id === 'limosycoin') {
+        newExclusive = `<span class="new-exclusive">NEW Эксклюзив</span>`;
+        const creationTime = creationTimes[coin.id];
+        if (creationTime && Date.now() - creationTime > 5 * 24 * 60 * 60 * 1000) {
+          expiredMsg = `<div class="expired-msg">Покупка недоступна! Эксклюзивный период истек (5 дней).</div>`;
+          buyDisabled = 'disabled';
+        }
+      }
+
       const div = document.createElement('div');
       div.className = 'crypto-item';
       div.innerHTML = `
-        <div class="crypto-name">${coin.name}</div>
+        <div class="crypto-name">${coin.name}${popularBadge}${newExclusive}</div>
         <div>
           <span class="crypto-price">${price.toFixed(3)} ₽</span>
           <span class="price-change ${changeClass}">${changeText}</span>
@@ -456,14 +526,15 @@
           <span class="${plClass}">Прибыль/убыток: ${plText >= 0 ? '+' : ''}${plText}₽</span>
         </div>
         ${cooldownMsg}
+        ${expiredMsg}
 
         <div class="controls">
           <input type="number" id="${coin.id}-rub" placeholder="Сколько ₽" step="1" min="1">
           <input type="number" id="${coin.id}-amt" placeholder="Сколько шт" step="any" min="0.000001">
-          <button class="buy-btn" onclick="window.buy('${coin.id}')">Купить</button>
+          <button class="buy-btn" onclick="window.buy('${coin.id}')" ${buyDisabled}>Купить</button>
           <button class="sell-btn" onclick="window.sell('${coin.id}')">Продать</button>
           <button class="sell-all-btn" onclick="window.sellAll('${coin.id}')">Продать всё</button>
-          <button class="all-btn" onclick="window.buyAll('${coin.id}')">Купить на всё</button>
+          <button class="all-btn" onclick="window.buyAll('${coin.id}')" ${buyDisabled}>Купить на всё</button>
         </div>
 
         <canvas id="chart-${coin.id}" height="160"></canvas>
@@ -509,7 +580,22 @@
               grid: { color: 'rgba(139,92,246,0.08)' }
             }
           },
-          plugins: { legend: { display: false } }
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              enabled: true,
+              callbacks: {
+                label: function(context) {
+                  return `Цена: ${context.parsed.y.toFixed(3)} ₽`;
+                }
+              }
+            }
+          },
+          interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false
+          }
         }
       });
     });

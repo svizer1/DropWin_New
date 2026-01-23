@@ -39,16 +39,13 @@ body::before {
 }
 .particle {
     position: absolute;
-    background: #fbbf24; /* Изменено на жёлтый, как в рулетке, для лучшей видимости */
+    background: rgba(255,255,255,0.15);
     border-radius: 50%;
-    opacity: 0.6; /* Добавлена opacity для видимости */
     animation: float 15s infinite linear;
 }
 @keyframes float {
-    0% { transform: translateY(100vh) scale(0.5); opacity: 0; } /* Улучшена анимация для лучшей видимости, как в рулетке */
-    10% { opacity: 0.8; }
-    90% { opacity: 0.8; }
-    100% { transform: translateY(-20vh) scale(1.2); opacity: 0; }
+    0% { transform: translateY(0) scale(1); opacity: 0.8; }
+    100% { transform: translateY(-100vh) scale(0.5); opacity: 0; }
 }
 
 /* ─── HEADER (самое изменённое место) ──────────────────────────────────────── */
@@ -267,11 +264,137 @@ body::before {
     100% { transform: rotateY(360deg); }
 }
 
-/* ─── INPUTS ──────────────────────────────────────── */
-.input-group {
-    margin-bottom: 20px;
+.game-item.win {
+    animation: winPulse 1s infinite;
+    border-color: #fbbf24;
+    box-shadow: 0 0 30px rgba(251,191,36,0.6);
+}
+@keyframes winPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
 }
 
+.roulette-wheel.spinning {
+    animation: rouletteSpin 5s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+@keyframes rouletteSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(2160deg); }
+}
+
+.card.flipped {
+    animation: flip 0.8s ease;
+}
+@keyframes flip {
+    0% { transform: rotateY(0); }
+    100% { transform: rotateY(180deg); }
+}
+
+.dice-face.shake {
+    animation: shake 0.5s;
+}
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.crash-multiplier {
+    animation: crashPulse 1s infinite;
+}
+@keyframes crashPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+.crash-multiplier.crashed {
+    animation: crashShake 0.6s;
+}
+@keyframes crashShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-10px); }
+    40% { transform: translateX(10px); }
+    60% { transform: translateX(-10px); }
+    80% { transform: translateX(5px); }
+}
+
+.gem.win {
+    animation: gemShine 0.8s infinite alternate;
+}
+@keyframes gemShine {
+    0%, 100% { box-shadow: 0 0 15px rgba(16,185,129,0.5); }
+    50% { box-shadow: 0 0 30px rgba(16,185,129,0.8); }
+}
+
+/* Результат */
+.result {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 16px;
+    background: rgba(99,102,241,0.1);
+    text-align: center;
+    font-weight: 700;
+    font-size: 16px;
+    border: 2px solid rgba(99,102,241,0.3);
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Бэк кнопка */
+.back-btn {
+    background: rgba(255,255,255,0.08);
+    border: none;
+    color: #c084fc;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+/* Промокод в хедере */
+.promo-header {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(30,27,71,0.55);           /* тоже чуть прозрачнее */
+    backdrop-filter: blur(10px);
+    padding: 8px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(168,85,247,0.35);
+    font-size: 0.85rem;
+    color: #c084fc;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.promo-header input {
+    width: 110px;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.promo-header button {
+    background: none;
+    border: none;
+    color: #fbbf24;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+/* ИНПУТЫ */
+.input-group {
+    margin: 15px 0;
+}
 .input-label {
     display: block;
     margin-bottom: 10px;

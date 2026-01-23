@@ -39,13 +39,6 @@
     }
     .change-up   { color: #34d399; }
     .change-down { color: #f87171; }
-    .profit-loss {
-      font-size: 1.05rem;
-      margin: 8px 0;
-      font-weight: 600;
-    }
-    .profit { color: #34d399; }
-    .loss   { color: #f87171; }
     .portfolio-info {
       font-size: 1rem;
       color: #94a3b8;
@@ -194,6 +187,9 @@
   const volumes = {};
   const creationTimes = {};
 
+  const cryptoElements = {};
+  const cryptoCharts = {};
+
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       userId = user.uid;
@@ -233,9 +229,9 @@
         const data = snap.data();
         prevPrices[coin.id] = prices[coin.id] || data.price;
         prices[coin.id] = data.price;
-        histories[coin.id] = data.history || [];
+        histories[coin.id] = data.history || [data.price];
         volumes[coin.id] = data.volume || 0;
-        if (data.creationTime) {
+        if (data.creationTime?.toMillis) {
           creationTimes[coin.id] = data.creationTime.toMillis();
         }
         renderList();
@@ -248,7 +244,7 @@
       const ref = doc(db, 'cryptoPrices', coin.id);
       const snap = await getDoc(ref);
       if (snap.exists()) {
-        let { price, history, volume } = snap.data();
+        let { price, history = [], volume } = snap.data();
         const change = (Math.random() * 0.06 - 0.03);
         price *= (1 + change);
         price = Math.max(price, 0.00001);
@@ -259,20 +255,20 @@
         await updateDoc(ref, { price, history });
       }
     }
-  }, 30000);
+  }, 40000);
 
   setInterval(async () => {
     const coin = coins[Math.floor(Math.random() * coins.length)];
     const ref = doc(db, 'cryptoPrices', coin.id);
     const snap = await getDoc(ref);
     if (snap.exists()) {
-      let { price, volume } = snap.data();
+      let { price, volume = 0 } = snap.data();
       const isBuy = Math.random() > 0.5;
-      price *= isBuy ? 1.002 : 0.998;
-      volume += Math.random() * 500 + 100;
+      price *= isBuy ? 1.003 : 0.997;
+      volume += Math.random() * 800 + 200;
       await updateDoc(ref, { price, volume });
     }
-  }, 60000);
+  }, 150000);
 
   window.buy = async function(coinId) {
     if (!currentUser) return;
@@ -282,10 +278,10 @@
     let amount = parseFloat(amtInput.value) || 0;
     let rub = parseFloat(rubInput.value) || 0;
 
-    if (rub > 0) {
+    if (rub > 0 && price) {
       amount = rub / price;
       amtInput.value = amount.toFixed(6);
-    } else if (amount > 0) {
+    } else if (amount > 0 && price) {
       rub = amount * price;
       rubInput.value = rub.toFixed(0);
     }
@@ -297,7 +293,6 @@
       return;
     }
 
-    // Проверка на эксклюзив для LimosyCoin
     if (coinId === 'limosycoin') {
       const creationTime = creationTimes[coinId];
       if (creationTime && Date.now() - creationTime > 5 * 24 * 60 * 60 * 1000) {
@@ -312,38 +307,25 @@
     const old = portfolio[coinId];
     const newAmount = old.amount + amount;
     const newInvested = old.invested + cost;
-    const newAvg = newInvested / newAmount;
+    const newAvg = newAmount > 0 ? newInvested / newAmount : 0;
 
-    portfolio[coinId] = {
-      amount: newAmount,
-      avgPrice: newAvg,
-      invested: newInvested,
-      lastBuyTime: Date.now()
-    };
+    portfolio[coinId] = { amount: newAmount, avgPrice: newAvg, invested: newInvested, lastBuyTime: Date.now() };
 
     const priceImpact = Math.min(0.005 * (cost / price), 0.02);
     const newPrice = prices[coinId] * (1 + priceImpact);
-
     const newVolume = (volumes[coinId] || 0) + cost;
 
-    await updateDoc(doc(db, 'cryptoPrices', coinId), {
-      price: newPrice,
-      volume: newVolume
-    });
+    await updateDoc(doc(db, 'cryptoPrices', coinId), { price: newPrice, volume: newVolume });
 
     const transaction = {
       timestamp: new Date().toISOString(),
       coin: coinId,
       type: 'buy',
-      amount,
-      price,
-      cost
+      amount, price, cost
     };
-    await updateDoc(doc(db, 'users', userId), {
-      cryptoTransactions: arrayUnion(transaction)
-    });
 
     await updateDoc(doc(db, 'users', userId), {
+      cryptoTransactions: arrayUnion(transaction),
       balance: currentUser.balance,
       cryptoPortfolio: portfolio
     });
@@ -360,10 +342,10 @@
     let amount = parseFloat(amtInput.value) || 0;
     let rub = parseFloat(rubInput.value) || 0;
 
-    if (rub > 0) {
+    if (rub > 0 && price) {
       amount = rub / price;
       amtInput.value = amount.toFixed(6);
-    } else if (amount > 0) {
+    } else if (amount > 0 && price) {
       rub = amount * price;
       rubInput.value = rub.toFixed(0);
     }
@@ -373,7 +355,6 @@
       return;
     }
 
-    // Проверка кулдауна
     const lastBuy = portfolio[coinId].lastBuyTime || 0;
     const timeLeft = 5 * 60 * 1000 - (Date.now() - lastBuy);
     if (timeLeft > 0) {
@@ -383,41 +364,29 @@
     }
 
     const revenue = amount * price;
-
     const soldRatio = amount / portfolio[coinId].amount;
-    const reducedInvested = portfolio[coinId].invested * soldRatio;
-    portfolio[coinId].invested -= reducedInvested;
+    portfolio[coinId].invested -= portfolio[coinId].invested * soldRatio;
 
     currentUser.balance += revenue;
     portfolio[coinId].amount -= amount;
 
-    if (portfolio[coinId].amount <= 0) {
-      delete portfolio[coinId];
-    }
+    if (portfolio[coinId].amount <= 0) delete portfolio[coinId];
 
     const priceImpact = Math.min(0.005 * (revenue / price), 0.02);
     const newPrice = prices[coinId] * (1 - priceImpact);
-
     const newVolume = (volumes[coinId] || 0) + revenue;
 
-    await updateDoc(doc(db, 'cryptoPrices', coinId), {
-      price: newPrice,
-      volume: newVolume
-    });
+    await updateDoc(doc(db, 'cryptoPrices', coinId), { price: newPrice, volume: newVolume });
 
     const transaction = {
       timestamp: new Date().toISOString(),
       coin: coinId,
       type: 'sell',
-      amount,
-      price,
-      revenue
+      amount, price, revenue
     };
-    await updateDoc(doc(db, 'users', userId), {
-      cryptoTransactions: arrayUnion(transaction)
-    });
 
     await updateDoc(doc(db, 'users', userId), {
+      cryptoTransactions: arrayUnion(transaction),
       balance: currentUser.balance,
       cryptoPortfolio: portfolio
     });
@@ -442,15 +411,13 @@
 
     const amount = portfolio[coinId].amount;
     document.getElementById(`${coinId}-amt`).value = amount.toFixed(6);
-    const rub = amount * prices[coinId];
-    document.getElementById(`${coinId}-rub`).value = Math.round(rub);
+    document.getElementById(`${coinId}-rub`).value = Math.round(amount * prices[coinId]);
     window.sell(coinId);
   };
 
   window.buyAll = async function(coinId) {
     if (!currentUser || currentUser.balance <= 0) return;
 
-    // Проверка на эксклюзив для LimosyCoin
     if (coinId === 'limosycoin') {
       const creationTime = creationTimes[coinId];
       if (creationTime && Date.now() - creationTime > 5 * 24 * 60 * 60 * 1000) {
@@ -467,137 +434,201 @@
 
   function renderList() {
     const container = document.getElementById('crypto-list');
-    container.innerHTML = '';
 
-    const sortedCoins = [...coins].sort((a, b) => (volumes[b.id] || 0) - (volumes[a.id] || 0));
+    // Гибридная сортировка
+    let sortedCoins = [...coins];
+
+    const limosyIndex = sortedCoins.findIndex(c => c.id === 'limosycoin');
+    const limosy = sortedCoins[limosyIndex];
+    const isLimosyActive = limosy && creationTimes['limosycoin'] &&
+      (Date.now() - creationTimes['limosycoin'] < 5 * 24 * 60 * 60 * 1000);
+
+    if (isLimosyActive && limosyIndex !== -1) {
+      sortedCoins.splice(limosyIndex, 1);
+      sortedCoins.unshift(limosy);  // эксклюзив всегда первый
+    }
+
+    // Остальные сортируем по объёму
+    sortedCoins.sort((a, b) => {
+      if (a.id === 'limosycoin' && isLimosyActive) return -1;
+      if (b.id === 'limosycoin' && isLimosyActive) return 1;
+      return (volumes[b.id] || 0) - (volumes[a.id] || 0);
+    });
 
     sortedCoins.forEach((coin, index) => {
-      const price = prices[coin.id] || coin.startPrice;
-      const prev = prevPrices[coin.id] || price;
-      const changePercent = ((price - prev) / prev * 100);
+      const coinId = coin.id;
+      const price = prices[coinId] || coin.startPrice;
+      const prev = prevPrices[coinId] || price;
+      const changePercent = prev !== 0 ? ((price - prev) / prev * 100) : 0;
       const changeClass = changePercent >= 0 ? 'change-up' : 'change-down';
       const changeText = changePercent >= 0 ? `+${changePercent.toFixed(2)}%` : `${changePercent.toFixed(2)}%`;
 
-      const port = portfolio[coin.id] || { amount: 0, avgPrice: 0, invested: 0, lastBuyTime: 0 };
+      const port = portfolio[coinId] || { amount: 0, avgPrice: 0, invested: 0, lastBuyTime: 0 };
       const currentValue = port.amount * price;
       const profitLoss = currentValue - port.invested;
       const plClass = profitLoss >= 0 ? 'profit' : 'loss';
       const plText = Math.round(profitLoss);
 
-      const hist = histories[coin.id] || [price];
+      let hist = histories[coinId] || [price];
+      if (!Array.isArray(hist)) hist = [price];
 
       const cooldown = port.lastBuyTime ? 5 * 60 * 1000 - (Date.now() - port.lastBuyTime) : 0;
-      let cooldownMsg = '';
+      let cooldownHtml = '';
       if (cooldown > 0) {
         const minutes = Math.ceil(cooldown / 60000);
-        cooldownMsg = `<div class="cooldown-msg">Продажа разблокируется через ${minutes} мин</div>`;
-      } else if (cooldown <= 0 && port.lastBuyTime && port.lastBuyTime + 5*60*1000 > Date.now() - 1000) {
-        cooldownMsg = `<div class="cooldown-msg" style="color:#34d399">Продажа разблокирована!</div>`;
+        cooldownHtml = `<div class="cooldown-msg">Продажа разблокируется через ${minutes} мин</div>`;
+      } else if (cooldown <= 0 && port.lastBuyTime) {
+        cooldownHtml = `<div class="cooldown-msg" style="color:#34d399">Продажа разблокирована!</div>`;
       }
 
-      let popularBadge = '';
-      if (index === 0) {
-        popularBadge = `<span class="popular-badge">🔥 Популярный</span>`;
+      let badgeHtml = '';
+
+      if (coinId === 'limosycoin') {
+        const creationTime = creationTimes[coinId];
+        const isExpired = creationTime && Date.now() - creationTime > 5 * 24 * 60 * 60 * 1000;
+        if (!isExpired) {
+          badgeHtml = `<span class="new-exclusive">NEW Эксклюзив</span>`;
+        }
       }
 
-      let newExclusive = '';
-      let expiredMsg = '';
-      let buyDisabled = '';
-      if (coin.id === 'limosycoin') {
-        newExclusive = `<span class="new-exclusive">NEW Эксклюзив</span>`;
-        const creationTime = creationTimes[coin.id];
+      // Популярный — топ-3 после учёта эксклюзива
+      const isPopular = index < 3 && badgeHtml === '';
+      if (isPopular) {
+        badgeHtml = `<span class="popular-badge">🔥 Популярный</span>`;
+      }
+
+      const nameHtml = `${coin.name}${badgeHtml}`;
+
+      let expiredHtml = '';
+      let buyDisabled = false;
+      if (coinId === 'limosycoin') {
+        const creationTime = creationTimes[coinId];
         if (creationTime && Date.now() - creationTime > 5 * 24 * 60 * 60 * 1000) {
-          expiredMsg = `<div class="expired-msg">Покупка недоступна! Эксклюзивный период истек (5 дней).</div>`;
-          buyDisabled = 'disabled';
+          expiredHtml = `<div class="expired-msg">Покупка недоступна! Эксклюзивный период истек (5 дней).</div>`;
+          buyDisabled = true;
         }
       }
 
-      const div = document.createElement('div');
-      div.className = 'crypto-item';
-      div.innerHTML = `
-        <div class="crypto-name">${coin.name}${popularBadge}${newExclusive}</div>
-        <div>
-          <span class="crypto-price">${price.toFixed(3)} ₽</span>
-          <span class="price-change ${changeClass}">${changeText}</span>
-        </div>
-        <div class="portfolio-info">
-          У тебя: ${port.amount.toFixed(4)} шт<br>
-          Ср. цена: ${port.avgPrice.toFixed(3)} ₽<br>
-          <span class="${plClass}">Прибыль/убыток: ${plText >= 0 ? '+' : ''}${plText}₽</span>
-        </div>
-        ${cooldownMsg}
-        ${expiredMsg}
+      if (!cryptoElements[coinId]) {
+        const div = document.createElement('div');
+        div.className = 'crypto-item';
+        div.id = `crypto-${coinId}`;
+        div.innerHTML = `
+          <div class="crypto-name"></div>
+          <div>
+            <span class="crypto-price"></span>
+            <span class="price-change"></span>
+          </div>
+          <div class="portfolio-info">
+            У тебя: <span class="port-amount"></span> шт<br>
+            Ср. цена: <span class="port-avg"></span> ₽<br>
+            <span class="port-pl"></span>
+          </div>
+          <div class="cooldown-placeholder"></div>
+          <div class="expired-placeholder"></div>
 
-        <div class="controls">
-          <input type="number" id="${coin.id}-rub" placeholder="Сколько ₽" step="1" min="1">
-          <input type="number" id="${coin.id}-amt" placeholder="Сколько шт" step="any" min="0.000001">
-          <button class="buy-btn" onclick="window.buy('${coin.id}')" ${buyDisabled}>Купить</button>
-          <button class="sell-btn" onclick="window.sell('${coin.id}')">Продать</button>
-          <button class="sell-all-btn" onclick="window.sellAll('${coin.id}')">Продать всё</button>
-          <button class="all-btn" onclick="window.buyAll('${coin.id}')" ${buyDisabled}>Купить на всё</button>
-        </div>
+          <div class="controls">
+            <input type="number" id="${coinId}-rub" placeholder="Сколько ₽" step="1" min="1">
+            <input type="number" id="${coinId}-amt" placeholder="Сколько шт" step="any" min="0.000001">
+            <button class="buy-btn">Купить</button>
+            <button class="sell-btn">Продать</button>
+            <button class="sell-all-btn">Продать всё</button>
+            <button class="all-btn">Купить на всё</button>
+          </div>
 
-        <canvas id="chart-${coin.id}" height="160"></canvas>
-      `;
-      container.appendChild(div);
+          <canvas id="chart-${coinId}" height="160"></canvas>
+        `;
+        container.appendChild(div);
 
-      const rubInput = document.getElementById(`${coin.id}-rub`);
-      const amtInput = document.getElementById(`${coin.id}-amt`);
-      rubInput.oninput = () => {
-        const rub = parseFloat(rubInput.value) || 0;
-        if (rub > 0 && prices[coin.id]) {
-          amtInput.value = (rub / prices[coin.id]).toFixed(6);
-        }
-      };
-      amtInput.oninput = () => {
-        const amt = parseFloat(amtInput.value) || 0;
-        if (amt > 0 && prices[coin.id]) {
-          rubInput.value = Math.round(amt * prices[coin.id]);
-        }
-      };
+        cryptoElements[coinId] = {
+          root: div,
+          name: div.querySelector('.crypto-name'),
+          price: div.querySelector('.crypto-price'),
+          change: div.querySelector('.price-change'),
+          portAmount: div.querySelector('.port-amount'),
+          portAvg: div.querySelector('.port-avg'),
+          portPl: div.querySelector('.port-pl'),
+          cooldown: div.querySelector('.cooldown-placeholder'),
+          expired: div.querySelector('.expired-placeholder'),
+          buyBtn: div.querySelector('.buy-btn'),
+          buyAllBtn: div.querySelector('.all-btn'),
+          rubInput: div.querySelector(`#${coinId}-rub`),
+          amtInput: div.querySelector(`#${coinId}-amt`)
+        };
 
-      const ctx = document.getElementById(`chart-${coin.id}`).getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: hist.map((_,i)=>i),
-          datasets: [{
-            label: 'Цена ₽',
-            data: hist,
-            borderColor: '#c084fc',
-            backgroundColor: 'rgba(192,132,252,0.08)',
-            fill: true,
-            tension: 0.4,
-            pointRadius: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            x: { display: false },
-            y: {
-              ticks: { color: '#94a3b8', font: { size: 11 }, callback: v => v.toFixed(3) },
-              grid: { color: 'rgba(139,92,246,0.08)' }
-            }
+        const { rubInput, amtInput } = cryptoElements[coinId];
+        rubInput.oninput = () => {
+          const rub = parseFloat(rubInput.value) || 0;
+          if (rub > 0 && prices[coinId]) amtInput.value = (rub / prices[coinId]).toFixed(6);
+        };
+        amtInput.oninput = () => {
+          const amt = parseFloat(amtInput.value) || 0;
+          if (amt > 0 && prices[coinId]) rubInput.value = Math.round(amt * prices[coinId]);
+        };
+
+        const canvas = document.getElementById(`chart-${coinId}`);
+        cryptoCharts[coinId] = new Chart(canvas.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: hist.map((_,i)=>i),
+            datasets: [{
+              label: 'Цена ₽',
+              data: hist,
+              borderColor: '#c084fc',
+              backgroundColor: 'rgba(192,132,252,0.08)',
+              fill: true,
+              tension: 0.4,
+              pointRadius: 0
+            }]
           },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              enabled: true,
-              callbacks: {
-                label: function(context) {
-                  return `Цена: ${context.parsed.y.toFixed(3)} ₽`;
-                }
+          options: {
+            responsive: true,
+            scales: {
+              x: { display: false },
+              y: {
+                ticks: { color: '#94a3b8', font: { size: 11 }, callback: v => v.toFixed(3) },
+                grid: { color: 'rgba(139,92,246,0.08)' }
               }
-            }
-          },
-          interaction: {
-            mode: 'nearest',
-            axis: 'x',
-            intersect: false
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: { callbacks: { label: ctx => `Цена: ${ctx.parsed.y.toFixed(3)} ₽` } }
+            },
+            interaction: { mode: 'nearest', axis: 'x', intersect: false }
           }
+        });
+
+        div.querySelector('.buy-btn').onclick = () => window.buy(coinId);
+        div.querySelector('.sell-btn').onclick = () => window.sell(coinId);
+        div.querySelector('.sell-all-btn').onclick = () => window.sellAll(coinId);
+        div.querySelector('.all-btn').onclick = () => window.buyAll(coinId);
+      }
+
+      const el = cryptoElements[coinId];
+      if (el) {
+        el.name.innerHTML = nameHtml;
+        el.price.textContent = price.toFixed(3) + ' ₽';
+        el.change.textContent = changeText;
+        el.change.className = `price-change ${changeClass}`;
+
+        el.portAmount.textContent = port.amount.toFixed(4);
+        el.portAvg.textContent = port.avgPrice.toFixed(3);
+        el.portPl.innerHTML = `Прибыль/убыток: <span class="${plClass}">${profitLoss >= 0 ? '+' : ''}${plText}₽</span>`;
+
+        el.cooldown.innerHTML = cooldownHtml;
+        el.expired.innerHTML = expiredHtml;
+
+        el.buyBtn.disabled = buyDisabled;
+        el.buyAllBtn.disabled = buyDisabled;
+
+        // Обновление графика
+        const chart = cryptoCharts[coinId];
+        if (chart && hist.length > 0) {
+          chart.data.labels = hist.map((_, i) => i);
+          chart.data.datasets[0].data = hist.slice(); // копия массива
+          chart.update('none');
         }
-      });
+      }
     });
   }
 

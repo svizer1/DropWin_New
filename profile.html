@@ -16,29 +16,24 @@
       overflow: hidden;
       margin: 16px 0;
     }
-
     .streak-item {
       flex: 1;
       border-radius: 8px;
       position: relative;
       transition: transform 0.15s;
     }
-
     .streak-item:hover {
       transform: scale(1.08);
       z-index: 2;
     }
-
     .streak-item.win {
       background: linear-gradient(135deg, #34d399, #10b981);
       box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
     }
-
     .streak-item.loss {
       background: linear-gradient(135deg, #f87171, #ef4444);
       box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
     }
-
     .streak-tooltip {
       position: absolute;
       bottom: 110%;
@@ -57,12 +52,10 @@
       box-shadow: 0 6px 16px rgba(0,0,0,0.5);
       border: 1px solid rgba(255,255,255,0.08);
     }
-
     .streak-item:hover .streak-tooltip {
       opacity: 1;
       bottom: 120%;
     }
-
     .streak-empty {
       color: #6b7280;
       font-size: 0.9rem;
@@ -70,7 +63,6 @@
       padding: 10px;
       opacity: 0.7;
     }
-
     .max-streak {
       background: rgba(30, 30, 50, 0.4);
       border-radius: 10px;
@@ -80,20 +72,16 @@
       justify-content: space-around;
       text-align: center;
     }
-
     .max-streak-item {
       flex: 1;
     }
-
     .max-streak-value {
       font-size: 1.6rem;
       font-weight: 800;
       margin: 4px 0;
     }
-
     .max-streak-win  { color: #34d399; }
     .max-streak-loss { color: #f87171; }
-
     .time-direction {
       text-align: center;
       font-size: 0.8rem;
@@ -101,7 +89,6 @@
       margin-top: 6px;
       opacity: 0.8;
     }
-    /* Новый стиль для истории транзакций */
     .crypto-transactions {
       margin-top: 24px;
     }
@@ -117,6 +104,89 @@
     }
     .transaction-buy  { border-left: 4px solid #10b981; }
     .transaction-sell { border-left: 4px solid #ef4444; }
+    .profile-balance-block {
+      text-align: center;
+      margin: 24px 0 32px;
+      padding: 20px;
+      background: rgba(16, 185, 129, 0.08);
+      border-radius: 16px;
+      border: 1px solid rgba(52, 211, 153, 0.25);
+    }
+    .profile-balance-big {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: #34d399;
+      margin: 8px 0;
+    }
+
+    /* Дополнительные стили для реферального блока */
+    .referral-card {
+      background: rgba(30,30,50,0.48);
+      border: 1px solid rgba(139,92,246,0.22);
+      border-radius: 18px;
+      padding: 28px 18px;
+      margin: 32px 0;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.32);
+    }
+    .referral-title {
+      font-size: 1.15rem;
+      color: #c4b5fd;
+      margin-bottom: 12px;
+      font-weight: 500;
+      letter-spacing: 0.6px;
+    }
+    .referral-code-display {
+      font-size: 2.6rem;
+      font-weight: 900;
+      color: #fcd34d;
+      letter-spacing: 3px;
+      margin: 14px 0;
+      word-break: break-all;
+      text-shadow: 0 3px 14px rgba(251,191,36,0.4);
+    }
+    .referral-buttons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin: 24px 0;
+    }
+    .btn-copy-referral {
+      padding: 14px 36px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      color: #111827;
+      border: none;
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(251,191,36,0.55);
+      transition: all 0.22s ease;
+      min-width: 150px;
+      cursor: pointer;
+    }
+    .btn-refresh-referral {
+      width: 56px;
+      height: 56px;
+      padding: 0;
+      font-size: 1.7rem;
+      background: linear-gradient(145deg, #a78bfa, #7c3aed);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 18px rgba(139,92,246,0.5);
+      transition: all 0.22s ease;
+      cursor: pointer;
+    }
+    .btn-copy-referral:hover,
+    .btn-refresh-referral:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.4) !important;
+    }
   </style>
 </head>
 <body>
@@ -124,8 +194,11 @@
 
   <div class="header">
     <div class="logo">💎 DROPWIN</div>
-    <div class="balance-container">
+    <div class="balance-container" id="gotoDeposit" style="cursor: pointer; transition: all 0.2s;">
       <div class="balance">💰 <span id="balance">—</span>₽</div>
+      <div style="font-size:0.78rem; color:#34d399; margin-top:3px; text-align:center; opacity:0.9;">
+        Пополнить →
+      </div>
     </div>
   </div>
 
@@ -136,11 +209,75 @@
       <div class="game-title">👤 Профиль</div>
       <div id="usernameDisplay" style="font-size:1.6rem; font-weight:800; margin:20px 0; text-align:center;">—</div>
 
-      <div class="input-group">
+      <!-- Большой блок баланса -->
+      <div class="profile-balance-block">
+        <div style="font-size:1.1rem; color:#9ca3af; margin-bottom:4px;">Текущий баланс</div>
+        <div class="profile-balance-big"><span id="balanceBig">—</span> ₽</div>
+        <button class="btn" onclick="location.href='dep.html'"
+                style="margin-top:16px; background: linear-gradient(135deg, #10b981, #059669); font-size:1.15rem; padding:14px 40px;">
+          Пополнить баланс
+        </button>
+      </div>
+
+      <!-- Реферальный блок (обновлённый) -->
+      <div class="referral-card">
+        <div class="referral-title">Ваш реферальный код</div>
+
+        <div class="referral-code-display" id="myReferralCode">——</div>
+
+        <div class="referral-buttons">
+          <button class="btn-copy-referral" onclick="copyReferralCode()">
+            Скопировать
+          </button>
+          <button class="btn-refresh-referral" id="refreshReferralCodeBtn">
+            🔄
+          </button>
+        </div>
+
+        <div id="referralChangeInfo"
+             style="margin-top:16px; font-size:0.88rem; color:#fca5a5; font-weight:500; display:none;
+                    background:rgba(239,68,68,0.15); padding:10px 16px; border-radius:12px;
+                    border:1px solid rgba(239,68,68,0.3);">
+          Новый код можно сгенерировать только один раз в сутки
+        </div>
+
+        <div style="margin-top:20px; font-size:0.96rem; color:#9ca3af; line-height:1.5;">
+          Приглашайте друзей и получайте <span style="color:#fcd34d; font-weight:700;">+10 ₽</span> за каждого зарегистрированного по вашей ссылке
+        </div>
+      </div>
+
+      <!-- Статистика рефералов -->
+      <div style="margin: 28px 0; text-align: center; background: rgba(30,30,50,0.4); padding: 20px; border-radius: 12px;">
+        <div style="font-size: 1.1rem; color: #9ca3af; margin-bottom: 12px;">Ваши рефералы</div>
+        <div style="display: flex; justify-content: space-around; margin: 16px 0;">
+          <div>
+            <div style="font-size: 2.2rem; font-weight: 800; color: #60a5fa;" id="refCount">0</div>
+            <div style="color: #9ca3af;">приглашено</div>
+          </div>
+          <div>
+            <div style="font-size: 2.2rem; font-weight: 800; color: #34d399;" id="refEarnings">0 ₽</div>
+            <div style="color: #9ca3af;">заработано</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Промокод -->
+      <div class="input-group" style="margin: 32px 0 16px;">
         <label class="input-label">Промокод</label>
         <input type="text" id="promoCode" placeholder="Kavexs / Kavexs2026">
-        <button class="btn" id="promoBtn" style="margin-top:12px;">Активировать</button>
+        <button class="btn" id="promoBtn"
+          style="margin: 16px auto; display: block; width: 90%; max-width: 360px;
+                 background: linear-gradient(135deg, #facc15, #ca8a04);
+                 font-size: 1.25rem; padding: 16px; font-weight: 700;
+                 box-shadow: 0 4px 15px rgba(250, 204, 21, 0.4);">
+          🎁 АКТИВИРОВАТЬ
+        </button>
       </div>
+
+      <button class="btn" onclick="openDailyCaseFromProfile()"
+        style="margin: 16px auto; display:block; width:90%; max-width:400px; background:linear-gradient(135deg,#eab308,#ca8a04);">
+        📦 Ежедневный кейс
+      </button>
 
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-value" id="gamesPlayed">0</div><div class="stat-label">Игр</div></div>
@@ -163,7 +300,7 @@
       <div class="recent-streak">
         <div class="game-title" style="margin: 20px 0 8px;">Последние игры</div>
         <div id="streakBar" class="streak-bar"></div>
-        <div class="time-direction">← старые &nbsp;&nbsp; • &nbsp;&nbsp; новые →</div>
+        <div class="time-direction">← старые   •   новые →</div>
       </div>
 
       <div class="history-list">
@@ -171,7 +308,6 @@
         <div id="historyList"></div>
       </div>
 
-      <!-- Новый раздел: История крипто-транзакций -->
       <div class="crypto-transactions">
         <div class="game-title" style="margin-top:28px; margin-bottom:12px;">История крипто-транзакций</div>
         <div id="cryptoTransactionList"></div>
@@ -179,7 +315,7 @@
 
     </div>
 
-    <button class="btn logout-btn" id="logoutBtn" style="margin: 32px auto; display:block; width:90%; max-width:400px;">
+    <button class="btn logout-btn" id="logoutBtn" style="margin: 40px auto 80px; display:block; width:90%; max-width:400px;">
       Выйти
     </button>
   </div>
@@ -222,15 +358,22 @@
     }
   }
 
+  window.openDailyCaseFromProfile = async function() {
+    if (!currentUser) return alert('Войдите в аккаунт');
+    const today = new Date().toDateString();
+    if (currentUser.lastDailyCase === today) {
+      return alert('Сегодня вы уже открывали ежедневный кейс');
+    }
+    location.href = 'freebet.html';
+  };
+
   let currentUser = null;
   let userId = null;
 
   function calculateMaxStreaks(history) {
     if (!history || history.length === 0) return { maxWin: 0, maxLoss: 0 };
-
     let currentWin = 0, currentLoss = 0;
     let maxWin = 0, maxLoss = 0;
-
     for (const item of history) {
       if (item.result === 'win') {
         currentWin++;
@@ -242,20 +385,30 @@
         maxLoss = Math.max(maxLoss, currentLoss);
       }
     }
-
     return { maxWin, maxLoss };
   }
 
   function loadCurrentUser() {
     onAuthStateChanged(auth, (user) => {
-      if (user) {
-        userId = user.uid;
-        getDoc(doc(db, 'users', user.uid)).then((docSnap) => {
+      if (!user) {
+        location.href = 'register.html';
+        return;
+      }
+
+      userId = user.uid;
+      document.getElementById('usernameDisplay').textContent = "Загрузка...";
+
+      getDoc(doc(db, 'users', user.uid))
+        .then((docSnap) => {
           if (docSnap.exists()) {
             currentUser = docSnap.data();
-            let displayName = currentUser.isGuest ? 'Гость' : currentUser.username;
-            document.getElementById('usernameDisplay').textContent = displayName;
-            document.getElementById('balance').textContent = currentUser.balance || 0;
+
+            document.getElementById('usernameDisplay').textContent = currentUser.username || 'Пользователь';
+            const bal = currentUser.balance || 0;
+            document.getElementById('balance').textContent = bal;
+            document.getElementById('balanceBig').textContent = bal;
+
+            document.getElementById('myReferralCode').textContent = currentUser.referralCode || '—';
 
             document.getElementById('gamesPlayed').textContent = currentUser.gamesPlayed || 0;
             document.getElementById('totalBet').textContent = (currentUser.totalBet || 0) + '₽';
@@ -270,6 +423,10 @@
             document.getElementById('maxWinStreak').textContent = maxWin;
             document.getElementById('maxLossStreak').textContent = maxLoss;
 
+            document.getElementById('refCount').textContent = currentUser.referralCount || 0;
+            document.getElementById('refEarnings').textContent = (currentUser.referralEarnings || 0) + ' ₽';
+
+            // История игр
             const historyList = document.getElementById('historyList');
             historyList.innerHTML = '';
             if (!currentUser.history || currentUser.history.length === 0) {
@@ -313,14 +470,13 @@
               });
             }
 
-            // Новый раздел: История крипто-транзакций
             const transactionList = document.getElementById('cryptoTransactionList');
             transactionList.innerHTML = '';
             const transactions = currentUser.cryptoTransactions || [];
             if (transactions.length === 0) {
               transactionList.innerHTML = '<div class="empty-state">Нет транзакций</div>';
             } else {
-              transactions.slice(-10).reverse().forEach(tr => { // Последние 10, в хронологическом порядке
+              transactions.slice(-10).reverse().forEach(tr => {
                 const div = document.createElement('div');
                 div.className = `transaction-item transaction-${tr.type}`;
                 div.innerHTML = `
@@ -337,96 +493,20 @@
               });
             }
           } else {
-            showGuestMode();
+            console.warn("Нет документа пользователя в Firestore");
+            alert("Профиль не найден в базе. Попробуйте выйти и войти заново.");
           }
+        })
+        .catch(err => {
+          console.error("Ошибка загрузки профиля:", err);
+          document.getElementById('usernameDisplay').textContent = "Ошибка загрузки профиля";
         });
-      } else {
-        showGuestMode();
-      }
     });
-  }
-
-  function showGuestMode() {
-    // Твой старый код для гостя
-    const username = localStorage.getItem('dropwin_current_username');
-    if (username !== 'Гость') {
-      location.href = 'register.html';
-      return;
-    }
-    const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
-    currentUser = users.find(u => u.username === username);
-    if (!currentUser) {
-      location.href = 'register.html';
-      return;
-    }
-
-    document.getElementById('usernameDisplay').textContent = 'Гость';
-    document.getElementById('balance').textContent = currentUser.balance;
-    document.getElementById('gamesPlayed').textContent = currentUser.gamesPlayed || 0;
-    document.getElementById('totalBet').textContent = (currentUser.totalBet || 0) + '₽';
-    document.getElementById('totalWin').textContent = (currentUser.totalWin || 0) + '₽';
-    const wins = currentUser.wins || 0;
-    const games = currentUser.gamesPlayed || 0;
-    const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
-    document.getElementById('winRate').textContent = winRate + '%';
-
-    const { maxWin, maxLoss } = calculateMaxStreaks(currentUser.history || []);
-    document.getElementById('maxWinStreak').textContent = maxWin;
-    document.getElementById('maxLossStreak').textContent = maxLoss;
-
-    const historyList = document.getElementById('historyList');
-    historyList.innerHTML = '<div class="empty-state">История пуста</div>';
-    if (currentUser.history && currentUser.history.length > 0) {
-      historyList.innerHTML = '';
-      currentUser.history.forEach(item => {
-        const div = document.createElement('div');
-        div.className = `history-item ${item.result || 'loss'}`;
-        div.innerHTML = `
-          <div>
-            <div class="history-game">${item.game || 'Игра'}</div>
-            <div class="history-time">${item.time || ''}</div>
-          </div>
-          <div class="history-amount ${item.result}">
-            ${item.win > 0 ? '+' : ''}${item.win || 0}₽
-          </div>
-        `;
-        historyList.appendChild(div);
-      });
-    }
-
-    const streakBar = document.getElementById('streakBar');
-    streakBar.innerHTML = '<div class="streak-empty">Нет сыгранных игр</div>';
-    if (currentUser.history && currentUser.history.length > 0) {
-      streakBar.innerHTML = '';
-      const recent = currentUser.history.slice(-12);
-      recent.forEach(item => {
-        const el = document.createElement('div');
-        el.className = `streak-item ${item.result || 'loss'}`;
-        const resultText = item.result === 'win' ? 'Выигрыш' : 'Проигрыш';
-        const amount = item.win > 0 ? `+${item.win}₽` : `${item.win}₽`;
-        el.innerHTML = `
-          <div class="streak-tooltip">
-            ${item.game || 'Игра'}<br>
-            ${resultText} • ${amount}<br>
-            <small>${item.time || ''}</small>
-          </div>
-        `;
-        streakBar.appendChild(el);
-      });
-    }
-
-    // Для гостя крипто-транзакции не поддерживаются
-    document.getElementById('cryptoTransactionList').innerHTML = '<div class="empty-state">Нет транзакций (для гостей не доступно)</div>';
   }
 
   async function saveUser() {
     if (currentUser && userId) {
       await updateDoc(doc(db, 'users', userId), currentUser);
-    } else if (currentUser && currentUser.isGuest) {
-      let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
-      const idx = users.findIndex(u => u.username === currentUser.username);
-      if (idx !== -1) users[idx] = currentUser;
-      localStorage.setItem('dropwin_users', JSON.stringify(users));
     }
   }
 
@@ -436,45 +516,116 @@
     if (!code) return alert('Введите промокод');
 
     const today = new Date().toDateString();
-    if (currentUser.lastPromoDate === today) {
+    if (currentUser.lastPromoDate === today && code.startsWith('FB-')) {
       return alert('Сегодня вы уже активировали промокод');
     }
 
     let sum = 0;
+
     if (code === 'KAVEXS' || code === 'KAVEXS2026') {
       sum = 100;
+    } else if (currentUser.activePromoCode === code && currentUser.activePromoValue) {
+      sum = currentUser.activePromoValue;
+      if (currentUser.activePromoType === 'meme') {
+        localStorage.setItem('has_bonus_case', 'yes');
+        alert('Бонусный мем-кейс разблокирован!');
+      }
     } else {
-      return alert('Неверный промокод');
+      return alert('Неверный или уже использованный промокод');
     }
 
     currentUser.balance = (currentUser.balance || 0) + sum;
     currentUser.lastPromoDate = today;
+
+    if (currentUser.activePromoCode === code) {
+      delete currentUser.activePromoCode;
+      delete currentUser.activePromoType;
+      delete currentUser.activePromoValue;
+    }
+
     await saveUser();
 
-    document.getElementById('balance').textContent = currentUser.balance;
-    alert(`+${sum}₽ успешно добавлено на баланс!`);
+    const bal = currentUser.balance;
+    document.getElementById('balance').textContent = bal;
+    document.getElementById('balanceBig').textContent = bal;
+    alert(`+${sum}₽ успешно добавлено!`);
     document.getElementById('promoCode').value = '';
   }
 
   function logout() {
-    if (currentUser.isGuest) {
-      localStorage.removeItem('dropwin_current_username');
+    signOut(auth).then(() => {
       location.href = 'index.html';
-    } else {
-      signOut(auth).then(() => {
-        location.href = 'index.html';
-      }).catch((error) => {
-        alert('Ошибка выхода: ' + error.message);
-      });
-    }
+    }).catch((error) => {
+      alert('Ошибка выхода: ' + error.message);
+    });
   }
+
+  window.copyReferralCode = function() {
+    const codeEl = document.getElementById('myReferralCode');
+    const code = codeEl.textContent.trim();
+
+    if (!code || code === '—' || code === '——' || !code.includes('DropWin-')) {
+      alert('Нет реферального кода для копирования');
+      return;
+    }
+
+    navigator.clipboard.writeText(code)
+      .then(() => {
+        alert(`Скопировано!\n\n${code}`);
+      })
+      .catch(() => {
+        alert('Не удалось скопировать код');
+      });
+  };
+
+  function generateNewReferralCode() {
+    if (!currentUser || !userId) {
+      alert('Сначала войдите в аккаунт');
+      return;
+    }
+
+    const today = new Date().toDateString();
+
+    if (currentUser.lastReferralChange === today) {
+      const info = document.getElementById('referralChangeInfo');
+      info.style.display = 'block';
+      setTimeout(() => { info.style.display = 'none'; }, 7000);
+      return;
+    }
+
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let codePart = '';
+    for (let i = 0; i < 5; i++) {
+      codePart += chars[Math.floor(Math.random() * chars.length)];
+    }
+
+    const newCode = `DropWin-${codePart}`;
+
+    currentUser.referralCode = newCode;
+    currentUser.lastReferralChange = today;
+
+    saveUser()
+      .then(() => {
+        document.getElementById('myReferralCode').textContent = newCode;
+        alert(`Новый код создан!\n\n${newCode}\n\nСкопируйте его сейчас`);
+      })
+      .catch(err => {
+        console.error('Ошибка при смене реферального кода:', err);
+        alert('Не удалось обновить код. Проверьте соединение.');
+      });
+  }
+
+  document.getElementById('gotoDeposit')?.addEventListener('click', () => {
+    location.href = 'dep.html';
+  });
 
   document.addEventListener('DOMContentLoaded', () => {
     createParticles();
     loadCurrentUser();
+    document.getElementById('promoBtn').addEventListener('click', activatePromo);
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('refreshReferralCodeBtn')?.addEventListener('click', generateNewReferralCode);
   });
-  document.getElementById('promoBtn').addEventListener('click', activatePromo);
-  document.getElementById('logoutBtn').addEventListener('click', logout);
 </script>
 </body>
 </html>

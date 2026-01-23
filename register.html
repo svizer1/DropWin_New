@@ -6,28 +6,11 @@
   <title>Вход / Регистрация | DropWin</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    .form-toggle {
-      text-align: center;
-      margin-top: 16px;
-      color: #c084fc;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    .form-toggle:hover {
-      text-decoration: underline;
-    }
-    #loginForm {
-      display: none;
-    }
-    .password-group {
-      position: relative;
-    }
-    .error-msg {
-      color: #ef4444;
-      font-size: 0.9rem;
-      margin-top: 4px;
-      display: none;
-    }
+    .form-toggle { text-align: center; margin-top: 16px; color: #c084fc; cursor: pointer; font-weight: 600; }
+    .form-toggle:hover { text-decoration: underline; }
+    #loginForm { display: none; }
+    .password-group { position: relative; }
+    .error-msg { color: #ef4444; font-size: 0.9rem; margin-top: 4px; display: none; }
   </style>
 </head>
 <body>
@@ -43,7 +26,7 @@
   <div class="game-card">
     <div class="game-title" id="formTitle">Регистрация</div>
 
-    <!-- Форма регистрации (показывается первой) -->
+    <!-- Форма регистрации -->
     <div id="registerForm">
       <div class="input-group">
         <label class="input-label">Никнейм</label>
@@ -52,6 +35,10 @@
       <div class="input-group">
         <label class="input-label">Email</label>
         <input type="email" id="regEmail" placeholder="example@dropwin.com" required>
+      </div>
+      <div class="input-group">
+        <label class="input-label">Реферальный код (необязательно)</label>
+        <input type="text" id="regReferralCode" placeholder="Например: DAN1234X">
       </div>
       <div class="input-group password-group">
         <label class="input-label">Пароль</label>
@@ -65,7 +52,7 @@
       <button class="btn" id="registerBtn">Зарегистрироваться</button>
     </div>
 
-    <!-- Форма входа (скрыта по умолчанию) -->
+    <!-- Форма входа -->
     <div id="loginForm">
       <div class="input-group">
         <label class="input-label">Email</label>
@@ -80,17 +67,13 @@
     </div>
 
     <div class="form-toggle" id="toggleLink">Уже есть аккаунт? Войти</div>
-
-    <button class="btn" onclick="guestLogin()" style="margin-top:16px; background: linear-gradient(135deg, #6b7280, #4b5563);">
-      Гостевой вход
-    </button>
   </div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, updateDoc, getDocs, collection, query, where, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
@@ -119,6 +102,24 @@
     }
   }
 
+  // Простой device fingerprint (не идеально, но лучше чем ничего)
+  function getDeviceFingerprint() {
+    const data = [
+      navigator.userAgent,
+      screen.width + 'x' + screen.height,
+      screen.colorDepth,
+      new Date().getTimezoneOffset(),
+      navigator.language || navigator.userLanguage,
+      navigator.hardwareConcurrency || 'unknown'
+    ].join('|');
+    let hash = 0;
+    for (let i = 0; i < data.length; i++) {
+      hash = ((hash << 5) - hash) + data.charCodeAt(i);
+      hash = hash & hash;
+    }
+    return 'dev_' + Math.abs(hash).toString(36);
+  }
+
   // Переключение форм
   const registerForm = document.getElementById('registerForm');
   const loginForm = document.getElementById('loginForm');
@@ -127,13 +128,11 @@
 
   toggleLink.addEventListener('click', () => {
     if (registerForm.style.display !== 'none') {
-      // Переключаем на вход
       registerForm.style.display = 'none';
       loginForm.style.display = 'block';
       formTitle.textContent = 'Вход';
       toggleLink.textContent = 'Нет аккаунта? Зарегистрироваться';
     } else {
-      // Переключаем на регистрацию
       loginForm.style.display = 'none';
       registerForm.style.display = 'block';
       formTitle.textContent = 'Регистрация';
@@ -147,13 +146,14 @@
     const email = document.getElementById('regEmail').value.trim();
     const password = document.getElementById('regPassword').value.trim();
     const confirm = document.getElementById('regPasswordConfirm').value.trim();
+    const referralCode = document.getElementById('regReferralCode').value.trim().toUpperCase();
     const errorEl = document.getElementById('regError');
 
     errorEl.style.display = 'none';
     errorEl.textContent = '';
 
     if (!username || !email || !password || !confirm) {
-      errorEl.textContent = 'Заполните все поля';
+      errorEl.textContent = 'Заполните все обязательные поля';
       errorEl.style.display = 'block';
       return;
     }
@@ -168,14 +168,54 @@
       return;
     }
 
+    const deviceId = getDeviceFingerprint();
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
+      // Проверяем, использовалось ли это устройство недавно
+      const recentDeviceQuery = query(
+        collection(db, 'users'),
+        where('deviceId', '==', deviceId),
+        where('createdAt', '>=', new Date(Date.now() - 30*24*60*60*1000).toISOString())
+      );
+      const recentDevices = await getDocs(recentDeviceQuery);
+      const isNewDevice = recentDevices.empty;
+
+      // Генерация реферального кода
+      const refCode = (username.toUpperCase().slice(0,6) + user.uid.slice(-6)).replace(/[^A-Z0-9]/g,'');
+
+      let initialBalance = 100;
+      let referredBy = null;
+
+      // Реферал работает ТОЛЬКО если устройство новое
+      if (referralCode && isNewDevice) {
+        const q = query(collection(db, 'users'), where('referralCode', '==', referralCode));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          const referrerDoc = querySnapshot.docs[0];
+          const referrerData = referrerDoc.data();
+          const referrerId = referrerDoc.id;
+
+          const newCount = (referrerData.referralCount || 0) + 1;
+          const newEarnings = (referrerData.referralEarnings || 0) + 10;
+
+          await updateDoc(doc(db, 'users', referrerId), {
+            balance: (referrerData.balance || 0) + 10,
+            referralCount: newCount,
+            referralEarnings: newEarnings
+          });
+
+          referredBy = referrerId;
+          initialBalance = 105; // +5 ₽ новому
+        }
+      }
+
       await setDoc(doc(db, 'users', user.uid), {
         username,
         email,
-        balance: 1000,
+        balance: initialBalance,
         gamesPlayed: 0,
         wins: 0,
         losses: 0,
@@ -183,10 +223,15 @@
         totalWin: 0,
         history: [],
         lastPromoDate: '',
-        isGuest: false
+        referralCode: refCode,
+        referredBy: referredBy || null,
+        referralCount: 0,
+        referralEarnings: 0,
+        deviceId: deviceId,
+        createdAt: new Date().toISOString()
       });
 
-      alert('Аккаунт создан! Баланс 1000₽');
+      alert(`Аккаунт создан!\nБаланс: ${initialBalance}₽\nВаш реферальный код: ${refCode}`);
       location.href = 'index.html';
     } catch (error) {
       console.error(error);
@@ -218,7 +263,6 @@
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      alert('Добро пожаловать!');
       location.href = 'index.html';
     } catch (error) {
       console.error(error);
@@ -232,32 +276,6 @@
       errorEl.style.display = 'block';
     }
   });
-
-  function guestLogin() {
-    const guestName = 'Гость';
-    let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
-    let guest = users.find(u => u.username === guestName);
-    if (!guest) {
-      guest = {
-        username: guestName,
-        password: 'guest',
-        balance: 500,
-        gamesPlayed: 0,
-        wins: 0,
-        losses: 0,
-        totalBet: 0,
-        totalWin: 0,
-        history: [],
-        lastPromoDate: '',
-        isGuest: true
-      };
-      users.push(guest);
-      localStorage.setItem('dropwin_users', JSON.stringify(users));
-    }
-    localStorage.setItem('dropwin_current_username', guestName);
-    alert('Вошли как Гость! Баланс 500₽');
-    location.href = 'index.html';
-  }
 
   document.addEventListener('DOMContentLoaded', createParticles);
 </script>

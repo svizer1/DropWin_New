@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Пополнение | DropWin</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .method-card {
+      background: rgba(30,27,71,0.75);
+      border-radius: 16px;
+      padding: 18px;
+      margin: 16px 0;
+      border: 2px solid #6b7280;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .method-card.active {
+      border-color: #34d399;
+      background: rgba(16,185,129,0.15);
+      box-shadow: 0 0 20px rgba(52,211,153,0.4);
+    }
+    .bonus-notice {
+      background: linear-gradient(135deg, #1e40af, #1e3a8a);
+      padding: 16px;
+      border-radius: 16px;
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    #promoFloat {
+      position: fixed;
+      top: 80px;
+      right: 16px;
+      background: linear-gradient(135deg, #34d399, #10b981);
+      color: white;
+      padding: 14px 18px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      max-width: 320px;
+      z-index: 9999;
+      font-size: 0.95rem;
+      display: none;
+      opacity: 1;
+      transition: opacity 1s ease-out;
+    }
+    #promoFloat.fade-out { opacity: 0; }
+
+    #promoFloat button {
+      margin-top: 10px;
+      background: white;
+      color: #10b981;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #promoBonusPreview {
+      margin: 12px 0;
+      color: #34d399;
+      font-weight: bold;
+      font-size: 1.1rem;
+      text-align: center;
+      min-height: 30px;
+    }
+
+    #loadingLine {
+      height: 4px;
+      background: linear-gradient(to right, #fbbf24, #34d399);
+      width: 0%;
+      transition: width 1.8s ease-in-out;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      border-radius: 2px;
+    }
+
+    #depStatus.success {
+      color: #34d399;
+      font-weight: bold;
+      font-size: 1.3rem;
+      opacity: 1;
+      transition: opacity 1.2s ease-out;
+    }
+    #depStatus.success.fade-out {
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+<div class="particles" id="particles"></div>
+
+<div id="promoFloat">
+  <strong>Секретный промокод на +20%!</strong><br>
+  Сейчас часто выпадает <b id="randomPromoCode">DEP-X7K9P2</b><br>
+  Введи его ниже и получи +20% к депозиту!
+  <button onclick="copyPromoCode()">Скопировать</button>
+</div>
+
+<div class="header">
+  <div class="logo">💎 DROPWIN</div>
+  <div class="balance-container">
+    <div class="balance">💰 <span id="balance">0</span>₽</div>
+  </div>
+</div>
+
+<div class="content">
+  <button class="back-btn" onclick="location.href='index.html'">← Назад</button>
+
+  <div class="game-card">
+    <div class="game-title">Пополнение баланса</div>
+
+    <div class="bonus-notice">
+      <strong>🎁 Бонус от 100₽</strong><br>
+      Чем больше пополнение — тем больше бонус!
+    </div>
+
+    <div id="method-rub" class="method-card active">
+      <h3>🇷🇺 Рубли (карта • СБП • ЮMoney)</h3>
+      <p>Мгновенно • без комиссии</p>
+    </div>
+
+    <div style="margin: 24px 0; position: relative;">
+      <label class="input-label">Сумма (₽)</label>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <input type="number" id="depAmount" placeholder="100" min="50" value="500" style="font-size:1.4rem; padding:16px; flex: 1;">
+        <div id="totalWithBonus" style="color:#34d399; font-weight:700; font-size:1.5rem; min-width: 120px; text-align: right;"></div>
+      </div>
+      <div id="loadingLine"></div>
+    </div>
+
+    <div style="margin: 16px 0;">
+      <label class="input-label">Промокод (необязательно)</label>
+      <input type="text" id="depPromoCode" placeholder="Например: DROPWIN-ABC123" style="font-size:1.2rem; padding:12px;">
+    </div>
+
+    <button class="btn" onclick="activatePromoOnDep()" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">Применить промокод</button>
+
+    <button class="btn" onclick="processDeposit()" style="margin-top: 16px;">Пополнить</button>
+
+    <div id="depStatus"></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn" onclick="location.href='index.html'"><span>🏠</span>Главная</button>
+  <button class="nav-btn" onclick="location.href='profile.html'"><span>👤</span>Профиль</button>
+  <button class="nav-btn active"><span>💸</span>Депозит</button>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+    authDomain: "dropwin-8d94b.firebaseapp.com",
+    projectId: "dropwin-8d94b",
+    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    messagingSenderId: "988974289403",
+    appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+    measurementId: "G-BK010MHN8N"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let currentUser = null;
+  let userId = null;
+  let activePromoCode = null;
+
+  function createParticles() {
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDuration = Math.random() * 15 + 10 + 's';
+      p.style.animationDelay = Math.random() * 5 + 's';
+      container.appendChild(p);
+    }
+  }
+
+  function showRandomPromo() {
+    const codes = ["DEP-X7K9P2", "DEP-L4M8Q1", "DEP-R9T2V5", "DEP-B3N6Z8", "DEP-K1P4W7"];
+    const code = codes[Math.floor(Math.random() * codes.length)];
+    document.getElementById('randomPromoCode').textContent = code;
+    const float = document.getElementById('promoFloat');
+    float.style.display = 'block';
+    setTimeout(() => {
+      float.classList.add('fade-out');
+      setTimeout(() => float.style.display = 'none', 1200);
+    }, 20000);
+  }
+
+  window.copyPromoCode = function() {
+    const code = document.getElementById('randomPromoCode').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      alert('Промокод скопирован!');
+    });
+  };
+
+  window.activatePromoOnDep = async function() {
+    const code = document.getElementById('depPromoCode').value.trim().toUpperCase();
+    if (!code) return alert('Введите промокод');
+
+    const amount = Number(document.getElementById('depAmount').value) || 0;
+    if (amount < 50) return alert('Минимальная сумма депозита — 50₽');
+
+    let calculatedBonus = 0;
+
+    // Проверяем промокод из ежедневного кейса
+    if (currentUser?.activePromoCode === code) {
+      const promoType = currentUser.activePromoType;
+      const promoValue = currentUser.activePromoValue;
+
+      if (promoType === 'dep20') {
+        calculatedBonus = Math.round(amount * 0.20);
+      } else if (promoType === 'dep25') {
+        calculatedBonus = Math.round(amount * 0.25);
+      } else if (promoType === 'dep30') {
+        calculatedBonus = Math.round(amount * 0.30);
+      } else if (promoType && promoType.startsWith('bonus')) {
+        calculatedBonus = promoValue;
+      } else {
+        return alert('Этот промокод нельзя использовать для депозита');
+      }
+
+      activePromoCode = {
+        code: code,
+        type: promoType,
+        value: promoValue
+      };
+
+      document.getElementById('totalWithBonus').textContent = `= ${amount + calculatedBonus}₽`;
+    }
+    // Проверяем стандартные промокоды
+    else if (code.startsWith('DEP-') || code.startsWith('DROPWIN-')) {
+      calculatedBonus = Math.round(amount * 0.20);
+
+      activePromoCode = {
+        code: code,
+        type: 'dep20',
+        value: 20
+      };
+
+      document.getElementById('totalWithBonus').textContent = `= ${amount + calculatedBonus}₽`;
+    }
+    else {
+      document.getElementById('totalWithBonus').textContent = '';
+      alert('Неверный или просроченный промокод');
+    }
+  };
+
+  window.processDeposit = async function() {
+    const amountInput = document.getElementById('depAmount');
+    const amount = Number(amountInput.value);
+    if (!amount || amount < 50) return alert('Минимальная сумма — 50 ₽');
+
+    const status = document.getElementById('depStatus');
+    const loading = document.getElementById('loadingLine');
+
+    status.innerHTML = '<div style="color:#fbbf24;">Обработка...</div>';
+    loading.style.width = '0%';
+    setTimeout(() => loading.style.width = '100%', 50);
+
+    await new Promise(r => setTimeout(r, 1600));
+
+    let bonus = 0;
+    let bonusSource = '';
+
+    // Применяем бонус от промокода (если есть)
+    if (activePromoCode) {
+      const promoType = activePromoCode.type;
+      const promoValue = activePromoCode.value;
+
+      if (promoType === 'dep20') {
+        bonus = Math.round(amount * 0.20);
+        bonusSource = '+20%';
+      } else if (promoType === 'dep25') {
+        bonus = Math.round(amount * 0.25);
+        bonusSource = '+25%';
+      } else if (promoType === 'dep30') {
+        bonus = Math.round(amount * 0.30);
+        bonusSource = '+30%';
+      } else if (promoType && promoType.startsWith('bonus')) {
+        bonus = promoValue;
+        bonusSource = 'фиксированный';
+      }
+
+      // Очищаем использованный промокод из Firebase
+      if (currentUser?.activePromoCode === activePromoCode.code) {
+        await updateDoc(doc(db, 'users', userId), {
+          activePromoCode: null,
+          activePromoType: null,
+          activePromoValue: null
+        });
+        currentUser.activePromoCode = null;
+      }
+
+      activePromoCode = null;
+    }
+    // Случайный бонус в рублях в зависимости от суммы депозита
+    else if (amount >= 1000) {
+      bonus = Math.floor(Math.random() * 100) + 1; // 1-100₽
+      bonusSource = 'случайный';
+    } else if (amount >= 500) {
+      bonus = Math.floor(Math.random() * 50) + 1; // 1-50₽
+      bonusSource = 'случайный';
+    } else if (amount >= 250) {
+      bonus = Math.floor(Math.random() * 30) + 1; // 1-30₽
+      bonusSource = 'случайный';
+    } else if (amount >= 100) {
+      bonus = Math.floor(Math.random() * 15) + 1; // 1-15₽
+      bonusSource = 'случайный';
+    }
+
+    const total = amount + bonus;
+
+    // Генерируем новый промокод на бонус в рублях
+    let newPromoCode = null;
+    let newPromoBonus = 0;
+
+    if (amount >= 1000) {
+      newPromoBonus = Math.floor(Math.random() * 100) + 1; // 1-100₽
+    } else if (amount >= 500) {
+      newPromoBonus = Math.floor(Math.random() * 50) + 1; // 1-50₽
+    } else if (amount >= 250) {
+      newPromoBonus = Math.floor(Math.random() * 30) + 1; // 1-30₽
+    } else if (amount >= 100) {
+      newPromoBonus = Math.floor(Math.random() * 15) + 1; // 1-15₽
+    }
+
+    if (newPromoBonus > 0) {
+      const randomPart = Math.random().toString(36).substring(2, 9).toUpperCase();
+      newPromoCode = `BONUS-${randomPart}`;
+    }
+
+    // Сохраняем в Firebase
+    if (db && userId && currentUser) {
+      currentUser.balance = (currentUser.balance || 0) + total;
+
+      const updateData = {
+        balance: currentUser.balance
+      };
+
+      // Если есть новый промокод, сохраняем его
+      if (newPromoCode) {
+        updateData.activePromoCode = newPromoCode;
+        updateData.activePromoType = `bonus${newPromoBonus}`;
+        updateData.activePromoValue = newPromoBonus;
+        currentUser.activePromoCode = newPromoCode;
+        currentUser.activePromoType = `bonus${newPromoBonus}`;
+        currentUser.activePromoValue = newPromoBonus;
+      }
+
+      await updateDoc(doc(db, 'users', userId), updateData);
+      document.getElementById('balance').textContent = currentUser.balance;
+    }
+
+    // Сбрасываем форму
+    document.getElementById('totalWithBonus').textContent = '';
+    document.getElementById('depPromoCode').value = '';
+
+    loading.style.width = '0%';
+
+    let promoMessage = '';
+    if (newPromoCode) {
+      promoMessage = `
+        <div style="background: rgba(52,211,153,0.1); padding: 12px; border-radius: 10px; margin-top: 12px; border: 2px solid #34d399;">
+          <div style="color:#34d399; font-weight:700;">🎁 Вы получили промокод!</div>
+          <div style="font-family: monospace; font-size: 1.3rem; letter-spacing: 2px; margin: 8px 0; cursor: pointer; background: #111827; padding: 10px; border-radius: 8px;"
+               onclick="navigator.clipboard.writeText('${newPromoCode}').then(() => alert('Промокод скопирован!'))"
+               title="Нажмите чтобы скопировать">
+            ${newPromoCode}
+          </div>
+          <div style="color:#fbbf24; font-size: 0.95rem;">Активируйте в профиле: +${newPromoBonus}₽</div>
+          <div style="color:#9ca3af; font-size: 0.85rem; margin-top: 4px;">👆 Нажмите на промокод чтобы скопировать</div>
+        </div>
+      `;
+    }
+
+    status.innerHTML = `
+      <div style="color:#34d399; font-weight:700; font-size:1.4rem;">
+        ✅ Успешно зачислено +${total} ₽
+      </div>
+      ${bonus ? `<div style="color:#fbbf24; margin-top:8px;">Бонус от промокода: +${bonus}₽${bonusSource === 'случайный' ? ' (сюрприз!)' : bonusSource !== 'фиксированный' ? ' (' + bonusSource + ')' : ''}</div>` : ''}
+      ${promoMessage}
+    `;
+    status.classList.add('success');
+
+    // Не скрываем сообщение автоматически если есть промокод
+    if (!newPromoCode) {
+      setTimeout(() => {
+        status.classList.add('fade-out');
+        setTimeout(() => {
+          status.innerHTML = '';
+          status.classList.remove('success', 'fade-out');
+        }, 1200);
+      }, 4000);
+    }
+  };
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      userId = user.uid;
+      try {
+        const snap = await getDoc(doc(db, 'users', user.uid));
+        if (snap.exists()) {
+          currentUser = snap.data();
+          document.getElementById('balance').textContent = currentUser.balance || 0;
+        }
+      } catch (e) {
+        console.error("Ошибка загрузки профиля:", e);
+      }
+    } else {
+      location.href = 'register.html';
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    createParticles();
+    showRandomPromo();
+  });
+</script>
+</body>
+</html>

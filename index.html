@@ -5,6 +5,104 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>DropWin Casino</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .games-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px 14px;
+      padding: 20px 16px;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    .game-icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 12px 20px;
+      border-radius: 20px;
+      background: rgba(30, 27, 71, 0.75);
+      border: 2px solid rgba(52, 211, 153, 0.25);
+      transition: all 0.28s ease;
+      cursor: pointer;
+      color: white;
+      text-decoration: none;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.45);
+      overflow: hidden;
+    }
+
+    .game-icon:hover {
+      transform: translateY(-8px);
+      border-color: #34d399;
+      box-shadow: 0 16px 36px rgba(16, 185, 129, 0.5);
+    }
+
+    .game-icon .image-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 140px;
+    }
+
+    .game-icon img {
+      max-width: 100%;
+      max-height: 160px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 18px rgba(0,0,0,0.65));
+    }
+
+    /* Кости — крупнее */
+    .game-icon.dice img {
+      max-height: 190px;
+    }
+
+    /* Баттлы — тоже крупнее */
+    .game-icon.battles img {
+      max-height: 185px;
+    }
+
+    .game-icon-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      text-align: center;
+      margin-top: 12px;
+      width: 100%;
+    }
+
+    @media (max-width: 420px) {
+      .games-list {
+        gap: 16px 12px;
+        padding: 18px 14px;
+      }
+      .game-icon img {
+        max-height: 145px;
+      }
+      .game-icon.dice img {
+        max-height: 170px;
+      }
+      .game-icon.battles img {
+        max-height: 165px;
+      }
+      .game-icon-name {
+        font-size: 1.05rem;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .game-icon img {
+        max-height: 130px;
+      }
+      .game-icon.dice img {
+        max-height: 155px;
+      }
+      .game-icon.battles img {
+        max-height: 150px;
+      }
+    }
+  </style>
 </head>
 <body>
 <div class="particles" id="particles"></div>
@@ -19,16 +117,77 @@
 
 <div class="content">
   <div class="games-list">
-    <div class="game-icon" onclick="location.href='games/slots.html'"><div class="game-icon-emoji">🎰</div><div class="game-icon-name">Слоты</div></div>
-    <div class="game-icon" onclick="location.href='games/miner.html'"><div class="game-icon-emoji">💎</div><div class="game-icon-name">Минёр</div></div>
-    <div class="game-icon" onclick="location.href='games/roulette.html'"><div class="game-icon-emoji">🎡</div><div class="game-icon-name">Рулетка</div></div>
-    <div class="game-icon" onclick="location.href='games/cards.html'"><div class="game-icon-emoji">🃏</div><div class="game-icon-name">Карты</div></div>
-    <div class="game-icon" onclick="location.href='games/dice.html'"><div class="game-icon-emoji">🎲</div><div class="game-icon-name">Кости</div></div>
-    <div class="game-icon" onclick="location.href='games/crash.html'"><div class="game-icon-emoji">🚀</div><div class="game-icon-name">Краш</div></div>
-    <div class="game-icon" onclick="location.href='games/plinko.html'"><div class="game-icon-emoji">🎯</div><div class="game-icon-name">Plinko</div></div>
-    <div class="game-icon" onclick="location.href='games/dino-throw.html'"><div class="game-icon-emoji">🦖</div><div class="game-icon-name">Dino Throw</div></div>
-    <div class="game-icon" onclick="location.href='crypto.html'"><div class="game-icon-emoji">📈</div><div class="game-icon-name">Акции: Крипта</div></div>
-    <div class="game-icon" onclick="location.href='games/battles.html'"><div class="game-icon-emoji">⚔️</div><div class="game-icon-name">Баттлы Кейсов</div></div>
+
+    <div class="game-icon" onclick="location.href='games/slots.html'">
+      <div class="image-container">
+        <img src="images/index/slots.png" alt="Слоты">
+      </div>
+      <div class="game-icon-name">Слоты</div>
+    </div>
+
+    <div class="game-icon" onclick="location.href='games/miner.html'">
+      <div class="image-container">
+        <img src="images/index/miner.png" alt="Минёр">
+      </div>
+      <div class="game-icon-name">Минёр</div>
+    </div>
+
+    <div class="game-icon" onclick="location.href='games/roulette.html'">
+      <div class="image-container">
+        <img src="images/index/roulette.png" alt="Рулетка">
+      </div>
+      <div class="game-icon-name">Рулетка</div>
+    </div>
+
+    <div class="game-icon" onclick="location.href='games/cards.html'">
+      <div class="image-container">
+        <img src="images/index/cards.png" alt="Карты">
+      </div>
+      <div class="game-icon-name">Карты</div>
+    </div>
+
+    <div class="game-icon dice" onclick="location.href='games/dice.html'">
+      <div class="image-container">
+        <img src="images/index/dice.png" alt="Кости">
+      </div>
+      <div class="game-icon-name">Кости</div>
+    </div>
+
+    <div class="game-icon" onclick="location.href='games/crash.html'">
+      <div class="image-container">
+        <img src="images/index/crash.png" alt="Краш">
+      </div>
+      <div class="game-icon-name">Краш</div>
+    </div>
+
+    <div class="game-icon" onclick="location.href='games/plinko.html'">
+      <div class="image-container">
+        <img src="images/index/plinko.png" alt="Plinko">
+      </div>
+      <div class="game-icon-name">Plinko</div>
+    </div>
+
+    <div class="game-icon" onclick="location.href='games/dino-throw.html'">
+      <div class="image-container">
+        <img src="images/index/dino-throw.png" alt="Dino Throw">
+      </div>
+      <div class="game-icon-name">Dino Throw</div>
+    </div>
+
+    <div class="game-icon" onclick="location.href='crypto.html'">
+      <div class="image-container">
+        <img src="images/index/crypto.png" alt="Акции Крипта">
+      </div>
+      <div class="game-icon-name">Акции: Крипта</div>
+    </div>
+
+    <div class="game-icon battles" onclick="location.href='games/battles.html'">
+      <div class="image-container">
+        <img src="images/index/battles.png" alt="Баттлы Кейсов">
+      </div>
+      <div class="game-icon-name">Баттлы Кейсов</div>
+    </div>
+
   </div>
 </div>
 
@@ -79,7 +238,7 @@
         getDoc(doc(db, 'users', user.uid)).then((docSnap) => {
           if (docSnap.exists()) {
             currentUser = docSnap.data();
-            document.getElementById('balance').textContent = Math.round(currentUser.balance || 0);
+            document.getElementById('balance').textContent = currentUser.balance || 0;
             document.getElementById('authBtn').textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
             document.getElementById('authBtn').onclick = () => location.href = 'profile.html';
           } else {
@@ -96,7 +255,7 @@
           const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
           currentUser = users.find(u => u.username === username);
           if (currentUser) {
-            document.getElementById('balance').textContent = Math.round(currentUser.balance || 0);
+            document.getElementById('balance').textContent = currentUser.balance || 0;
             document.getElementById('authBtn').textContent = 'Гость';
             document.getElementById('authBtn').onclick = () => location.href = 'profile.html';
           }

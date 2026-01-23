@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>FreeBet Бонусы | DropWin</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .case-big {
+      font-size: 9rem;
+      text-align: center;
+      margin: 30px 0;
+      cursor: pointer;
+      transition: transform 0.4s;
+    }
+    .case-big:hover { transform: scale(1.12); }
+    .case-big.spin { animation: spin 2.2s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+    @keyframes spin {
+      0%   { transform: rotate(0deg) scale(1); }
+      50%  { transform: rotate(360deg) scale(1.15); }
+      100% { transform: rotate(720deg) scale(1); }
+    }
+    .daily-info {
+      background: rgba(30,41,59,0.7);
+      padding: 20px;
+      border-radius: 16px;
+      margin: 24px 0;
+      text-align: center;
+    }
+    .promo-code {
+      background: #111827;
+      padding: 12px;
+      border-radius: 10px;
+      font-family: monospace;
+      font-size: 1.4rem;
+      letter-spacing: 3px;
+      margin: 12px 0;
+    }
+  </style>
+</head>
+<body>
+<div class="particles" id="particles"></div>
+
+<div class="header">
+  <div class="logo">💎 DROPWIN</div>
+  <div class="balance-container">
+    <div class="balance">💰 <span id="balance">0</span>₽</div>
+  </div>
+</div>
+
+<div class="content">
+  <button class="back-btn" onclick="location.href='index.html'">← Назад</button>
+
+  <div class="game-card">
+    <div class="game-title">🎁 FreeBet & Бонусы</div>
+
+    <div class="daily-info">
+      <h3>Ежедневный кейс</h3>
+      <div class="case-big" id="dailyCaseEmoji">📦</div>
+      <button class="btn" id="openDailyBtn" style="margin:16px auto; max-width:320px;">Открыть сегодня</button>
+      <div id="dailyResult" style="margin-top:20px; font-size:1.3rem; min-height:70px;"></div>
+    </div>
+
+    <div style="margin-top:30px; padding:16px; background:rgba(30,27,71,0.6); border-radius:16px;">
+      <h4>Возможные награды:</h4>
+      <ul>
+        <li>+1₽ - +15₽ (часто)</li>
+        <li>+20% на депозит (часто)</li>
+        <li>+25% на депозит (редко)</li>
+        <li>+30% на депозит (очень редко)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn" onclick="location.href='index.html'"><span>🏠</span><span class="nav-label">Главная</span></button>
+  <button class="nav-btn" onclick="location.href='profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
+  <button class="nav-btn active"><span>🎁</span><span class="nav-label">Бонусы</span></button>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+    authDomain: "dropwin-8d94b.firebaseapp.com",
+    projectId: "dropwin-8d94b",
+    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    messagingSenderId: "988974289403",
+    appId: "1:988974289403:web:886d34e6f65920a105fb5e"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let currentUser = null;
+  let userId = null;
+
+  function createParticles() {
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDuration = Math.random() * 15 + 10 + 's';
+      p.style.animationDelay = Math.random() * 5 + 's';
+      container.appendChild(p);
+    }
+  }
+
+  function loadUser() {
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        userId = user.uid;
+        const snap = await getDoc(doc(db, 'users', user.uid));
+        if (snap.exists()) {
+          currentUser = snap.data();
+          document.getElementById('balance').textContent = currentUser.balance || 0;
+
+          // Проверяем кулдаун
+          const now = Date.now();
+          const lastOpen = currentUser.lastDailyCaseTime || 0;
+          const cooldown = 24 * 60 * 60 * 1000; // 24 часа (1 день)
+
+          if (now - lastOpen < cooldown) {
+            const remaining = Math.ceil((cooldown - (now - lastOpen)) / 1000);
+            document.getElementById('dailyResult').innerHTML = `<div style="color:#ef4444;">⏱️ Подождите еще ${remaining} секунд</div>`;
+            document.getElementById('openDailyBtn').disabled = true;
+            document.getElementById('openDailyBtn').style.opacity = '0.5';
+
+            setTimeout(() => {
+              document.getElementById('openDailyBtn').disabled = false;
+              document.getElementById('openDailyBtn').style.opacity = '1';
+              document.getElementById('dailyResult').innerHTML = '';
+            }, remaining * 1000);
+          }
+        }
+      }
+    });
+  }
+
+  window.openDailyCase = async function() {
+    if (!currentUser) return alert('Войдите в аккаунт');
+
+    // СРАЗУ блокируем кнопку
+    const btn = document.getElementById('openDailyBtn');
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+
+    const now = Date.now();
+    const lastOpen = currentUser.lastDailyCaseTime || 0;
+    const cooldown = 10 * 1000; // 10 секунд для теста
+
+    if (now - lastOpen < cooldown) {
+      const remaining = Math.ceil((cooldown - (now - lastOpen)) / 1000);
+      document.getElementById('dailyResult').innerHTML = `<div style="color:#ef4444;">⏱️ Подождите еще ${remaining} секунд</div>`;
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }, remaining * 1000);
+      return;
+    }
+
+    // Обновляем время СРАЗУ
+    await updateDoc(doc(db, 'users', userId), {
+      lastDailyCaseTime: now
+    });
+    currentUser.lastDailyCaseTime = now;
+
+    // Анимация открытия кейса
+    const emoji = document.getElementById('dailyCaseEmoji');
+    emoji.classList.add('spin');
+    await new Promise(r => setTimeout(r, 2200));
+    emoji.classList.remove('spin');
+
+    const randomPart = Math.random().toString(36).substring(2, 9).toUpperCase();
+    const promoCode = `DROPWIN-${randomPart}`;
+
+    const rewards = [
+      // Промокоды на депозит
+      {type: 'dep30', value: 30, text: '+30% на депозит', weight: 100},        // очень редко
+      {type: 'dep25', value: 25, text: '+25% на депозит', weight: 500},        // редко
+      {type: 'dep20', value: 20, text: '+20% на депозит', weight: 300000},     // часто
+
+      // Маленькие бонусы (от 1₽ до 15₽) - чаще всего
+      {type: 'bonus15', value: 15, text: '+15₽', weight: 50000},
+      {type: 'bonus10', value: 10, text: '+10₽', weight: 100000},
+      {type: 'bonus7',  value:  7, text: '+7₽',  weight: 150000},
+      {type: 'bonus5',  value:  5, text: '+5₽',  weight: 200000},
+      {type: 'bonus3',  value:  3, text: '+3₽',  weight: 150000},
+      {type: 'bonus1',  value:  1, text: '+1₽',  weight: 50000}
+    ];
+
+    let totalWeight = rewards.reduce((sum, r) => sum + r.weight, 0);
+    let rand = Math.random() * totalWeight;
+    let sum = 0;
+    let prize;
+
+    for (let item of rewards) {
+      sum += item.weight;
+      if (rand <= sum) {
+        prize = item;
+        break;
+      }
+    }
+    if (!prize) prize = rewards[rewards.length-1];
+
+    await updateDoc(doc(db, 'users', userId), {
+      activePromoCode: promoCode,
+      activePromoType: prize.type,
+      activePromoValue: prize.value
+    });
+
+    let resultHTML = `
+      <div style="color:#34d399; font-size:1.6rem; font-weight:700;">🎉 Поздравляем!</div>
+      Ваш промокод:<br>
+      <div class="promo-code">${promoCode}</div>
+      Награда: <b>${prize.text}</b><br>
+    `;
+
+    if (prize.type.startsWith('dep')) {
+      resultHTML += `<small style="color:#9ca3af;">Используйте на странице <a href="dep.html" style="color:#34d399;">Пополнения</a></small>`;
+    } else {
+      resultHTML += `<small style="color:#9ca3af;">Активируйте в <a href="profile.html" style="color:#34d399;">Профиле</a></small>`;
+    }
+
+    document.getElementById('dailyResult').innerHTML = resultHTML;
+
+    // Разблокируем кнопку через 10 секунд
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }, 10000);
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    createParticles();
+    loadUser();
+    document.getElementById('openDailyBtn').addEventListener('click', openDailyCase);
+  });
+</script>
+</body>
+</html>

@@ -209,60 +209,43 @@
         .join-btn { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; box-shadow: 0 4px 14px #3b82f655; }
         .join-btn:hover { transform: scale(1.07); box-shadow: 0 8px 20px #3b82f688; }
 
-        .battle-item {
-            background: rgba(45, 40, 75, 0.8);
-            border-radius: 16px;
-            padding: 20px;
-            margin: 16px 0;
-            border-left: 6px solid #8b5cf6;
-        }
-        .battle-price {
-            font-size: 1.4rem;
-            font-weight: 800;
-            margin: 12px 0;
-        }
-        .battle-price.free  { color: #34d399; }
-        .battle-price.paid  { color: #c4b5fd; }
+      .battle-item {
+    background: rgba(45, 40, 75, 0.85);
+    border-radius: 16px;
+    padding: 16px;
+    margin: 12px 0;
+    border-left: 5px solid #8b5cf6;
+    font-size: 0.95rem;
+}
 
-        .delete-battle-btn {
-            background: linear-gradient(135deg, #ef4444, #991b1b);
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 12px;
-            font-weight: 700;
-            margin-top: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.25s;
-        }
-        .delete-battle-btn:hover {
-            transform: scale(1.06);
-            box-shadow: 0 0 20px #ef4444bb;
-        }
+.battle-item > div {
+    margin: 8px 0;
+}
 
-        .charity-label {
-            background: linear-gradient(135deg, #10b981, #047857);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: bold;
-            margin-left: 14px;
-        }
+.battle-item .nickname {
+    color: #c084fc;
+    font-weight: 700;
+}
 
-        .charity-toggle {
-            margin: 24px auto;
-            text-align: center;
-            font-size: 1.2rem;
-            color: #e5e7eb;
-        }
-        .charity-toggle input[type="checkbox"] {
-            transform: scale(1.6);
-            margin-right: 14px;
-        }
+.battle-price {
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+@media (max-width: 480px) {
+    .battle-item {
+        padding: 14px;
+        font-size: 0.92rem;
+    }
+    .join-btn, .delete-battle-btn {
+        width: 100%;
+        margin-top: 12px;
+        padding: 12px;
+    }
+    .battle-item > div {
+        font-size: 0.9rem;
+    }
+}
 
         .nickname { color: #c084fc; font-weight: bold; }
     </style>
@@ -288,7 +271,32 @@
                 <button class="mode-btn active" id="vsBotBtn">Vs Бот</button>
                 <button class="mode-btn" id="vsPlayerBtn">Vs Игрок</button>
             </div>
+<button id="showChancesBtn" title="Шансы выпадения из кейсов" style="
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #64748b, #475569);
+    color: white;
+    font-size: 1.2rem;
+    line-height: 36px;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    transition: all 0.18s ease;
+    z-index: 5;
+  ">ℹ️</button>
 
+<div id="chancesModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9999; justify-content:center; align-items:center;">
+        <div style="background:#1e1b32; border-radius:16px; padding:20px; max-width:92%; max-height:90vh; overflow-y:auto; border:2px solid #8b5cf6; box-shadow:0 0 40px #8b5cf655;">
+            <h2 style="text-align:center; margin:0 0 20px; color:#c4b5fd;">Шансы выпадения</h2>
+            <div id="chancesContent"></div>
+            <button class="btn" id="closeChances" style="margin:20px auto 8px; display:block; min-width:140px;">Закрыть</button>
+        </div>
+    </div>
             <div id="vsBotSection">
                 <div class="case-select-grid" id="botCaseGrid"></div>
                 <button class="btn add-case-btn" id="addBotCase">Добавить кейс</button>
@@ -360,44 +368,58 @@
                 container.appendChild(p);
             }
         }
+function openCaseWithBotBoost(caseType) {
+        const items = cases[caseType].items;
+        const r = Math.random();
+        let sum = 0;
 
+        // даём боту ~4–6% буст на более высокие предметы
+        for (let i = 0; i < items.length; i++) {
+            let adjustedProb = items[i].prob;
+            // увеличиваем шанс на каждый следующий предмет примерно на 4–7%
+            if (i > 0) adjustedProb += 0.004 * (i + 1);
+            sum += adjustedProb;
+            if (r <= sum) return { ...items[i], caseType };
+        }
+        return { ...items[0], caseType };
+    }
         let currentUser = null;
         let userId = null;
         let isGuest = false;
         let isCharityMode = false;
 
-        const cases = {
-            bomj: {
-                price: 5,
-                items: [
-                    {emoji: '🧦', name: 'Дырявый носок', value: 1, prob: 0.42},
-                    {emoji: '🍞', name: 'Чёрствый хлеб', value: 3, prob: 0.24},
-                    {emoji: '🗑️', name: 'Мусорный пакет', value: 7, prob: 0.14},
-                    {emoji: '🍺', name: 'Тёплое пиво 0.5', value: 12, prob: 0.09},
-                    {emoji: '🪙', name: 'Горстка мелочи', value: 25, prob: 0.055},
-                    {emoji: '🧥', name: 'Старая куртка', value: 50, prob: 0.025},
-                    {emoji: '📱', name: 'Сломанный Nokia', value: 100, prob: 0.015},
-                    {emoji: '💸', name: 'Заначка под матрасом', value: 180, prob: 0.006},
-                ],
-                color: '#6b7280',
-                icon: '🗑️'
-            },
-            vibe: {
-                price: 45,
-                items: [
-                    {emoji: '💖', name: 'Сердце', value: 15, prob: 0.65},
-                    {emoji: '🌹', name: 'Роза', value: 25, prob: 0.17},
-                    {emoji: '🚀', name: 'Ракета', value: 50, prob: 0.07},
-                    {emoji: '💐', name: 'Цветы', value: 50, prob: 0.07},
-                    {emoji: '💍', name: 'Кольцо', value: 100, prob: 0.015},
-                    {emoji: '💎', name: 'Алмаз', value: 100, prob: 0.015},
-                    {emoji: '🍭', name: 'Лол-поп', value: 325, prob: 0.0075},
-                    {emoji: '🐶', name: 'Суп Дог', value: 425, prob: 0.005},
-                    {emoji: '🤡', name: 'Шапка шута', value: 500, prob: 0.0025},
-                    {emoji: '⭐', name: 'Звезда', value: 200, prob: 0.0025},
-                ],
-                color: '#ec4899',
-                icon: '💖'
+const cases = {
+    bomj: {
+        price: 5,
+        items: [
+            {emoji: '🧦', name: 'Дырявый носок',      value: 1,   prob: 0.58},   // было 0.42
+            {emoji: '🍞', name: 'Чёрствый хлеб',       value: 3,   prob: 0.22},   // было 0.24
+            {emoji: '🗑️', name: 'Мусорный пакет',      value: 7,   prob: 0.11},   // было 0.14
+            {emoji: '🍺', name: 'Тёплое пиво 0.5',     value: 12,  prob: 0.05},   // было 0.09
+            {emoji: '🪙', name: 'Горстка мелочи',      value: 25,  prob: 0.025},  // было 0.055
+            {emoji: '🧥', name: 'Старая куртка',       value: 50,  prob: 0.012},  // было 0.025
+            {emoji: '📱', name: 'Сломанный Nokia',     value: 100, prob: 0.003},  // было 0.015
+            {emoji: '💸', name: 'Заначка под матрасом',value: 180, prob: 0.0005}, // было 0.006
+        ],
+        color: '#6b7280',
+        icon: '🗑️'
+    },
+    vibe: {
+        price: 45,
+        items: [
+            {emoji: '💖', name: 'Сердце',          value: 15,  prob: 0.52},   // было 0.65 → меньше мелочёвки
+            {emoji: '🌹', name: 'Роза',            value: 25,  prob: 0.20},   // ↑
+            {emoji: '🚀', name: 'Ракета',          value: 50,  prob: 0.10},   // ↑
+            {emoji: '💐', name: 'Цветы',           value: 50,  prob: 0.08},   // ↑
+            {emoji: '💍', name: 'Кольцо',          value: 100, prob: 0.035},  // ↑
+            {emoji: '💎', name: 'Алмаз',           value: 100, prob: 0.03},   // ↑
+            {emoji: '🍭', name: 'Лол-поп',         value: 325, prob: 0.015},  // ↑
+            {emoji: '🐶', name: 'Суп Дог',         value: 425, prob: 0.012},  // ↑
+            {emoji: '🤡', name: 'Шапка шута',      value: 500, prob: 0.008},  // ↑
+            {emoji: '⭐', name: 'Звезда',           value: 200, prob: 0.01},   // добавлено чуть больше
+        ],
+        color: '#ec4899',
+        icon: '💖'
             },
             dvornik: {
                 price: 25,
@@ -572,10 +594,10 @@
     await saveUser();
     updateBalance();
 
-    const playerItems = selectedBotCases.map(type => openCase(type));
-    const playerTotal = playerItems.reduce((sum, item) => sum + item.value, 0);
-    const botItems    = selectedBotCases.map(type => openCase(type));
-    const botTotal    = botItems.reduce((sum, item) => sum + item.value, 0);
+        const playerItems = selectedBotCases.map(type => openCase(type));
+        const playerTotal = playerItems.reduce((sum, item) => sum + item.value, 0);
+        const botItems    = selectedBotCases.map(type => openCaseWithBotBoost(type));
+        const botTotal    = botItems.reduce((sum, item) => sum + item.value, 0);
 
     const resultsDiv = document.getElementById('botResults');
     if (!resultsDiv) return;
@@ -1007,36 +1029,93 @@ function showBotResult(playerTotal, botTotal, totalCost) {
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            createParticles();
-            loadCurrentUser();
+document.addEventListener('DOMContentLoaded', () => {
+    createParticles();
+    loadCurrentUser();
 
-            const vsBotBtn = document.getElementById('vsBotBtn');
-            const vsPlayerBtn = document.getElementById('vsPlayerBtn');
+    // Рендерим сетки кейсов
+    renderCaseGrid('botCaseGrid', type => addSelectedCase('bot', type));
+    renderCaseGrid('playerCaseGrid', type => addSelectedCase('player', type));
 
-            vsBotBtn.addEventListener('click', () => {
-                vsBotBtn.classList.add('active');
-                vsPlayerBtn.classList.remove('active');
-                document.getElementById('vsBotSection').style.display = 'block';
-                document.getElementById('vsPlayerSection').style.display = 'none';
+    // ─── Переключение режимов Vs Bot / Vs Player ────────────────────────
+    const vsBotBtn      = document.getElementById('vsBotBtn');
+    const vsPlayerBtn   = document.getElementById('vsPlayerBtn');
+    const botSection    = document.getElementById('vsBotSection');
+    const playerSection = document.getElementById('vsPlayerSection');
+
+    function setBotMode() {
+        vsBotBtn.classList.add('active');
+        vsPlayerBtn.classList.remove('active');
+        botSection.style.display = 'block';
+        playerSection.style.display = 'none';
+    }
+
+    function setPlayerMode() {
+        if (isGuest) {
+            alert('Только зарегистрированные пользователи могут играть Vs Игрок');
+            return;
+        }
+        vsPlayerBtn.classList.add('active');
+        vsBotBtn.classList.remove('active');
+        botSection.style.display = 'none';
+        playerSection.style.display = 'block';
+        loadBattles();           // загружаем список баттлов только при переходе
+    }
+
+    // Вешаем клики
+    vsBotBtn.addEventListener('click', setBotMode);
+    vsPlayerBtn.addEventListener('click', setPlayerMode);
+
+    // Начальное состояние — Vs Bot активно
+    setBotMode();
+
+    // ─── Кнопка «Шансы кейсов» ───────────────────────────────────────────
+    document.getElementById('showChancesBtn')?.addEventListener('click', () => {
+        const modal = document.getElementById('chancesModal');
+        const content = document.getElementById('chancesContent');
+        if (!modal || !content) return;
+
+        content.innerHTML = '';
+
+        sortedCaseKeys.forEach(key => {
+            const c = cases[key];
+            let html = `<div style="margin:14px 0; padding:14px; background:rgba(35,30,60,0.65); border-radius:10px; border-left:4px solid ${c.color}">
+                <h3 style="margin:0 0 10px; color:${c.color}">${caseDisplayNames[key] || key} — ${c.price}₽</h3>`;
+
+            c.items.forEach(it => {
+                const percent = (it.prob * 100).toFixed(2).replace(/\.?0+$/, "");
+                html += `<div style="display:flex; justify-content:space-between; margin:5px 0; font-size:0.96rem;">
+                    <span>${it.emoji} ${it.name}</span>
+                    <span style="color:#fde047; font-weight:600;">${it.value}₽ — ${percent}%</span>
+                </div>`;
             });
 
-            vsPlayerBtn.addEventListener('click', () => {
-                if (isGuest) {
-                    alert('Только для зарегистрированных пользователей');
-                    return;
-                }
-                vsPlayerBtn.classList.add('active');
-                vsBotBtn.classList.remove('active');
-                document.getElementById('vsBotSection').style.display = 'none';
-                document.getElementById('vsPlayerSection').style.display = 'block';
-                loadBattles();
-            });
+            html += '</div>';
+            content.innerHTML += html;
+        });
 
-            document.getElementById('charityMode')?.addEventListener('change', (e) => {
-                isCharityMode = e.target.checked;
-                updateTotalCost('player');
-            });
+        modal.style.display = 'flex';
+    });
+
+    // Закрытие модалки
+    document.getElementById('closeChances')?.addEventListener('click', () => {
+        document.getElementById('chancesModal').style.display = 'none';
+    });
+
+    // ─── Остальные кнопки (добавь свои, если не хватает) ────────────────
+    document.getElementById('playVsBot')?.addEventListener('click', () => playVsBot(false));
+    document.getElementById('quickVsBot')?.addEventListener('click', () => playVsBot(true));
+
+    document.getElementById('createBattleBtn')?.addEventListener('click', () => {
+        document.getElementById('createForm').style.display = 'block';
+    });
+
+    document.getElementById('confirmCreate')?.addEventListener('click', createBattle);
+
+    document.getElementById('charityMode')?.addEventListener('change', e => {
+        isCharityMode = e.target.checked;
+        updateTotalCost('player');
+    });
 
             renderCaseGrid('botCaseGrid', (type) => addSelectedCase('bot', type));
             renderCaseGrid('playerCaseGrid', (type) => addSelectedCase('player', type));
@@ -1052,5 +1131,4 @@ function showBotResult(playerTotal, botTotal, totalCost) {
         });
     </script>
 </body>
-
 </html>

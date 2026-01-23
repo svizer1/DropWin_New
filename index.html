@@ -79,7 +79,7 @@
         getDoc(doc(db, 'users', user.uid)).then((docSnap) => {
           if (docSnap.exists()) {
             currentUser = docSnap.data();
-            document.getElementById('balance').textContent = currentUser.balance || 0;
+            document.getElementById('balance').textContent = Math.round(currentUser.balance || 0);
             document.getElementById('authBtn').textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
             document.getElementById('authBtn').onclick = () => location.href = 'profile.html';
           } else {
@@ -96,7 +96,7 @@
           const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
           currentUser = users.find(u => u.username === username);
           if (currentUser) {
-            document.getElementById('balance').textContent = currentUser.balance || 0;
+            document.getElementById('balance').textContent = Math.round(currentUser.balance || 0);
             document.getElementById('authBtn').textContent = 'Гость';
             document.getElementById('authBtn').onclick = () => location.href = 'profile.html';
           }

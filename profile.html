@@ -374,7 +374,7 @@
 
   window.copyReferralCode = function() {
     const code = document.getElementById('myReferralCode').textContent.trim();
-    if (!code || code === '—' || !code.includes('DropWin-')) {
+    if (!code || code === '—' || !code.includes('DROPWIN-')) {  // Изменено: проверка на верхний регистр
       alert('Нет реферального кода');
       return;
     }
@@ -404,7 +404,7 @@
       codePart += chars[Math.floor(Math.random() * chars.length)];
     }
 
-    const newCode = `DropWin-${codePart}`;
+    const newCode = `DROPWIN-${codePart}`;  // Изменено: полностью в верхнем регистре
 
     currentUser.referralCode = newCode;
     currentUser.lastReferralChange = today;
@@ -529,7 +529,7 @@
             document.getElementById('balance').textContent = bal;
             document.getElementById('balanceBig').textContent = bal;
 
-            document.getElementById('myReferralCode').textContent = currentUser.referralCode || '—';
+            document.getElementById('myReferralCode').textContent = (currentUser.referralCode || '—').toUpperCase();  // Изменено: отображение в верхнем регистре
 
             document.getElementById('gamesPlayed').textContent = currentUser.gamesPlayed || 0;
             document.getElementById('totalBet').textContent = (currentUser.totalBet || 0) + '₽';

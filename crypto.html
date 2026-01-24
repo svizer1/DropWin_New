@@ -106,6 +106,8 @@
       margin-top: 6px;
       font-weight: 600;
     }
+    .profit { color: #34d399; }
+    .loss { color: #f87171; }
   </style>
 </head>
 <body>
@@ -137,7 +139,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, updateDoc, onSnapshot, setDoc, arrayUnion, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, updateDoc, onSnapshot, setDoc, arrayUnion, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
@@ -186,6 +188,7 @@
   const prevPrices = {};
   const volumes = {};
   const creationTimes = {};
+  const lastUpdates = {};
 
   const cryptoElements = {};
   const cryptoCharts = {};
@@ -213,7 +216,8 @@
         const data = {
           price: coin.startPrice,
           history: [coin.startPrice],
-          volume: 0
+          volume: 0,
+          lastUpdate: serverTimestamp()
         };
         if (coin.id === 'limosycoin') {
           data.creationTime = serverTimestamp();
@@ -234,41 +238,49 @@
         if (data.creationTime?.toMillis) {
           creationTimes[coin.id] = data.creationTime.toMillis();
         }
+        if (data.lastUpdate?.toMillis) {
+          lastUpdates[coin.id] = data.lastUpdate.toMillis();
+        }
         renderList();
       }
     });
   });
 
+  // Увеличили интервал для волатильности
   setInterval(async () => {
     for (const coin of coins) {
       const ref = doc(db, 'cryptoPrices', coin.id);
       const snap = await getDoc(ref);
       if (snap.exists()) {
         let { price, history = [], volume } = snap.data();
-        const change = (Math.random() * 0.06 - 0.03);
+        const change = (Math.random() * 0.03 - 0.015); // Меньше волатильность для реализма
         price *= (1 + change);
         price = Math.max(price, 0.00001);
 
         history.push(price);
         if (history.length > 60) history.shift();
 
-        await updateDoc(ref, { price, history });
+        await updateDoc(ref, { price, history, lastUpdate: serverTimestamp() });
       }
     }
-  }, 40000);
+  }, 30000); // Дольше: каждые 30 сек вместо 20
 
+  // Увеличили интервал для ботов
   setInterval(async () => {
-    const coin = coins[Math.floor(Math.random() * coins.length)];
-    const ref = doc(db, 'cryptoPrices', coin.id);
-    const snap = await getDoc(ref);
-    if (snap.exists()) {
-      let { price, volume = 0 } = snap.data();
-      const isBuy = Math.random() > 0.5;
-      price *= isBuy ? 1.003 : 0.997;
-      volume += Math.random() * 800 + 200;
-      await updateDoc(ref, { price, volume });
+    for (let i = 0; i < 2; i++) { // Два бота за интервал для "побольше"
+      const coin = coins[Math.floor(Math.random() * coins.length)];
+      const ref = doc(db, 'cryptoPrices', coin.id);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        let { price, volume = 0 } = snap.data();
+        const isBuy = Math.random() > 0.5;
+        const impact = Math.random() * 0.002 + 0.001; // Меньше влияние для реализма
+        price *= isBuy ? (1 + impact) : (1 - impact);
+        volume += Math.random() * 500 + 100; // Меньше объемы для баланса
+        await updateDoc(ref, { price, volume, lastUpdate: serverTimestamp() });
+      }
     }
-  }, 150000);
+  }, 90000); // Дольше: 90 сек вместо 60
 
   window.buy = async function(coinId) {
     if (!currentUser) return;
@@ -283,11 +295,11 @@
       amtInput.value = amount.toFixed(6);
     } else if (amount > 0 && price) {
       rub = amount * price;
-      rubInput.value = rub.toFixed(0);
+      rubInput.value = Math.round(rub);
     }
 
     if (amount <= 0) return;
-    const cost = amount * price;
+    const cost = Math.round(amount * price);
     if (cost > currentUser.balance) {
       alert('Недостаточно средств');
       return;
@@ -311,11 +323,12 @@
 
     portfolio[coinId] = { amount: newAmount, avgPrice: newAvg, invested: newInvested, lastBuyTime: Date.now() };
 
-    const priceImpact = Math.min(0.005 * (cost / price), 0.02);
+    // Уменьшили priceImpact для меньшего повышения цены
+    const priceImpact = Math.min(0.001 * (cost / price), 0.005); // Меньше: 0.1% на единицу, max 0.5%
     const newPrice = prices[coinId] * (1 + priceImpact);
     const newVolume = (volumes[coinId] || 0) + cost;
 
-    await updateDoc(doc(db, 'cryptoPrices', coinId), { price: newPrice, volume: newVolume });
+    await updateDoc(doc(db, 'cryptoPrices', coinId), { price: newPrice, volume: newVolume, lastUpdate: serverTimestamp() });
 
     const transaction = {
       timestamp: new Date().toISOString(),
@@ -323,6 +336,29 @@
       type: 'buy',
       amount, price, cost
     };
+
+    // 5% от покупки LimosyCoin на аккаунт Limosy, если покупатель не сам Limosy
+    if (coinId === 'limosycoin' && userId !== 'bVtpuvS4FXQ7A9NudrymVUR2Mvh1') {
+      const fee = 0.05 * cost;
+      const limosyUid = 'bVtpuvS4FXQ7A9NudrymVUR2Mvh1';
+      const feeTransaction = {
+        timestamp: new Date().toISOString(),
+        coin: coinId,
+        type: 'fee_in',
+        amount: fee,
+        from: currentUser.username || 'Аноним',
+        originalCost: cost
+      };
+
+      try {
+        await updateDoc(doc(db, 'users', limosyUid), {
+          balance: increment(fee),
+          cryptoTransactions: arrayUnion(feeTransaction)
+        });
+      } catch (e) {
+        console.warn('Не удалось начислить 5% комиссии Limosy (проверь rules):', e);
+      }
+    }
 
     await updateDoc(doc(db, 'users', userId), {
       cryptoTransactions: arrayUnion(transaction),
@@ -347,7 +383,7 @@
       amtInput.value = amount.toFixed(6);
     } else if (amount > 0 && price) {
       rub = amount * price;
-      rubInput.value = rub.toFixed(0);
+      rubInput.value = Math.round(rub);
     }
 
     if (amount <= 0 || amount > portfolio[coinId].amount) {
@@ -363,7 +399,7 @@
       return;
     }
 
-    const revenue = amount * price;
+    const revenue = Math.round(amount * price);
     const soldRatio = amount / portfolio[coinId].amount;
     portfolio[coinId].invested -= portfolio[coinId].invested * soldRatio;
 
@@ -372,11 +408,11 @@
 
     if (portfolio[coinId].amount <= 0) delete portfolio[coinId];
 
-    const priceImpact = Math.min(0.005 * (revenue / price), 0.02);
+    const priceImpact = Math.min(0.001 * (revenue / price), 0.005);
     const newPrice = prices[coinId] * (1 - priceImpact);
     const newVolume = (volumes[coinId] || 0) + revenue;
 
-    await updateDoc(doc(db, 'cryptoPrices', coinId), { price: newPrice, volume: newVolume });
+    await updateDoc(doc(db, 'cryptoPrices', coinId), { price: newPrice, volume: newVolume, lastUpdate: serverTimestamp() });
 
     const transaction = {
       timestamp: new Date().toISOString(),
@@ -432,10 +468,33 @@
     window.buy(coinId);
   };
 
+  function timeAgo(timestamp) {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days} дн. назад`;
+    if (hours > 0) return `${hours} ч. назад`;
+    if (minutes > 0) return `${minutes} мин. назад`;
+    return `только что`;
+  }
+
+  function formatPrice(price) {
+    if (price >= 1) {
+      return price.toFixed(3);
+    } else if (price >= 0.001) {
+      return price.toFixed(6);
+    } else {
+      return price.toPrecision(6).replace(/0+$/, '');
+    }
+  }
+
   function renderList() {
     const container = document.getElementById('crypto-list');
 
-    // Гибридная сортировка
     let sortedCoins = [...coins];
 
     const limosyIndex = sortedCoins.findIndex(c => c.id === 'limosycoin');
@@ -445,10 +504,9 @@
 
     if (isLimosyActive && limosyIndex !== -1) {
       sortedCoins.splice(limosyIndex, 1);
-      sortedCoins.unshift(limosy);  // эксклюзив всегда первый
+      sortedCoins.unshift(limosy);
     }
 
-    // Остальные сортируем по объёму
     sortedCoins.sort((a, b) => {
       if (a.id === 'limosycoin' && isLimosyActive) return -1;
       if (b.id === 'limosycoin' && isLimosyActive) return 1;
@@ -491,7 +549,6 @@
         }
       }
 
-      // Популярный — топ-3 после учёта эксклюзива
       const isPopular = index < 3 && badgeHtml === '';
       if (isPopular) {
         badgeHtml = `<span class="popular-badge">🔥 Популярный</span>`;
@@ -508,6 +565,9 @@
           buyDisabled = true;
         }
       }
+
+      const lastUpdateTime = lastUpdates[coinId] || Date.now();
+      const timeAgoText = timeAgo(lastUpdateTime);
 
       if (!cryptoElements[coinId]) {
         const div = document.createElement('div');
@@ -586,13 +646,19 @@
             scales: {
               x: { display: false },
               y: {
-                ticks: { color: '#94a3b8', font: { size: 11 }, callback: v => v.toFixed(3) },
+                ticks: { color: '#94a3b8', font: { size: 11 }, callback: v => formatPrice(v) },
                 grid: { color: 'rgba(139,92,246,0.08)' }
               }
             },
             plugins: {
               legend: { display: false },
-              tooltip: { callbacks: { label: ctx => `Цена: ${ctx.parsed.y.toFixed(3)} ₽` } }
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return `Цена: ${formatPrice(context.parsed.y)} ₽`;
+                  }
+                }
+              }
             },
             interaction: { mode: 'nearest', axis: 'x', intersect: false }
           }
@@ -607,12 +673,12 @@
       const el = cryptoElements[coinId];
       if (el) {
         el.name.innerHTML = nameHtml;
-        el.price.textContent = price.toFixed(3) + ' ₽';
+        el.price.textContent = formatPrice(price) + ' ₽';
         el.change.textContent = changeText;
         el.change.className = `price-change ${changeClass}`;
 
         el.portAmount.textContent = port.amount.toFixed(4);
-        el.portAvg.textContent = port.avgPrice.toFixed(3);
+        el.portAvg.textContent = formatPrice(port.avgPrice);
         el.portPl.innerHTML = `Прибыль/убыток: <span class="${plClass}">${profitLoss >= 0 ? '+' : ''}${plText}₽</span>`;
 
         el.cooldown.innerHTML = cooldownHtml;
@@ -621,11 +687,10 @@
         el.buyBtn.disabled = buyDisabled;
         el.buyAllBtn.disabled = buyDisabled;
 
-        // Обновление графика
         const chart = cryptoCharts[coinId];
         if (chart && hist.length > 0) {
           chart.data.labels = hist.map((_, i) => i);
-          chart.data.datasets[0].data = hist.slice(); // копия массива
+          chart.data.datasets[0].data = hist.slice();
           chart.update('none');
         }
       }

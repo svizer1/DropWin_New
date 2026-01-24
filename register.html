@@ -11,6 +11,7 @@
     #loginForm { display: none; }
     .password-group { position: relative; }
     .error-msg { color: #ef4444; font-size: 0.9rem; margin-top: 4px; display: none; }
+    .success-msg { color: #34d399; font-size: 0.95rem; margin-top: 8px; display: none; }
   </style>
 </head>
 <body>
@@ -38,7 +39,7 @@
       </div>
       <div class="input-group">
         <label class="input-label">Реферальный код (необязательно)</label>
-        <input type="text" id="regReferralCode" placeholder="Например: DAN1234X">
+        <input type="text" id="regReferralCode" placeholder="Например: DropWin-ABC12">
       </div>
       <div class="input-group password-group">
         <label class="input-label">Пароль</label>
@@ -49,6 +50,7 @@
         <input type="password" id="regPasswordConfirm" placeholder="Повторите пароль" required>
       </div>
       <div class="error-msg" id="regError"></div>
+      <div class="success-msg" id="regSuccess"></div>
       <button class="btn" id="registerBtn">Зарегистрироваться</button>
     </div>
 
@@ -72,8 +74,8 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getFirestore, doc, setDoc, updateDoc, getDocs, collection, query, where, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, setDoc, updateDoc, getDocs, collection, query, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
@@ -102,7 +104,6 @@
     }
   }
 
-  // Простой device fingerprint (не идеально, но лучше чем ничего)
   function getDeviceFingerprint() {
     const data = [
       navigator.userAgent,
@@ -143,13 +144,15 @@
   // Регистрация
   document.getElementById('registerBtn').addEventListener('click', async () => {
     const username = document.getElementById('regUsername').value.trim();
-    const email = document.getElementById('regEmail').value.trim();
+    const email = document.getElementById('regEmail').value.trim().toLowerCase();
     const password = document.getElementById('regPassword').value.trim();
     const confirm = document.getElementById('regPasswordConfirm').value.trim();
     const referralCode = document.getElementById('regReferralCode').value.trim().toUpperCase();
     const errorEl = document.getElementById('regError');
+    const successEl = document.getElementById('regSuccess');
 
     errorEl.style.display = 'none';
+    successEl.style.display = 'none';
     errorEl.textContent = '';
 
     if (!username || !email || !password || !confirm) {
@@ -158,7 +161,7 @@
       return;
     }
     if (password.length < 6) {
-      errorEl.textContent = 'Пароль минимум 6 символов';
+      errorEl.textContent = 'Пароль должен быть минимум 6 символов';
       errorEl.style.display = 'block';
       return;
     }
@@ -171,47 +174,61 @@
     const deviceId = getDeviceFingerprint();
 
     try {
+      // 1. Создаём пользователя
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Проверяем, использовалось ли это устройство недавно
-      const recentDeviceQuery = query(
-        collection(db, 'users'),
-        where('deviceId', '==', deviceId),
-        where('createdAt', '>=', new Date(Date.now() - 30*24*60*60*1000).toISOString())
-      );
-      const recentDevices = await getDocs(recentDeviceQuery);
-      const isNewDevice = recentDevices.empty;
+      // 2. Явно ждём, пока токен обновится и пользователь будет авторизован
+      await new Promise(resolve => {
+        const unsubscribe = onAuthStateChanged(auth, (u) => {
+          if (u && u.uid === user.uid) {
+            unsubscribe();
+            resolve();
+          }
+        });
+      });
 
-      // Генерация реферального кода
-      const refCode = (username.toUpperCase().slice(0,6) + user.uid.slice(-6)).replace(/[^A-Z0-9]/g,'');
+      // 3. Генерация реферального кода (исправил на случайные символы, чтобы совпадало с generateNewReferralCode в profile.html)
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let codePart = '';
+      for (let i = 0; i < 5; i++) {
+        codePart += chars[Math.floor(Math.random() * chars.length)];
+      }
+      const refCode = `DropWin-${codePart}`;
 
       let initialBalance = 100;
       let referredBy = null;
 
-      // Реферал работает ТОЛЬКО если устройство новое
-      if (referralCode && isNewDevice) {
-        const q = query(collection(db, 'users'), where('referralCode', '==', referralCode));
-        const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-          const referrerDoc = querySnapshot.docs[0];
-          const referrerData = referrerDoc.data();
-          const referrerId = referrerDoc.id;
+      // 4. Реферал
+      if (referralCode) {
+        try {
+          const q = query(collection(db, 'users'), where('referralCode', '==', referralCode));
+          const querySnapshot = await getDocs(q);
+          if (!querySnapshot.empty) {
+            const referrerDoc = querySnapshot.docs[0];
+            const referrerData = referrerDoc.data();
+            const referrerId = referrerDoc.id;
 
-          const newCount = (referrerData.referralCount || 0) + 1;
-          const newEarnings = (referrerData.referralEarnings || 0) + 10;
+            await updateDoc(doc(db, 'users', referrerId), {
+              balance: (referrerData.balance || 0) + 10,
+              referralCount: (referrerData.referralCount || 0) + 1,
+              referralEarnings: (referrerData.referralEarnings || 0) + 10
+            });
 
-          await updateDoc(doc(db, 'users', referrerId), {
-            balance: (referrerData.balance || 0) + 10,
-            referralCount: newCount,
-            referralEarnings: newEarnings
-          });
-
-          referredBy = referrerId;
-          initialBalance = 105; // +5 ₽ новому
+            referredBy = referrerId;
+            initialBalance = 105;
+          } else {
+            console.warn('Реферальный код не найден');
+          }
+        } catch (err) {
+          console.error('Ошибка при применении реферала:', err);
+          errorEl.textContent = 'Реферальный код не применился (возможно, проблема с правами доступа), но регистрация продолжается без бонуса';
+          errorEl.style.display = 'block';
+          // Продолжаем регистрацию без реферала
         }
       }
 
+      // 5. Создаём документ пользователя
       await setDoc(doc(db, 'users', user.uid), {
         username,
         email,
@@ -231,17 +248,29 @@
         createdAt: new Date().toISOString()
       });
 
-      alert(`Аккаунт создан!\nБаланс: ${initialBalance}₽\nВаш реферальный код: ${refCode}`);
-      location.href = 'index.html';
+      successEl.textContent = `Аккаунт создан! Баланс: ${initialBalance}₽`;
+      successEl.style.display = 'block';
+
+      setTimeout(() => {
+        location.href = 'index.html';
+      }, 1800);
+
     } catch (error) {
-      console.error(error);
+      console.error("Ошибка регистрации:", error);
+
+      let message = 'Произошла ошибка. Попробуйте позже.';
+
       if (error.code === 'auth/email-already-in-use') {
-        errorEl.textContent = 'Этот email уже зарегистрирован';
+        message = 'Этот email уже зарегистрирован';
       } else if (error.code === 'auth/invalid-email') {
-        errorEl.textContent = 'Неверный формат email';
-      } else {
-        errorEl.textContent = 'Ошибка: ' + error.message;
+        message = 'Неверный формат email';
+      } else if (error.code === 'auth/weak-password') {
+        message = 'Пароль слишком слабый';
+      } else if (error.message.includes('permissions')) {
+        message = 'Проблема с правами доступа. Попробуйте войти позже или обновить страницу.';
       }
+
+      errorEl.textContent = message;
       errorEl.style.display = 'block';
     }
   });
@@ -265,19 +294,22 @@
       await signInWithEmailAndPassword(auth, email, password);
       location.href = 'index.html';
     } catch (error) {
-      console.error(error);
+      let message = 'Ошибка входа';
+
       if (error.code === 'auth/user-not-found') {
-        errorEl.textContent = 'Пользователь не найден';
+        message = 'Пользователь не найден';
       } else if (error.code === 'auth/wrong-password') {
-        errorEl.textContent = 'Неверный пароль';
-      } else {
-        errorEl.textContent = 'Ошибка: ' + error.message;
+        message = 'Неверный пароль';
+      } else if (error.code === 'auth/invalid-email') {
+        message = 'Неверный формат email';
       }
+
+      errorEl.textContent = message;
       errorEl.style.display = 'block';
     }
   });
 
   document.addEventListener('DOMContentLoaded', createParticles);
 </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c2f1fccbf5d8459',t:'MTc2OTI1MzQ0NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

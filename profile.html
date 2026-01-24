@@ -104,6 +104,7 @@
     }
     .transaction-buy  { border-left: 4px solid #10b981; }
     .transaction-sell { border-left: 4px solid #ef4444; }
+    .transaction-fee { border-left: 4px solid #fbbf24; }
     .profile-balance-block {
       text-align: center;
       margin: 24px 0 32px;
@@ -119,7 +120,6 @@
       margin: 8px 0;
     }
 
-    /* Дополнительные стили для реферального блока */
     .referral-card {
       background: rgba(30,30,50,0.48);
       border: 1px solid rgba(139,92,246,0.22);
@@ -209,7 +209,6 @@
       <div class="game-title">👤 Профиль</div>
       <div id="usernameDisplay" style="font-size:1.6rem; font-weight:800; margin:20px 0; text-align:center;">—</div>
 
-      <!-- Большой блок баланса -->
       <div class="profile-balance-block">
         <div style="font-size:1.1rem; color:#9ca3af; margin-bottom:4px;">Текущий баланс</div>
         <div class="profile-balance-big"><span id="balanceBig">—</span> ₽</div>
@@ -219,12 +218,9 @@
         </button>
       </div>
 
-      <!-- Реферальный блок (обновлённый) -->
       <div class="referral-card">
         <div class="referral-title">Ваш реферальный код</div>
-
         <div class="referral-code-display" id="myReferralCode">——</div>
-
         <div class="referral-buttons">
           <button class="btn-copy-referral" onclick="copyReferralCode()">
             Скопировать
@@ -233,20 +229,17 @@
             🔄
           </button>
         </div>
-
         <div id="referralChangeInfo"
              style="margin-top:16px; font-size:0.88rem; color:#fca5a5; font-weight:500; display:none;
                     background:rgba(239,68,68,0.15); padding:10px 16px; border-radius:12px;
                     border:1px solid rgba(239,68,68,0.3);">
           Новый код можно сгенерировать только один раз в сутки
         </div>
-
         <div style="margin-top:20px; font-size:0.96rem; color:#9ca3af; line-height:1.5;">
           Приглашайте друзей и получайте <span style="color:#fcd34d; font-weight:700;">+10 ₽</span> за каждого зарегистрированного по вашей ссылке
         </div>
       </div>
 
-      <!-- Статистика рефералов -->
       <div style="margin: 28px 0; text-align: center; background: rgba(30,30,50,0.4); padding: 20px; border-radius: 12px;">
         <div style="font-size: 1.1rem; color: #9ca3af; margin-bottom: 12px;">Ваши рефералы</div>
         <div style="display: flex; justify-content: space-around; margin: 16px 0;">
@@ -261,7 +254,6 @@
         </div>
       </div>
 
-      <!-- Промокод -->
       <div class="input-group" style="margin: 32px 0 16px;">
         <label class="input-label">Промокод</label>
         <input type="text" id="promoCode" placeholder="Kavexs / Kavexs2026">
@@ -309,7 +301,7 @@
       </div>
 
       <div class="crypto-transactions">
-        <div class="game-title" style="margin-top:28px; margin-bottom:12px;">История крипто-транзакций</div>
+        <div class="game-title" style="margin-top:28px; margin-bottom:12px;">История транзакций</div>
         <div id="cryptoTransactionList"></div>
       </div>
 
@@ -322,7 +314,7 @@
 
   <div class="nav">
     <button class="nav-btn" onclick="location.href='index.html'"><span>🏠</span><span class="nav-label">Главная</span></button>
-    <button class="nav-btn active"><span>👤</span><span class="nav-label">Профиль</span></button>
+    <button class="nav-btn" onclick="location.href='profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
     <button class="nav-btn" onclick="location.href='register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
   </div>
 
@@ -344,6 +336,19 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+
+  let currentUser = null;
+  let userId = null;
+
+  // ─── ВСЕ ФУНКЦИИ ВЫШЕ addEventListener ───
+
+  function logout() {
+    signOut(auth).then(() => {
+      location.href = 'index.html';
+    }).catch((error) => {
+      alert('Ошибка выхода: ' + error.message);
+    });
+  }
 
   function createParticles() {
     const container = document.getElementById('particles');
@@ -367,8 +372,117 @@
     location.href = 'freebet.html';
   };
 
-  let currentUser = null;
-  let userId = null;
+  window.copyReferralCode = function() {
+    const code = document.getElementById('myReferralCode').textContent.trim();
+    if (!code || code === '—' || !code.includes('DropWin-')) {
+      alert('Нет реферального кода');
+      return;
+    }
+    navigator.clipboard.writeText(code)
+      .then(() => alert(`Скопировано!\n${code}`))
+      .catch(() => alert('Не удалось скопировать'));
+  };
+
+  function generateNewReferralCode() {
+    if (!currentUser || !userId) {
+      alert('Сначала войдите в аккаунт');
+      return;
+    }
+
+    const today = new Date().toDateString();
+
+    if (currentUser.lastReferralChange === today) {
+      const info = document.getElementById('referralChangeInfo');
+      info.style.display = 'block';
+      setTimeout(() => info.style.display = 'none', 7000);
+      return;
+    }
+
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let codePart = '';
+    for (let i = 0; i < 5; i++) {
+      codePart += chars[Math.floor(Math.random() * chars.length)];
+    }
+
+    const newCode = `DropWin-${codePart}`;
+
+    currentUser.referralCode = newCode;
+    currentUser.lastReferralChange = today;
+
+    updateDoc(doc(db, 'users', userId), {
+      referralCode: newCode,
+      lastReferralChange: today
+    }).then(() => {
+      document.getElementById('myReferralCode').textContent = newCode;
+      alert(`Новый код создан!\n\n${newCode}\n\nСкопируйте его сейчас`);
+    }).catch(err => {
+      console.error('Ошибка при смене реферального кода:', err);
+      alert('Не удалось обновить код. Проверьте соединение.');
+    });
+  }
+
+  async function activatePromo() {
+    if (!currentUser) return alert('Войдите в аккаунт');
+    const code = document.getElementById('promoCode').value.trim().toUpperCase();
+    if (!code) return alert('Введите промокод');
+
+    const today = new Date().toDateString();
+    if (currentUser.lastPromoDate === today && code.startsWith('FB-')) {
+      return alert('Сегодня вы уже активировали промокод');
+    }
+
+    let sum = 0;
+    let isBonusPromo = false;
+
+    if (code === 'KAVEXS' || code === 'KAVEXS2026') {
+      sum = 100;
+    }
+    else if (currentUser.activePromoCode === code && currentUser.activePromoValue != null) {
+      sum = currentUser.activePromoValue;
+      isBonusPromo = true;
+
+      // Удаляем промокод сразу
+      currentUser.activePromoCode = null;
+      currentUser.activePromoType = null;
+      currentUser.activePromoValue = null;
+    }
+    else {
+      return alert('Неверный или уже использованный промокод');
+    }
+
+    if (sum <= 0) return;
+
+    currentUser.balance = (currentUser.balance || 0) + sum;
+    currentUser.lastPromoDate = today;
+
+    const updateData = {
+      balance: currentUser.balance,
+      lastPromoDate: today,
+      activePromoCode: null,
+      activePromoType: null,
+      activePromoValue: null
+    };
+
+    await updateDoc(doc(db, 'users', userId), updateData);
+
+    // Добавляем в историю транзакций
+    if (!currentUser.cryptoTransactions) currentUser.cryptoTransactions = [];
+    currentUser.cryptoTransactions.push({
+      type: 'promo',
+      amount: sum,
+      code: code,
+      timestamp: Date.now()
+    });
+
+    await updateDoc(doc(db, 'users', userId), {
+      cryptoTransactions: currentUser.cryptoTransactions
+    });
+
+    document.getElementById('balance').textContent = currentUser.balance;
+    document.getElementById('balanceBig').textContent = currentUser.balance;
+    alert(`+${sum}₽ успешно добавлено!`);
+    document.getElementById('promoCode').value = '';
+  }
 
   function calculateMaxStreaks(history) {
     if (!history || history.length === 0) return { maxWin: 0, maxLoss: 0 };
@@ -402,6 +516,13 @@
         .then((docSnap) => {
           if (docSnap.exists()) {
             currentUser = docSnap.data();
+
+            // Защита от битых данных
+            if (!currentUser.activePromoCode) {
+              currentUser.activePromoCode = null;
+              currentUser.activePromoType = null;
+              currentUser.activePromoValue = null;
+            }
 
             document.getElementById('usernameDisplay').textContent = currentUser.username || 'Пользователь';
             const bal = currentUser.balance || 0;
@@ -448,6 +569,7 @@
               });
             }
 
+            // Стрик
             const streakBar = document.getElementById('streakBar');
             streakBar.innerHTML = '';
             if (!currentUser.history || currentUser.history.length === 0) {
@@ -457,37 +579,47 @@
               recent.forEach(item => {
                 const el = document.createElement('div');
                 el.className = `streak-item ${item.result || 'loss'}`;
-                const resultText = item.result === 'win' ? 'Выигрыш' : 'Проигрыш';
-                const amount = item.win > 0 ? `+${item.win}₽` : `${item.win}₽`;
-                el.innerHTML = `
-                  <div class="streak-tooltip">
-                    ${item.game || 'Игра'}<br>
-                    ${resultText} • ${amount}<br>
-                    <small>${item.time || ''}</small>
-                  </div>
-                `;
+                el.innerHTML = `<div class="streak-tooltip">${item.game || 'Игра'} • ${item.result === 'win' ? 'Выигрыш' : 'Проигрыш'}</div>`;
                 streakBar.appendChild(el);
               });
             }
 
+            // История транзакций (безопасная версия)
             const transactionList = document.getElementById('cryptoTransactionList');
             transactionList.innerHTML = '';
             const transactions = currentUser.cryptoTransactions || [];
+
             if (transactions.length === 0) {
               transactionList.innerHTML = '<div class="empty-state">Нет транзакций</div>';
             } else {
-              transactions.slice(-10).reverse().forEach(tr => {
+              transactions.slice(-12).reverse().forEach(tr => {
                 const div = document.createElement('div');
-                div.className = `transaction-item transaction-${tr.type}`;
+                let title = '';
+                let extra = '';
+                let amountText = `+${Math.round(tr.amount || 0)} ₽`;
+                let classType = 'transaction-fee';
+
+                if (tr.type === 'deposit') {
+                  title = 'ПОПОЛНЕНИЕ';
+                  classType = 'transaction-buy';
+                  if (tr.bonus) extra += ` +${tr.bonus}₽ бонус`;
+                  if (tr.promoCode) extra += ` [${tr.promoCode}]`;
+                } else if (tr.type === 'promo') {
+                  title = 'ПРОМОКОД';
+                  extra = tr.code || '';
+                } else {
+                  title = `${(tr.coin || 'RUB').toUpperCase()} - ${tr.type.toUpperCase()}`;
+                  classType = `transaction-${tr.type}`;
+                  if (tr.type === 'fee_in') title += ` от ${tr.from || ''}`;
+                }
+
+                div.className = `transaction-item ${classType}`;
                 div.innerHTML = `
                   <div>
-                    <div>${tr.coin.toUpperCase()} - ${tr.type.toUpperCase()}</div>
+                    <div>${title}${extra ? ' ' + extra : ''}</div>
                     <div class="history-time">${new Date(tr.timestamp).toLocaleString('ru-RU')}</div>
                   </div>
-                  <div class="history-amount ${tr.type === 'buy' ? 'loss' : 'profit'}">
-                    ${tr.type === 'buy' ? '-' : '+'}${Math.round(tr.type === 'buy' ? tr.cost : tr.revenue)}₽<br>
-                    <small>${tr.amount.toFixed(4)} шт @ ${Math.round(tr.price)}₽</small>
-                  </div>
+                  <div class="history-amount profit">${amountText}</div>
                 `;
                 transactionList.appendChild(div);
               });
@@ -504,127 +636,16 @@
     });
   }
 
-  async function saveUser() {
-    if (currentUser && userId) {
-      await updateDoc(doc(db, 'users', userId), currentUser);
-    }
-  }
-
-  async function activatePromo() {
-    if (!currentUser) return alert('Войдите в аккаунт');
-    const code = document.getElementById('promoCode').value.trim().toUpperCase();
-    if (!code) return alert('Введите промокод');
-
-    const today = new Date().toDateString();
-    if (currentUser.lastPromoDate === today && code.startsWith('FB-')) {
-      return alert('Сегодня вы уже активировали промокод');
-    }
-
-    let sum = 0;
-
-    if (code === 'KAVEXS' || code === 'KAVEXS2026') {
-      sum = 100;
-    } else if (currentUser.activePromoCode === code && currentUser.activePromoValue) {
-      sum = currentUser.activePromoValue;
-      if (currentUser.activePromoType === 'meme') {
-        localStorage.setItem('has_bonus_case', 'yes');
-        alert('Бонусный мем-кейс разблокирован!');
-      }
-    } else {
-      return alert('Неверный или уже использованный промокод');
-    }
-
-    currentUser.balance = (currentUser.balance || 0) + sum;
-    currentUser.lastPromoDate = today;
-
-    if (currentUser.activePromoCode === code) {
-      delete currentUser.activePromoCode;
-      delete currentUser.activePromoType;
-      delete currentUser.activePromoValue;
-    }
-
-    await saveUser();
-
-    const bal = currentUser.balance;
-    document.getElementById('balance').textContent = bal;
-    document.getElementById('balanceBig').textContent = bal;
-    alert(`+${sum}₽ успешно добавлено!`);
-    document.getElementById('promoCode').value = '';
-  }
-
-  function logout() {
-    signOut(auth).then(() => {
-      location.href = 'index.html';
-    }).catch((error) => {
-      alert('Ошибка выхода: ' + error.message);
-    });
-  }
-
-  window.copyReferralCode = function() {
-    const codeEl = document.getElementById('myReferralCode');
-    const code = codeEl.textContent.trim();
-
-    if (!code || code === '—' || code === '——' || !code.includes('DropWin-')) {
-      alert('Нет реферального кода для копирования');
-      return;
-    }
-
-    navigator.clipboard.writeText(code)
-      .then(() => {
-        alert(`Скопировано!\n\n${code}`);
-      })
-      .catch(() => {
-        alert('Не удалось скопировать код');
-      });
-  };
-
-  function generateNewReferralCode() {
-    if (!currentUser || !userId) {
-      alert('Сначала войдите в аккаунт');
-      return;
-    }
-
-    const today = new Date().toDateString();
-
-    if (currentUser.lastReferralChange === today) {
-      const info = document.getElementById('referralChangeInfo');
-      info.style.display = 'block';
-      setTimeout(() => { info.style.display = 'none'; }, 7000);
-      return;
-    }
-
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let codePart = '';
-    for (let i = 0; i < 5; i++) {
-      codePart += chars[Math.floor(Math.random() * chars.length)];
-    }
-
-    const newCode = `DropWin-${codePart}`;
-
-    currentUser.referralCode = newCode;
-    currentUser.lastReferralChange = today;
-
-    saveUser()
-      .then(() => {
-        document.getElementById('myReferralCode').textContent = newCode;
-        alert(`Новый код создан!\n\n${newCode}\n\nСкопируйте его сейчас`);
-      })
-      .catch(err => {
-        console.error('Ошибка при смене реферального кода:', err);
-        alert('Не удалось обновить код. Проверьте соединение.');
-      });
-  }
-
-  document.getElementById('gotoDeposit')?.addEventListener('click', () => {
-    location.href = 'dep.html';
-  });
-
   document.addEventListener('DOMContentLoaded', () => {
     createParticles();
     loadCurrentUser();
-    document.getElementById('promoBtn').addEventListener('click', activatePromo);
-    document.getElementById('logoutBtn').addEventListener('click', logout);
+
+    document.getElementById('promoBtn')?.addEventListener('click', activatePromo);
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
     document.getElementById('refreshReferralCodeBtn')?.addEventListener('click', generateNewReferralCode);
+    document.getElementById('gotoDeposit')?.addEventListener('click', () => {
+      location.href = 'dep.html';
+    });
   });
 </script>
 </body>

@@ -301,6 +301,8 @@
           activePromoValue: null
         });
         currentUser.activePromoCode = null;
+        currentUser.activePromoType = null;
+        currentUser.activePromoValue = null;
       }
 
       activePromoCode = null;
@@ -341,12 +343,25 @@
       newPromoCode = `BONUS-${randomPart}`;
     }
 
+    // ─── Запись депозита в историю ───
+    if (!currentUser.cryptoTransactions) currentUser.cryptoTransactions = [];
+    currentUser.cryptoTransactions.push({
+      type: 'deposit',
+      amount: total,
+      originalAmount: amount,
+      bonus: bonus > 0 ? bonus : undefined,
+      promoCode: activePromoCode?.code || null,
+      method: 'RUB (карта/СБП/ЮMoney)',
+      timestamp: Date.now()
+    });
+
     // Сохраняем в Firebase
     if (db && userId && currentUser) {
       currentUser.balance = (currentUser.balance || 0) + total;
 
       const updateData = {
-        balance: currentUser.balance
+        balance: currentUser.balance,
+        cryptoTransactions: currentUser.cryptoTransactions
       };
 
       // Если есть новый промокод, сохраняем его

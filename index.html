@@ -6,6 +6,22 @@
   <title>DropWin Casino</title>
   <link rel="stylesheet" href="style.css">
   <style>
+    .inventory-cta {
+      display: flex;
+      justify-content: center;
+      margin: 8px 0 12px;
+    }
+    .inventory-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 12px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .inventory-icon:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.45);
+    }
     .games-list {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -117,6 +133,11 @@
 </div>
 
 <div class="content">
+  <div class="inventory-cta">
+    <a href="inventory.html" aria-label="Инвентарь">
+      <img class="inventory-icon" src="images/index/inventory.png" alt="Инвентарь">
+    </a>
+  </div>
   <div class="games-list">
 
     <div class="game-icon" onclick="location.href='games/slots.html'">

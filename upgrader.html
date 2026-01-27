@@ -113,6 +113,8 @@
       inset: 0;
       transform: rotate(0deg);
       transform-origin: 50% 50%;
+      will-change: transform;
+      backface-visibility: hidden;
     }
     .ring-pointer-dot {
       position: absolute;
@@ -789,8 +791,10 @@
       document.getElementById('ringProgress').setAttribute('stroke-dashoffset', `${offset}`);
       const ringPtr = document.getElementById('ringPointer');
       if (ringPtr) {
-        ringPtr.style.transition = 'none';
-        ringPtr.style.transform = 'rotate(0deg)';
+        if (!window.__ringAnimating) {
+          ringPtr.style.transition = 'none';
+          ringPtr.style.transform = 'rotate(0deg)';
+        }
       }
       updateUpgradeButtonState(valid);
       renderInventory();
@@ -918,9 +922,13 @@
           const ringPtr = document.getElementById('ringPointer');
           if (ringPtr) {
             const angleIn360 = Math.random() * 360;
+            window.__ringAnimating = true;
             ringPtr.style.transition = 'transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)';
             ringPtr.style.transform = `rotate(${angleIn360}deg)`;
-            setTimeout(() => resolve(rollByAngle(angleIn360)), 800);
+            setTimeout(() => {
+              window.__ringAnimating = false;
+              resolve(rollByAngle(angleIn360));
+            }, 800);
             return;
           }
           resolve(rollByAngle(Math.random() * 360));
@@ -931,10 +939,14 @@
         const angleIn360 = Math.random() * 360;
         const totalAngle = baseSpins + angleIn360;
         if (ringPtr) {
+          window.__ringAnimating = true;
           ringPtr.style.transition = 'transform 2.8s cubic-bezier(0.11, 0.89, 0.32, 1.00)';
           ringPtr.style.transform = `rotate(${totalAngle}deg)`;
         }
-        setTimeout(() => resolve(rollByAngle(angleIn360)), 2800);
+        setTimeout(() => {
+          window.__ringAnimating = false;
+          resolve(rollByAngle(angleIn360));
+        }, 2800);
       });
       success = await runAnimation();
       {

@@ -493,11 +493,11 @@
       ? Math.max(12, Math.min(boardWidth - 12, spawnX))
       : (boardWidth / 2 + (Math.random() - 0.5) * 60);
     let y = 30;
-    let vx = (Math.random() - 0.5) * 1.8;
-    let vy = 0;
-    const gravity = 0.5;
+    let vx = (Math.random() - 0.5) * 2.0;
+    let vy = 0.2;
+    const gravity = 0.65;
     const bounce = 0.6;
-    const friction = 0.988;
+    const friction = 0.996;
 
     ball.style.left = x + 'px';
     ball.style.top = y + 'px';
@@ -513,9 +513,11 @@
       x += vx;
       y += vy;
 
-      // Минимальная вертикальная скорость для избежания зависания
-      if (Math.abs(vy) < 0.5) {
-        vy += gravity * 2;
+      // Анти-залипание: поддерживаем минимальную динамику
+      const speed = Math.sqrt(vx * vx + vy * vy);
+      if (speed < 0.12) {
+        vx += (Math.random() - 0.5) * 0.6;
+        vy += gravity * 0.6;
       }
 
       // Отскок от стенок
@@ -546,10 +548,11 @@
           y += Math.sin(angle) * overlap;
 
           // Изменяем скорость с учетом угла
-          const speed = Math.sqrt(vx * vx + vy * vy);
-          const newSpeed = Math.max(speed * bounce, 0.5);
+          const hitSpeed = Math.sqrt(vx * vx + vy * vy);
+          const newSpeed = Math.max(hitSpeed * bounce, 0.6);
           vx = Math.cos(angle) * newSpeed;
           vy = Math.sin(angle) * newSpeed;
+          vy += gravity * 0.2; // толчок вниз, чтобы не висеть на пине
 
           // Умеренное притяжение к выигрышным зонам ×1.5 и ×2
           const zones = [
@@ -567,7 +570,7 @@
           });
 
           // Добавляем случайность
-          vx += (Math.random() - 0.5) * 0.8;
+          vx += (Math.random() - 0.5) * 0.6;
         }
       });
 
@@ -658,21 +661,6 @@
     loadCurrentUser();
 
     document.getElementById('dropBtn').onclick = dropBall;
-    const board = document.getElementById('plinkoBoard');
-    // Pointer/touch запуск по тапу по доске
-    board.addEventListener('pointerdown', (e) => {
-      const rect = board.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      dropBallAt(x);
-    }, { passive: true });
-    // Поддержка старых мобильных браузеров
-    board.addEventListener('touchstart', (e) => {
-      if (e.changedTouches && e.changedTouches[0]) {
-        const rect = board.getBoundingClientRect();
-        const x = e.changedTouches[0].clientX - rect.left;
-        dropBallAt(x);
-      }
-    }, { passive: true });
   });
 </script>
 </body>

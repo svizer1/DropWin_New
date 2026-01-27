@@ -110,6 +110,7 @@
       max-width: 1200px;
       margin: 0 auto;
       padding: 20px;
+      padding-bottom: 120px;
       position: relative;
       z-index: 1;
     }
@@ -441,6 +442,19 @@
       background: radial-gradient(circle, #ef4444, #b91c1c);
       animation: sparkFlyMine 0.6s ease-out forwards;
     }
+    .screen-flash {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(255,255,255,0.5), rgba(239,68,68,0.35) 50%, transparent 70%);
+      border-radius: 20px;
+      pointer-events: none;
+      z-index: 12;
+      animation: flashOut 0.7s ease-out forwards;
+    }
+    @keyframes flashOut {
+      0% { opacity: 1; }
+      100% { opacity: 0; }
+    }
     .fragment {
       position: absolute;
       width: 10px;
@@ -553,12 +567,12 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: rgba(15, 23, 42, 0.95);
+      background: rgba(15, 23, 42, 0.65);
       backdrop-filter: blur(10px);
       display: flex;
       justify-content: space-around;
-      padding: 12px 0;
-      border-top: 1px solid rgba(139, 92, 246, 0.2);
+      padding: 8px 0;
+      border-top: 1px solid rgba(139, 92, 246, 0.15);
       z-index: 100;
     }
 
@@ -571,10 +585,10 @@
       align-items: center;
       gap: 4px;
       cursor: pointer;
-      padding: 8px 20px;
+      padding: 6px 16px;
       border-radius: 12px;
       transition: all 0.3s ease;
-      font-size: 1.5rem;
+      font-size: 1.3rem;
     }
 
     .nav-btn:hover {
@@ -894,7 +908,8 @@
           back.innerHTML = createMine3D();
           createShockwave(cell);
           createExplosionParticles(cell);
-          endRound(false);
+          createScreenFlash(cell);
+          setTimeout(() => endRound(false), 700);
         } else {
           cell.classList.add('safe');
           const back = cell.querySelector('.cell-back');
@@ -903,10 +918,9 @@
           successCount += 1;
           currentMult = progression[Math.min(successCount - 1, progression.length - 1)];
           updateInfo();
-          document.getElementById('status').textContent = '✨ Успех! Можно забрать, идём дальше...';
+          document.getElementById('status').textContent = '✨ Успех! Забрать или продолжить?';
           awaitingDecision = true;
-          setControls(true, false, true);
-          setTimeout(() => { if (roundActive) nextStep(); }, 900);
+          setControls(true, false, false);
         }
       }, 300);
     }
@@ -991,6 +1005,12 @@
       cell.appendChild(wave);
       setTimeout(() => wave.remove(), 600);
     }
+    function createScreenFlash(cell) {
+      const flash = document.createElement('div');
+      flash.className = 'screen-flash';
+      cell.appendChild(flash);
+      setTimeout(() => flash.remove(), 700);
+    }
 
     function cashOut() {
       if (!roundActive || !awaitingDecision) return;
@@ -1040,7 +1060,7 @@
       updateInfo();
       document.getElementById('startBtn').onclick = startRound;
       document.getElementById('cashoutBtn').onclick = cashOut;
-      document.getElementById('continueBtn').style.display = 'none';
+      document.getElementById('continueBtn').onclick = continueGame;
     });
   </script>
 </body>

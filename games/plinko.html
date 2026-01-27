@@ -200,6 +200,7 @@
   <div class="balance-container">
     <div class="balance">💰 <span id="balance">0</span>₽</div>
     <button class="auth-btn" id="authBtn">Аккаунт</button>
+    <button class="auth-btn" onclick="window.open('https://t.me/DropWinHelp_bot','_blank')">Поддержка</button>
   </div>
 </div>
 
@@ -481,6 +482,7 @@
     let lastTrail = 0;
     let frameCount = 0;
 
+    const isMobile = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) || window.innerWidth < 768;
     const animate = () => {
       frameCount++;
 
@@ -490,7 +492,7 @@
       y += vy;
 
       // Минимальная вертикальная скорость для избежания зависания
-      if (Math.abs(vy) < 0.3) {
+      if (Math.abs(vy) < 0.5) {
         vy += gravity * 2;
       }
 
@@ -567,7 +569,11 @@
 
       // Проверка достижения дна
       if (y < boardHeight - 75) {
-        requestAnimationFrame(animate);
+        if (isMobile) {
+          setTimeout(animate, 16);
+        } else {
+          requestAnimationFrame(animate);
+        }
       } else {
         // Определяем в какой бакет попал (11 бакетов)
         const bucketIndex = Math.floor((x / boardWidth) * 11);
@@ -625,7 +631,11 @@
       }
     };
 
-    requestAnimationFrame(animate);
+    if (isMobile) {
+      setTimeout(animate, 16);
+    } else {
+      requestAnimationFrame(animate);
+    }
   }
 
   // ─── Init ───────────────────────────────────────────────────────────────────

@@ -258,6 +258,7 @@
         <div class="balance-container">
             <div class="balance">💰 <span id="balance">0</span>₽</div>
             <button class="auth-btn" id="authBtn">Аккаунт</button>
+            <button class="auth-btn" onclick="window.open('https://t.me/DropWinHelp_bot','_blank')">Поддержка</button>
         </div>
     </div>
 
@@ -616,6 +617,10 @@ const cases = {
             </div>
         </div>
         <div id="resultText" style="text-align:center; margin-top:20px; font-size:1.4rem; min-height:40px;"></div>
+        <div style="display:flex; gap:10px; justify-content:center; margin-top:12px;">
+            <button class="btn" id="sellBotBtn" style="background: linear-gradient(135deg, #34d399, #059669);">Продать сразу</button>
+            <button class="btn" id="stashBotBtn" style="background: linear-gradient(135deg, #a855f7, #7e22ce);">Отложить всё</button>
+        </div>
     `;
 
     // Запускаем анимацию параллельно
@@ -679,6 +684,7 @@ async function animateBatchedOpenings(containerId, caseTypes, items, total, side
     }
 }
 
+let lastBotRun = null;
 function showBotResult(playerTotal, botTotal, totalCost) {
     const resultTextEl = document.getElementById('resultText');
     if (!resultTextEl) return;
@@ -688,21 +694,63 @@ function showBotResult(playerTotal, botTotal, totalCost) {
 
     if (playerTotal > botTotal) {
         prize = playerTotal + botTotal;
-        resultText = `<span style="color:#34d399">Победа! +${prize}₽</span>`;
+        resultText = `<span style="color:#34d399">Победа! Приз: ${prize}₽</span>`;
     } else if (playerTotal < botTotal) {
         resultText = `<span style="color:#f87171">Проигрыш</span>`;
     } else {
         prize = playerTotal;
-        resultText = `Ничья — возврат ${prize}₽`;
+        resultText = `Ничья — доступны ваши предметы на ${prize}₽`;
     }
 
     resultTextEl.innerHTML = resultText;
+    lastBotRun = { prize, playerTotal, botTotal, processed: false };
 
-    if (prize > 0) {
-        currentUser.balance += prize;
-        saveUser();
-        updateBalance();
-        resultTextEl.innerHTML += `<br><div style="color:#a78bfa; margin-top:12px;">Приз получен автоматически (+${prize}₽)</div>`;
+    const sellBtn = document.getElementById('sellBotBtn');
+    const stashBtn = document.getElementById('stashBotBtn');
+    if (sellBtn) {
+        sellBtn.onclick = async () => {
+            if (lastBotRun.processed) return;
+            sellBtn.disabled = true;
+            stashBtn.disabled = true;
+            if (prize > 0) {
+                currentUser.balance += prize;
+                await saveUser();
+                updateBalance();
+                resultTextEl.innerHTML += `<br><div style="color:#a78bfa; margin-top:12px;">Продажа выполнена (+${prize}₽)</div>`;
+            } else {
+                resultTextEl.innerHTML += `<br><div style="color:#f87171; margin-top:12px;">Продать нечего</div>`;
+            }
+            lastBotRun.processed = true;
+        };
+    }
+    if (stashBtn) {
+        stashBtn.onclick = async () => {
+            if (lastBotRun.processed) return;
+            sellBtn.disabled = true;
+            stashBtn.disabled = true;
+            const playerBoxes = document.querySelectorAll('#playerCases .case-box');
+            const botBoxes = document.querySelectorAll('#botCases .case-box');
+            const myItems = Array.from(playerBoxes).map(b => ({ emoji: b.querySelector('.item-reveal')?.textContent || '❓', name: 'Предмет', value: Number(b.querySelector('.value-label')?.textContent.replace('₽','')) || 0 }));
+            const oppItems = Array.from(botBoxes).map(b => ({ emoji: b.querySelector('.item-reveal')?.textContent || '❓', name: 'Предмет', value: Number(b.querySelector('.value-label')?.textContent.replace('₽','')) || 0 }));
+            const saveBoth = playerTotal >= botTotal;
+            const itemsToSave = saveBoth ? myItems.concat(oppItems) : myItems;
+            const userSnap = await getDoc(doc(db, 'users', userId));
+            const userData = userSnap.exists() ? userSnap.data() : {};
+            const inventory = Array.isArray(userData.inventory) ? userData.inventory : [];
+            const newItems = itemsToSave.filter(it => !inventory.some(e => e.name === it.name && e.value === it.value && e.source === 'Баттл:Бот')).map(it => ({
+                id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(16).slice(2)),
+                emoji: it.emoji,
+                name: it.name,
+                value: it.value,
+                source: 'Баттл:Бот',
+                timestamp: Date.now()
+            }));
+            const updatedInv = inventory.concat(newItems);
+            await updateDoc(doc(db, 'users', userId), { inventory: updatedInv });
+            currentUser.inventory = updatedInv;
+            resultTextEl.innerHTML += `<br><div style="text-align:center; padding:12px; color:#a78bfa;">Отложено: ${newItems.length} предметов</div>`;
+            lastBotRun.processed = true;
+        };
     }
 }
 
@@ -882,47 +930,74 @@ function showBotResult(playerTotal, botTotal, totalCost) {
                                 </div>
                             </div>
                             <div id="battleResultText" style="text-align:center; margin-top:12px;">${resultText}</div>
-                            <button class="claim-btn ${myClaimed ? 'disabled' : ''}" id="claimPrizeBtn">
-                                ${prize > 0 ? `Забрать ${prize}₽` : 'Нет приза'}
-                            </button>
+                            <div style="display:flex; gap:10px; justify-content:center; margin-top:12px;">
+                              <button class="btn" id="sellItemsBtn" style="background: linear-gradient(135deg, #34d399, #059669);">Продать сразу</button>
+                              <button class="btn" id="stashItemsBtn" style="background: linear-gradient(135deg, #a855f7, #7e22ce);">Отложить всё</button>
+                            </div>
                         `;
 
                         await animateBatchedOpenings('myBattleCases', data.caseTypes, myItems, myTotal, 'my', false);
                         await animateBatchedOpenings('oppBattleCases', data.caseTypes, oppItems, oppTotal, 'opp', false);
 
-                        const claimBtn = document.getElementById('claimPrizeBtn');
-                        if (myClaimed || prize === 0) {
-                            claimBtn.disabled = true;
-                            if (prize === 0) claimBtn.remove();
-                        } else {
-                            claimBtn.onclick = async () => {
-                                claimBtn.disabled = true;
-                                claimBtn.classList.add('disabled');
-                                claimBtn.textContent = 'Обработка...';
-
+                        const sellBtn = document.getElementById('sellItemsBtn');
+                        const stashBtn = document.getElementById('stashItemsBtn');
+                        if (sellBtn) {
+                            sellBtn.onclick = async () => {
+                                sellBtn.disabled = true;
+                                stashBtn.disabled = true;
                                 const freshSnap = await getDoc(snap.ref);
                                 const freshData = freshSnap.data();
                                 if (!freshData) return;
-
-                                const alreadyClaimed = isPlayer1 ? freshData.player1Claimed : freshData.player2Claimed;
-                                if (alreadyClaimed) {
-                                    statusDiv.innerHTML += '<div style="color:#f87171; text-align:center; padding:20px;">Приз уже был забран!</div>';
+                                const claimedField = isPlayer1 ? 'player1Claimed' : 'player2Claimed';
+                                const savedField = isPlayer1 ? 'player1Saved' : 'player2Saved';
+                                if (freshData[claimedField] || freshData[savedField]) {
+                                    statusDiv.innerHTML += '<div style="color:#f87171; text-align:center; padding:10px;">Действие уже выполнено.</div>';
                                     return;
                                 }
-
-                                currentUser.balance += prize;
-                                await saveUser();
-                                updateBalance();
-
-                                await updateDoc(snap.ref, {
-                                    [isPlayer1 ? 'player1Claimed' : 'player2Claimed']: true
-                                });
-
-                                statusDiv.innerHTML = `
-                                    <div style="text-align:center; padding:30px; color:#a78bfa; font-size:1.4rem;">
-                                        Приз получен (+${prize}₽)
-                                    </div>`;
-                                setTimeout(() => { statusDiv.innerHTML = ''; }, 2200);
+                                if (prize > 0) {
+                                    currentUser.balance += prize;
+                                    await saveUser();
+                                    updateBalance();
+                                    await updateDoc(snap.ref, { [claimedField]: true });
+                                    statusDiv.innerHTML += `<div style="text-align:center; padding:12px; color:#a78bfa;">Продажа выполнена (+${prize}₽)</div>`;
+                                } else {
+                                    statusDiv.innerHTML += `<div style="text-align:center; padding:12px; color:#f87171;">Продать нечего</div>`;
+                                }
+                            };
+                        }
+                        if (stashBtn) {
+                            stashBtn.onclick = async () => {
+                                stashBtn.disabled = true;
+                                sellBtn.disabled = true;
+                                const freshSnap = await getDoc(snap.ref);
+                                const freshData = freshSnap.data();
+                                if (!freshData) return;
+                                const claimedField = isPlayer1 ? 'player1Claimed' : 'player2Claimed';
+                                const savedFlagField = isPlayer1 ? 'player1Saved' : 'player2Saved';
+                                if (freshData[savedFlagField] || freshData[claimedField]) {
+                                    statusDiv.innerHTML += '<div style="color:#fbbf24; text-align:center; padding:10px;">Действие уже выполнено.</div>';
+                                    return;
+                                }
+                                const itemsToSave = winner === userId ? myItems.concat(oppItems) : myItems;
+                                const userSnap = await getDoc(doc(db, 'users', userId));
+                                const userData = userSnap.exists() ? userSnap.data() : {};
+                                const inventory = Array.isArray(userData.inventory) ? userData.inventory : [];
+                                const newItems = itemsToSave.filter(it => !inventory.some(e =>
+                                    e.battleId === snap.id && e.name === it.name && e.value === it.value
+                                )).map(it => ({
+                                    id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(16).slice(2)),
+                                    emoji: it.emoji,
+                                    name: it.name,
+                                    value: it.value,
+                                    source: 'Баттл',
+                                    battleId: snap.id,
+                                    timestamp: Date.now()
+                                }));
+                                const updatedInv = inventory.concat(newItems);
+                                await updateDoc(doc(db, 'users', userId), { inventory: updatedInv });
+                                currentUser.inventory = updatedInv;
+                                await updateDoc(snap.ref, { [savedFlagField]: true });
+                                statusDiv.innerHTML += `<div style="text-align:center; padding:12px; color:#a78bfa;">Отложено: ${newItems.length} предметов</div>`;
                             };
                         }
                     }

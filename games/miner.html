@@ -57,6 +57,9 @@
   <div class="game-card">
     <div class="game-title">💎 Минёр</div>
     <div class="multiplier-display" id="multiplier">x1.00</div>
+    <div style="text-align:center; color:#94a3b8; margin-bottom:8px;">
+      Открыто клеток: <span id="openedInfo">0</span> / <span>2</span>
+    </div>
 
     <div class="miner-grid" id="grid"></div>
 
@@ -229,8 +232,11 @@
     gameActive = true;
 
     document.getElementById('multiplier').textContent = 'x1.00';
+    document.getElementById('openedInfo').textContent = '0';
     document.getElementById('startBtn').style.display = 'none';
     document.getElementById('cashoutBtn').style.display = 'block';
+    document.getElementById('cashoutBtn').disabled = true;
+    document.getElementById('cashoutBtn').style.opacity = '0.6';
     document.getElementById('status').textContent = 'Выбирайте клетки...';
 
     const grid = document.getElementById('grid');
@@ -268,6 +274,12 @@
 
       const multiplier = 1 + revealedSafe * (baseMultiplier + riskBonusPerBomb * bombsCount);
       document.getElementById('multiplier').textContent = `x${multiplier.toFixed(2)}`;
+      document.getElementById('openedInfo').textContent = String(revealedSafe);
+      if (revealedSafe >= 2) {
+        const btn = document.getElementById('cashoutBtn');
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
 
       if (revealedSafe === totalCells - bombsCount) {
         const win = Math.floor(bet * multiplier);
@@ -279,6 +291,10 @@
   // Забрать
   function cashOut() {
     if (!gameActive) return;
+    if (revealedSafe < 2) {
+      document.getElementById('status').innerHTML = '<span style="color:#fbbf24">Для получения награды откройте минимум 2 клетки</span>';
+      return;
+    }
     const multiplier = 1 + revealedSafe * (baseMultiplier + riskBonusPerBomb * bombsCount);
     const win = Math.floor(bet * multiplier);
     finishWithWin(win);

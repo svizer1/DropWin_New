@@ -50,6 +50,7 @@
       transform: translate(-50%, -50%);
       z-index: 20;
       transition: none;
+      will-change: transform;
     }
 
     .bucket {
@@ -178,6 +179,14 @@
 
     @keyframes trailFade {
       to { opacity: 0; transform: scale(0.3); }
+    }
+
+    @media (max-width: 520px) {
+      .ball {
+        box-shadow:
+          0 0 14px rgba(250,204,21,0.7),
+          0 3px 6px rgba(0,0,0,0.35);
+      }
     }
 
     .info-text {
@@ -493,17 +502,17 @@
       ? Math.max(12, Math.min(boardWidth - 12, spawnX))
       : (boardWidth / 2 + (Math.random() - 0.5) * 60);
     let y = 30;
-    let vx = (Math.random() - 0.5) * 2.0;
-    let vy = 0.2;
-    const gravity = 0.65;
+    let vx = (Math.random() - 0.5) * 2.2;
+    let vy = 0.4;
+    const gravity = 0.85;
     const bounce = 0.6;
-    const friction = 0.996;
+    const friction = 0.995;
 
-    ball.style.left = x + 'px';
-    ball.style.top = y + 'px';
+    ball.style.transform = `translate(-50%, -50%) translate3d(${x}px, ${y}px, 0)`;
 
     let lastTrail = 0;
     let frameCount = 0;
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     const animate = () => {
       frameCount++;
@@ -517,7 +526,7 @@
       const speed = Math.sqrt(vx * vx + vy * vy);
       if (speed < 0.12) {
         vx += (Math.random() - 0.5) * 0.6;
-        vy += gravity * 0.6;
+        vy += gravity * 0.8;
       }
 
       // Отскок от стенок
@@ -579,18 +588,19 @@
       vy *= friction;
 
       // Трейл эффект (каждые 3 кадра)
-      if (frameCount % 3 === 0 && Date.now() - lastTrail > 30) {
-        const trail = document.createElement('div');
-        trail.className = 'ball-trail';
-        trail.style.left = x + 'px';
-        trail.style.top = y + 'px';
-        board.appendChild(trail);
-        setTimeout(() => trail.remove(), 400);
-        lastTrail = Date.now();
+      if (!isIOS) {
+        if (frameCount % 3 === 0 && Date.now() - lastTrail > 30) {
+          const trail = document.createElement('div');
+          trail.className = 'ball-trail';
+          trail.style.left = x + 'px';
+          trail.style.top = y + 'px';
+          board.appendChild(trail);
+          setTimeout(() => trail.remove(), 400);
+          lastTrail = Date.now();
+        }
       }
 
-      ball.style.left = x + 'px';
-      ball.style.top = y + 'px';
+      ball.style.transform = `translate(-50%, -50%) translate3d(${x}px, ${y}px, 0)`;
 
       // Проверка достижения дна
       if (y < boardHeight - 75) {

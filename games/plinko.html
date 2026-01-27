@@ -353,6 +353,7 @@
   // ─── Plinko logic ───────────────────────────────────────────────────────────
   let activeDrops = 0;
   const maxActiveDrops = 5;
+  const rAF = window.requestAnimationFrame || (cb => setTimeout(cb, 16));
 
   // Физика Plinko
   function dropBall() {
@@ -398,7 +399,27 @@
     }
   }
 
-  function dropSingleBall(bet) {
+  function dropBallAt(spawnX) {
+    if (!currentUser) return alert('Сессия истекла. Войдите заново.');
+    const betInput = document.getElementById('bet');
+    const bet = Number(betInput.value);
+    if (isNaN(bet) || bet < 10) return alert('Минимальная ставка 10 ₽');
+    if (bet > currentUser.balance) return alert(`Недостаточно средств. Нужно ${bet}₽`);
+    if (activeDrops + 1 > maxActiveDrops) return alert(`Максимум ${maxActiveDrops} шариков одновременно`);
+    currentUser.balance = (currentUser.balance || 0) - bet;
+    currentUser.totalBet = (currentUser.totalBet || 0) + bet;
+    currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
+    saveUser({
+      balance: currentUser.balance,
+      totalBet: currentUser.totalBet,
+      gamesPlayed: currentUser.gamesPlayed
+    });
+    document.getElementById('balance').textContent = Math.floor(currentUser.balance);
+    document.getElementById('result').textContent = `Шарик запущен...`;
+    dropSingleBall(bet, spawnX);
+  }
+
+  function dropSingleBall(bet, spawnX) {
     activeDrops++;
 
     const board = document.getElementById('plinkoBoard');
@@ -459,8 +480,8 @@
     // Получаем позиции пинов
     const pins = document.querySelectorAll('.pin');
     const pinPositions = Array.from(pins).map(pin => ({
-      x: parseFloat(pin.style.left),
-      y: parseFloat(pin.style.top)
+      x: parseFloat(pin.style.left) + 4.5,
+      y: parseFloat(pin.style.top) + 4.5
     }));
 
     // Физика шарика
@@ -468,7 +489,9 @@
     ball.className = 'ball';
     board.appendChild(ball);
 
-    let x = boardWidth / 2 + (Math.random() - 0.5) * 60;
+    let x = typeof spawnX === 'number'
+      ? Math.max(12, Math.min(boardWidth - 12, spawnX))
+      : (boardWidth / 2 + (Math.random() - 0.5) * 60);
     let y = 30;
     let vx = (Math.random() - 0.5) * 1.8;
     let vy = 0;
@@ -482,7 +505,6 @@
     let lastTrail = 0;
     let frameCount = 0;
 
-    const isMobile = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) || window.innerWidth < 768;
     const animate = () => {
       frameCount++;
 
@@ -569,11 +591,7 @@
 
       // Проверка достижения дна
       if (y < boardHeight - 75) {
-        if (isMobile) {
-          setTimeout(animate, 16);
-        } else {
-          requestAnimationFrame(animate);
-        }
+        rAF(animate);
       } else {
         // Определяем в какой бакет попал (11 бакетов)
         const bucketIndex = Math.floor((x / boardWidth) * 11);
@@ -631,11 +649,7 @@
       }
     };
 
-    if (isMobile) {
-      setTimeout(animate, 16);
-    } else {
-      requestAnimationFrame(animate);
-    }
+    rAF(animate);
   }
 
   // ─── Init ───────────────────────────────────────────────────────────────────
@@ -644,6 +658,21 @@
     loadCurrentUser();
 
     document.getElementById('dropBtn').onclick = dropBall;
+    const board = document.getElementById('plinkoBoard');
+    // Pointer/touch запуск по тапу по доске
+    board.addEventListener('pointerdown', (e) => {
+      const rect = board.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      dropBallAt(x);
+    }, { passive: true });
+    // Поддержка старых мобильных браузеров
+    board.addEventListener('touchstart', (e) => {
+      if (e.changedTouches && e.changedTouches[0]) {
+        const rect = board.getBoundingClientRect();
+        const x = e.changedTouches[0].clientX - rect.left;
+        dropBallAt(x);
+      }
+    }, { passive: true });
   });
 </script>
 </body>

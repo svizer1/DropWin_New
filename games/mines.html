@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Mines | DropWin</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .particle {
+      position: absolute;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.8), transparent);
+      border-radius: 50%;
+      animation: float linear infinite;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-100px) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    .header {
+      position: sticky;
+      top: 0;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #8b5cf6, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .balance-container {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .balance {
+      background: rgba(139, 92, 246, 0.1);
+      padding: 8px 16px;
+      border-radius: 12px;
+      color: #e5e7eb;
+      font-weight: 700;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .auth-btn {
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .auth-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+    }
+
+    .content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .back-btn {
+      background: rgba(30, 27, 75, 0.8);
+      color: #e5e7eb;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .back-btn:hover {
+      background: rgba(139, 92, 246, 0.2);
+      transform: translateX(-5px);
+    }
+
+    .mines-card {
+      max-width: 500px;
+      margin: 0 auto;
+      background: rgba(30, 27, 75, 0.6);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 32px;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .game-title {
+      font-size: 2rem;
+      font-weight: 900;
+      text-align: center;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .emoji-banner {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin: 16px 0;
+      font-size: 1.8rem;
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+    }
+    .bombs-banner {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 10px 0 18px;
+      font-size: 1.6rem;
+      letter-spacing: 2px;
+      filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
+    }
+
+    .input-group {
+      margin: 24px 0;
+    }
+
+    .input-label {
+      display: block;
+      color: #c4b5fd;
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: 2px solid rgba(139, 92, 246, 0.3);
+      background: rgba(15, 23, 42, 0.8);
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 700;
+      transition: all 0.3s ease;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+    }
+
+    .info {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .info .tile {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 12px;
+      padding: 14px 10px;
+      text-align: center;
+      color: #e5e7eb;
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    .info .tile span {
+      display: block;
+      font-size: 1.2rem;
+      color: #fbbf24;
+      margin-top: 4px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .btn {
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    .btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      color: #1e1b4b;
+      box-shadow: 0 8px 20px rgba(251, 191, 36, 0.3);
+    }
+
+    .btn.secondary {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+    }
+
+    .btn.tertiary {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: white;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin: 24px 0;
+      perspective: 1000px;
+    }
+
+    .cell {
+      position: relative;
+      height: 180px;
+      border-radius: 20px;
+      cursor: pointer;
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+
+    .cell.flipping {
+      animation: flip 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+
+    @keyframes flip {
+      0% {
+        transform: rotateY(0deg);
+      }
+      50% {
+        transform: rotateY(90deg);
+      }
+      100% {
+        transform: rotateY(0deg);
+      }
+    }
+
+    .cell-front, .cell-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backface-visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .cell-front {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+      border: 2px solid rgba(139, 92, 246, 0.4);
+      box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .cell:hover .cell-front {
+      transform: translateY(-4px);
+      box-shadow: 
+        0 15px 40px rgba(139, 92, 246, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      border-color: rgba(139, 92, 246, 0.7);
+    }
+
+    .cell-back {
+      transform: rotateY(180deg);
+    }
+
+    .cell.safe .cell-back {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.3));
+      border: 2px solid rgba(16, 185, 129, 0.6);
+      box-shadow: 
+        0 0 30px rgba(16, 185, 129, 0.4),
+        0 10px 30px rgba(0, 0, 0, 0.3);
+      animation: successGlow 0.8s ease-out;
+    }
+
+    .cell.mine .cell-back {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(185, 28, 28, 0.3));
+      border: 2px solid rgba(239, 68, 68, 0.6);
+      box-shadow: 
+        0 0 40px rgba(239, 68, 68, 0.6),
+        0 10px 30px rgba(0, 0, 0, 0.3);
+      animation: explodeShake 0.5s ease-out;
+    }
+
+    @keyframes successGlow {
+      0%, 100% {
+        box-shadow: 
+          0 0 30px rgba(16, 185, 129, 0.4),
+          0 10px 30px rgba(0, 0, 0, 0.3);
+      }
+      50% {
+        box-shadow: 
+          0 0 50px rgba(16, 185, 129, 0.8),
+          0 10px 30px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    @keyframes explodeShake {
+      0%, 100% {
+        transform: translate(0, 0) scale(1);
+      }
+      10%, 30%, 50%, 70%, 90% {
+        transform: translate(-2px, 0) scale(1.02);
+      }
+      20%, 40%, 60%, 80% {
+        transform: translate(2px, 0) scale(0.98);
+      }
+    }
+
+    .emoji {
+      font-size: 4rem;
+      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6));
+      animation: float-emoji 2s ease-in-out infinite;
+    }
+
+    @keyframes float-emoji {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-8px);
+      }
+    }
+
+    .cell.disabled {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    /* Particle effects */
+    .spark {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .spark.success {
+      background: radial-gradient(circle, #10b981, #059669);
+      animation: sparkFlySuccess 0.8s ease-out forwards;
+    }
+
+    .spark.mine {
+      background: radial-gradient(circle, #ef4444, #b91c1c);
+      animation: sparkFlyMine 0.6s ease-out forwards;
+    }
+    .fragment {
+      position: absolute;
+      width: 10px;
+      height: 2px;
+      background: linear-gradient(90deg, #fee2e2, #ef4444);
+      border-radius: 2px;
+      opacity: 0.9;
+      transform-origin: left center;
+      animation: fragmentFly 0.7s ease-out forwards;
+      pointer-events: none;
+      z-index: 11;
+    }
+
+    @keyframes sparkFlySuccess {
+      to {
+        transform: translate(var(--tx), var(--ty)) scale(0);
+        opacity: 0;
+      }
+    }
+
+    @keyframes sparkFlyMine {
+      0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--tx), var(--ty)) scale(0);
+        opacity: 0;
+      }
+    }
+    @keyframes fragmentFly {
+      0% { transform: rotate(var(--rot)) translateX(0); opacity: 1; }
+      100% { transform: rotate(var(--rot)) translateX(var(--dist)); opacity: 0; }
+    }
+    .shockwave {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 40px;
+      height: 40px;
+      border: 2px solid rgba(239,68,68,0.8);
+      border-radius: 50%;
+      transform: translate(-50%,-50%) scale(0.3);
+      animation: shockExpand 0.6s ease-out forwards;
+      pointer-events: none;
+      z-index: 9;
+    }
+    @keyframes shockExpand {
+      0% { transform: translate(-50%,-50%) scale(0.3); opacity: 1; }
+      100% { transform: translate(-50%,-50%) scale(2.2); opacity: 0; }
+    }
+
+    /* Mine 3D Animation */
+    .mine-3d {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      animation: mine-spin 2s linear infinite;
+    }
+
+    @keyframes mine-spin {
+      0% {
+        transform: rotateY(0deg) rotateX(10deg);
+      }
+      100% {
+        transform: rotateY(360deg) rotateX(10deg);
+      }
+    }
+
+    .mine-body {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 30% 30%, #4a4a4a, #1a1a1a);
+      border-radius: 50%;
+      box-shadow: 
+        inset -10px -10px 20px rgba(0, 0, 0, 0.8),
+        inset 10px 10px 20px rgba(255, 255, 255, 0.1),
+        0 0 30px rgba(239, 68, 68, 0.5);
+    }
+
+    .mine-spike {
+      position: absolute;
+      width: 8px;
+      height: 30px;
+      background: linear-gradient(180deg, #6a6a6a, #2a2a2a);
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    }
+
+    .mine-spike:nth-child(1) { top: -15px; left: 50%; transform: translateX(-50%); }
+    .mine-spike:nth-child(2) { bottom: -15px; left: 50%; transform: translateX(-50%); }
+    .mine-spike:nth-child(3) { left: -15px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+    .mine-spike:nth-child(4) { right: -15px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+
+    .status {
+      text-align: center;
+      margin-top: 20px;
+      color: #c4b5fd;
+      font-weight: 700;
+      font-size: 1.1rem;
+      padding: 12px;
+      background: rgba(139, 92, 246, 0.1);
+      border-radius: 12px;
+      border: 1px solid rgba(139, 92, 246, 0.2);
+    }
+
+    .nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+      border-top: 1px solid rgba(139, 92, 246, 0.2);
+      z-index: 100;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      color: #9ca3af;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      padding: 8px 20px;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      font-size: 1.5rem;
+    }
+
+    .nav-btn:hover {
+      background: rgba(139, 92, 246, 0.1);
+      color: #8b5cf6;
+    }
+
+    .nav-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    @media (max-width: 640px) {
+      .mines-card {
+        padding: 20px;
+      }
+
+      .game-title {
+        font-size: 1.5rem;
+      }
+
+      .board {
+        gap: 12px;
+      }
+
+      .cell {
+        height: 140px;
+      }
+
+      .emoji {
+        font-size: 3rem;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .info {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+
+      .info .tile {
+        padding: 10px 6px;
+        font-size: 0.75rem;
+      }
+
+      .info .tile span {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="particles" id="particles"></div>
+
+  <div class="header">
+    <div class="logo">💎 DROPWIN</div>
+    <div class="balance-container">
+      <div class="balance">💰 <span id="balance">0</span>₽</div>
+      <button class="auth-btn" id="authBtn">Аккаунт</button>
+      <button class="auth-btn" onclick="window.open('https://t.me/DropWinHelp_bot','_blank')">💬</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <button class="back-btn" onclick="location.href='../index.html'">← Назад</button>
+    <div class="mines-card">
+      <div class="game-title">💣 Долина Мин</div>
+      <div class="bombs-banner">💣💣💣</div>
+
+      <div class="input-group">
+        <label class="input-label">Ставка</label>
+        <input type="number" id="bet" value="50" min="10" step="10">
+      </div>
+
+      <div class="info">
+        <div class="tile">
+          Множитель<br>
+          <span id="mult">1.0×</span>
+        </div>
+        <div class="tile">
+          Потенциал<br>
+          <span id="potential">0</span>₽
+        </div>
+        <div class="tile">
+          Успехи<br>
+          <span id="success">0</span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn primary" id="startBtn">Начать раунд</button>
+        <button class="btn secondary" id="cashoutBtn" disabled>Забрать</button>
+        <button class="btn tertiary" id="continueBtn" disabled>Ещё</button>
+      </div>
+
+      <div class="board" id="board"></div>
+      <div class="status" id="status">Выберите ставку и начните раунд 🎮</div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn" onclick="location.href='../index.html'">
+      <span>🏠</span>
+      <span class="nav-label">Главная</span>
+    </button>
+    <button class="nav-btn" onclick="location.href='../profile.html'">
+      <span>👤</span>
+      <span class="nav-label">Профиль</span>
+    </button>
+    <button class="nav-btn" onclick="location.href='../register.html'">
+      <span>🔐</span>
+      <span class="nav-label">Вход</span>
+    </button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+      authDomain: "dropwin-8d94b.firebaseapp.com",
+      projectId: "dropwin-8d94b",
+      storageBucket: "dropwin-8d94b.firebasestorage.app",
+      messagingSenderId: "988974289403",
+      appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+      measurementId: "G-BK010MHN8N"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let isGuest = false;
+    let userId = null;
+
+    function createParticles() {
+      const container = document.getElementById('particles');
+      if (!container) return;
+      const isMobile = window.innerWidth < 768;
+      const count = isMobile ? 15 : 30;
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.width = p.style.height = Math.random() * 4 + 2 + 'px';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.animationDuration = Math.random() * 15 + 10 + 's';
+        p.style.animationDelay = Math.random() * 5 + 's';
+        container.appendChild(p);
+      }
+    }
+
+    function loadCurrentUser() {
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          userId = user.uid;
+          const snap = await getDoc(doc(db, 'users', user.uid));
+          if (snap.exists()) {
+            currentUser = snap.data();
+            isGuest = false;
+            renderUser();
+          } else {
+            goToLogin();
+          }
+        } else {
+          const username = localStorage.getItem('dropwin_current_username');
+          if (username === 'Гость') {
+            const users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+            const guest = users.find(u => u.username === 'Гость');
+            if (guest) {
+              currentUser = guest;
+              isGuest = true;
+              renderUser();
+            } else {
+              goToLogin();
+            }
+          } else {
+            goToLogin();
+          }
+        }
+      });
+    }
+
+    function renderUser() {
+      document.getElementById('balance').textContent = Math.floor(currentUser.balance || 0);
+      const authBtn = document.getElementById('authBtn');
+      authBtn.textContent = currentUser.username || 'Аккаунт';
+      authBtn.onclick = () => location.href = '../profile.html';
+    }
+
+    function goToLogin() {
+      location.href = '../register.html';
+    }
+
+    function saveUser(updates = {}) {
+      if (!currentUser) return;
+      Object.assign(currentUser, updates);
+
+      if (isGuest) {
+        let users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+        const idx = users.findIndex(u => u.username === 'Гость');
+        if (idx !== -1) users[idx] = { ...currentUser };
+        localStorage.setItem('dropwin_users', JSON.stringify(users));
+      } else if (userId) {
+        updateDoc(doc(db, 'users', userId), updates).catch(err => console.error("Firestore save error:", err));
+      }
+    }
+
+    function addToHistory(game, change) {
+      const entry = {
+        game,
+        time: new Date().toLocaleString('ru-RU'),
+        win: change,
+        result: change > 0 ? 'win' : (change < 0 ? 'loss' : 'draw')
+      };
+      currentUser.history = currentUser.history || [];
+      currentUser.history.unshift(entry);
+      if (currentUser.history.length > 30) currentUser.history = currentUser.history.slice(0, 30);
+      saveUser({ history: currentUser.history });
+    }
+
+    // ─── Mines game state ──────────────────────────────────────────────────────
+    const progression = [1.5, 2.5, 4.0, 6.0, 9.0, 13.0];
+    let roundActive = false;
+    let bet = 50;
+    let successCount = 0;
+    let currentMult = 1.0;
+    let awaitingDecision = false;
+
+    function updateInfo() {
+      document.getElementById('mult').textContent = `${currentMult.toFixed(2)}×`;
+      document.getElementById('success').textContent = `${successCount}`;
+      const potential = Math.round(bet * currentMult);
+      document.getElementById('potential').textContent = `${potential}`;
+    }
+
+    function renderBoard(interactive = true) {
+      const board = document.getElementById('board');
+      board.innerHTML = '';
+      for (let i = 0; i < 2; i++) {
+        const cell = document.createElement('div');
+        cell.className = `cell ${interactive ? '' : 'disabled'}`;
+        cell.innerHTML = `
+          <div class="cell-front">
+            <div class="emoji">❓</div>
+          </div>
+          <div class="cell-back"></div>
+        `;
+        board.appendChild(cell);
+      }
+    }
+
+    function setControls(startDisabled, cashDisabled, contDisabled) {
+      document.getElementById('startBtn').disabled = startDisabled;
+      document.getElementById('cashoutBtn').disabled = cashDisabled;
+      document.getElementById('continueBtn').disabled = contDisabled;
+    }
+
+    function startRound() {
+      if (!currentUser) return alert('Сессия истекла. Войдите заново.');
+      const inputBet = Number(document.getElementById('bet').value);
+      if (isNaN(inputBet) || inputBet < 10) return alert('Минимальная ставка 10 ₽');
+      if (inputBet > (currentUser.balance || 0)) return alert('Недостаточно средств');
+
+      bet = inputBet;
+      currentUser.balance = (currentUser.balance || 0) - bet;
+      currentUser.totalBet = (currentUser.totalBet || 0) + bet;
+      currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
+      saveUser({ 
+        balance: currentUser.balance, 
+        totalBet: currentUser.totalBet, 
+        gamesPlayed: currentUser.gamesPlayed 
+      });
+      document.getElementById('balance').textContent = Math.floor(currentUser.balance);
+
+      roundActive = true;
+      successCount = 0;
+      currentMult = 1.0;
+      awaitingDecision = false;
+      setControls(true, true, true);
+      document.getElementById('status').textContent = 'Выберите безопасную клетку 🎯';
+      updateInfo();
+      renderBoard(true);
+      nextStep();
+    }
+
+    function nextStep() {
+      awaitingDecision = false;
+      setControls(true, true, true);
+      const board = document.getElementById('board');
+      const cells = Array.from(board.querySelectorAll('.cell'));
+      const mineIndex = Math.floor(Math.random() * 2);
+      
+      cells.forEach((cell, idx) => {
+        cell.classList.remove('safe', 'mine', 'flipping');
+        const front = cell.querySelector('.cell-front .emoji');
+        if (front) front.textContent = '❓';
+        cell.onclick = () => handlePick(idx === mineIndex, cell, cells[mineIndex]);
+      });
+    }
+
+    function handlePick(isMine, cell, mineCell) {
+      if (!roundActive) return;
+      const board = document.getElementById('board');
+      Array.from(board.querySelectorAll('.cell')).forEach(c => c.onclick = null);
+      
+      cell.classList.add('flipping');
+      
+      setTimeout(() => {
+        if (isMine) {
+          cell.classList.add('mine');
+          const back = cell.querySelector('.cell-back');
+          back.innerHTML = createMine3D();
+          createShockwave(cell);
+          createExplosionParticles(cell);
+          endRound(false);
+        } else {
+          cell.classList.add('safe');
+          const back = cell.querySelector('.cell-back');
+          back.innerHTML = '<div class="emoji">🛡️</div>';
+          createSuccessParticles(cell);
+          successCount += 1;
+          currentMult = progression[Math.min(successCount - 1, progression.length - 1)];
+          updateInfo();
+          document.getElementById('status').textContent = '✨ Успех! Можно забрать, идём дальше...';
+          awaitingDecision = true;
+          setControls(true, false, true);
+          setTimeout(() => { if (roundActive) nextStep(); }, 900);
+        }
+      }, 300);
+    }
+
+    function createMine3D() {
+      return `
+        <div class="mine-3d">
+          <div class="mine-body">
+            <div class="mine-spike"></div>
+            <div class="mine-spike"></div>
+            <div class="mine-spike"></div>
+            <div class="mine-spike"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function createSuccessParticles(cell) {
+      const rect = cell.getBoundingClientRect();
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      for (let i = 0; i < 20; i++) {
+        const spark = document.createElement('div');
+        spark.className = 'spark success';
+        
+        const angle = (Math.PI * 2 * i) / 20;
+        const distance = 50 + Math.random() * 50;
+        const tx = Math.cos(angle) * distance;
+        const ty = Math.sin(angle) * distance;
+        
+        spark.style.left = centerX + 'px';
+        spark.style.top = centerY + 'px';
+        spark.style.setProperty('--tx', tx + 'px');
+        spark.style.setProperty('--ty', ty + 'px');
+        
+        cell.appendChild(spark);
+        setTimeout(() => spark.remove(), 800);
+      }
+    }
+
+    function createExplosionParticles(cell) {
+      const rect = cell.getBoundingClientRect();
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      for (let i = 0; i < 30; i++) {
+        const spark = document.createElement('div');
+        spark.className = 'spark mine';
+        
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 80 + Math.random() * 80;
+        const tx = Math.cos(angle) * distance;
+        const ty = Math.sin(angle) * distance;
+        
+        spark.style.left = centerX + 'px';
+        spark.style.top = centerY + 'px';
+        spark.style.setProperty('--tx', tx + 'px');
+        spark.style.setProperty('--ty', ty + 'px');
+        spark.style.width = (Math.random() * 6 + 4) + 'px';
+        spark.style.height = spark.style.width;
+        
+        cell.appendChild(spark);
+        setTimeout(() => spark.remove(), 600);
+      }
+      for (let i = 0; i < 18; i++) {
+        const frag = document.createElement('div');
+        frag.className = 'fragment';
+        const rot = (Math.random() * 360) + 'deg';
+        const dist = (60 + Math.random() * 90) + 'px';
+        frag.style.setProperty('--rot', rot);
+        frag.style.setProperty('--dist', dist);
+        frag.style.left = centerX + 'px';
+        frag.style.top = centerY + 'px';
+        cell.appendChild(frag);
+        setTimeout(() => frag.remove(), 700);
+      }
+    }
+    function createShockwave(cell) {
+      const wave = document.createElement('div');
+      wave.className = 'shockwave';
+      cell.appendChild(wave);
+      setTimeout(() => wave.remove(), 600);
+    }
+
+    function cashOut() {
+      if (!roundActive || !awaitingDecision) return;
+      const payout = Math.round(bet * currentMult);
+      const net = payout - bet;
+      currentUser.balance = (currentUser.balance || 0) + payout;
+      if (net > 0) currentUser.totalWin = (currentUser.totalWin || 0) + net;
+      if (net > 0) currentUser.wins = (currentUser.wins || 0) + 1;
+      saveUser({ 
+        balance: currentUser.balance, 
+        totalWin: currentUser.totalWin, 
+        wins: currentUser.wins 
+      });
+      document.getElementById('balance').textContent = Math.floor(currentUser.balance);
+      addToHistory('Mines', net);
+      roundActive = false;
+      setControls(false, true, true);
+      renderBoard(false);
+      document.getElementById('status').innerHTML = `<span style="color:#10b981">🎉 Забрано: +${net}₽ (×${currentMult.toFixed(2)})</span>`;
+    }
+
+    function continueGame() {
+      if (!roundActive || !awaitingDecision) return;
+      document.getElementById('status').textContent = 'Выберите безопасную клетку 🎯';
+      nextStep();
+    }
+
+    function endRound(win) {
+      roundActive = false;
+      setControls(false, true, true);
+      renderBoard(false);
+      const net = win ? Math.round(bet * currentMult) - bet : -bet;
+      if (!win) {
+        currentUser.losses = (currentUser.losses || 0) + 1;
+      }
+      addToHistory('Mines', net);
+      saveUser({ losses: currentUser.losses });
+      document.getElementById('status').innerHTML = win
+        ? `<span style="color:#10b981">🎉 Победа: +${net}₽</span>`
+        : `<span style="color:#ef4444">💥 Мина! Потеря −${bet}₽</span>`;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      createParticles();
+      loadCurrentUser();
+      renderBoard(false);
+      updateInfo();
+      document.getElementById('startBtn').onclick = startRound;
+      document.getElementById('cashoutBtn').onclick = cashOut;
+      document.getElementById('continueBtn').style.display = 'none';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Upgrader | DropWin</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .upgrade-card {
+      max-width: 820px;
+      margin: 0 auto;
+    }
+    .upgrade-container {
+      display: grid;
+      grid-template-columns: 1fr 220px 1fr;
+      gap: 14px;
+      align-items: center;
+      margin-top: 14px;
+    }
+    .item-slot {
+      background: rgba(30, 30, 50, 0.75);
+      border: 2px solid rgba(139, 92, 246, 0.35);
+      border-radius: 16px;
+      padding: 12px;
+      min-height: 200px;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+    .item-slot:hover {
+      border-color: rgba(139, 92, 246, 0.6);
+      box-shadow: 0 10px 24px rgba(99,102,241,0.18);
+      transform: translateY(-2px);
+    }
+    .slot-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #c4b5fd;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .slot-body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .slot-emoji {
+      font-size: 3.2rem;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.6));
+      transition: transform 0.18s ease;
+    }
+    .slot-name {
+      color: #e0e0ff;
+      font-weight: 700;
+    }
+    .slot-value {
+      color: #fde047;
+      font-weight: 900;
+      font-size: 1.05rem;
+    }
+    .select-btn {
+      padding: 7px 12px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    }
+    .select-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(139,92,246,0.35);
+      filter: brightness(1.05);
+    }
+    .select-btn:active {
+      transform: translateY(0);
+      filter: brightness(0.95);
+    }
+    .chance-circle {
+      background: rgba(20, 20, 40, 0.9);
+      border: 2px solid rgba(99, 102, 241, 0.4);
+      border-radius: 20px;
+      padding: 16px;
+      text-align: center;
+    }
+    .ring-wrap {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      margin: 0 auto 8px auto;
+    }
+    .ring-svg {
+      transform: rotate(-90deg);
+    }
+    .ring-bg {
+      stroke: rgba(99, 102, 241, 0.25);
+      stroke-width: 12;
+      fill: none;
+    }
+    .ring-progress {
+      stroke: #fbbf24;
+      stroke-linecap: round;
+      stroke-width: 12;
+      fill: none;
+      transition: stroke-dashoffset 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .ring-pointer {
+      position: absolute;
+      inset: 0;
+      transform: rotate(0deg);
+      transform-origin: 50% 50%;
+    }
+    .ring-pointer-dot {
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 0 10px rgba(255,255,255,0.9);
+    }
+    .ring-pointer-arrow {
+      position: absolute;
+      top: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-bottom: 14px solid #ffffff;
+      filter: drop-shadow(0 0 8px rgba(255,255,255,0.9));
+    }
+    .ring-pointer-arrow::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: -5px;
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 10px solid rgba(15,23,42,0.9);
+    }
+    .fast-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 8px;
+      color: #c4b5fd;
+      font-weight: 700;
+    }
+    .fast-toggle input {
+      width: 44px;
+      height: 24px;
+      appearance: none;
+      background: #4b5563;
+      border-radius: 12px;
+      position: relative;
+      outline: none;
+      cursor: pointer;
+    }
+    .fast-toggle input:checked {
+      background: #22c55e;
+    }
+    .fast-toggle input::after {
+      content: '';
+      width: 18px;
+      height: 18px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 3px;
+      left: 4px;
+      transition: left 0.2s ease;
+    }
+    .fast-toggle input:checked::after {
+      left: 22px;
+    }
+    .mult-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .mult-btn {
+      padding: 8px 0;
+      border-radius: 10px;
+      border: none;
+      background: rgba(99,102,241,0.25);
+      color: #e5e7eb;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.14s ease, background 0.2s ease, box-shadow 0.2s ease;
+    }
+    .mult-btn:hover {
+      transform: translateY(-1px);
+      background: rgba(99,102,241,0.35);
+      box-shadow: 0 8px 16px rgba(99,102,241,0.25);
+    }
+    .mult-btn.active {
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      color: white;
+    }
+    .balance-use {
+      margin-top: 10px;
+      color: #c4b5fd;
+      font-weight: 700;
+    }
+    .balance-use input[type="range"] {
+      width: 100%;
+    }
+    @media (max-width: 860px) {
+      .upgrade-container {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .ring-wrap {
+        width: 150px;
+        height: 150px;
+      }
+      .chance-percent {
+        font-size: 1.8rem;
+      }
+    }
+    @media (max-width: 520px) {
+      .upgrade-container {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .item-slot {
+        min-height: 180px;
+      }
+      .slot-emoji {
+        font-size: 3rem;
+      }
+      .ring-wrap {
+        width: 130px;
+        height: 130px;
+      }
+      .chance-percent {
+        font-size: 1.5rem;
+      }
+      .mult-row {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .select-btn {
+        padding: 12px 16px;
+        font-size: 1rem;
+      }
+      .fast-toggle input {
+        width: 56px;
+        height: 30px;
+      }
+      .inventory-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .selected-list {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    .chance-percent {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: #34d399;
+    }
+    .chance-label {
+      color: #c4b5fd;
+      margin-top: 6px;
+      font-weight: 700;
+    }
+    .upgrade-btn {
+      margin-top: 12px;
+      width: 100%;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #fbbf24, #d97706);
+      color: white;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    }
+    .upgrade-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(217,119,6,0.25); filter: brightness(1.05); }
+    .upgrade-btn:active { transform: translateY(0); filter: brightness(0.95); }
+    .upgrade-btn:disabled { opacity: 0.65; cursor: not-allowed; filter: grayscale(0.2); }
+    .inventory-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .section-title {
+      margin-top: 18px;
+      margin-bottom: 8px;
+      color: #c4b5fd;
+      font-weight: 800;
+    }
+    .inventory-item {
+      background: rgba(28, 26, 60, 0.8);
+      border: 2px solid rgba(139, 92, 246, 0.25);
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .inventory-item.active {
+      border-color: #d946ef;
+      box-shadow: 0 0 16px rgba(217, 70, 239, 0.6);
+    }
+    .inventory-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 18px rgba(139,92,246,0.25);
+      border-color: rgba(139,92,246,0.5);
+    }
+    .inv-emoji { font-size: 2.2rem; }
+    .inv-name { color: #e0e0ff; font-weight: 700; font-size: 0.95rem; }
+    .inv-value { color: #fde047; font-weight: 800; }
+    .selected-list {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      width: 100%;
+    }
+    .selected-item {
+      background: rgba(28, 26, 60, 0.8);
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      border-radius: 10px;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .selected-emoji { font-size: 1.6rem; }
+    .selected-value { color: #fde047; font-weight: 800; font-size: 0.9rem; }
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.85);
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity 0.12s ease;
+    }
+    .modal[style*="display: flex"] { opacity: 1; }
+    .modal-body {
+      background: #15142a;
+      border: 2px solid rgba(139,92,246,0.35);
+      border-radius: 16px;
+      padding: 16px;
+      max-width: 920px;
+      width: 92%;
+      max-height: 80vh;
+      overflow: auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      animation: modalPop 0.12s ease;
+    }
+    .result-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.7);
+      z-index: 10000;
+    }
+    .result-card {
+      background: #0f172a;
+      border: 2px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      padding: 18px;
+      min-width: 280px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      animation: modalPop 0.12s ease;
+    }
+    .result-card.success { border-color: rgba(34,197,94,0.55); }
+    .result-card.fail { border-color: rgba(248,113,113,0.55); }
+    .result-title { font-weight: 900; margin-bottom: 6px; }
+    .result-title.success { color: #22c55e; }
+    .result-title.fail { color: #ef4444; }
+    .result-text { color: #e5e7eb; }
+    .result-btn {
+      margin-top: 12px;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #64748b, #475569);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .modal-actions .btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #64748b, #475569);
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.14s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    }
+    .modal-actions .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 16px rgba(100,116,139,0.35); filter: brightness(1.05); }
+    .modal-actions .btn:active { transform: translateY(0); filter: brightness(0.95); }
+    .modal-actions input {
+      flex: 1;
+      margin-left: 8px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.06);
+      color: #e5e7eb;
+    }
+    
+    @keyframes modalPop { from { transform: translateY(6px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  </style>
+  </head>
+<body>
+  <div class="particles" id="particles"></div>
+
+  <div class="header">
+    <div class="logo">💎 DROPWIN</div>
+    <div class="balance-container">
+      <div class="balance">💰 <span id="balance">0</span>₽</div>
+      <button class="auth-btn" id="authBtn">Аккаунт</button>
+      <button class="auth-btn" onclick="window.open('https://t.me/DropWinHelp_bot','_blank')">Поддержка</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <button class="back-btn" onclick="location.href='index.html'">← Назад</button>
+
+    <div class="game-card upgrade-card">
+      <div class="game-title">⚙️ Upgrader</div>
+
+      <div class="upgrade-container">
+        <div class="item-slot" id="leftSlot">
+          <div class="slot-header">
+            <span>Базовый предмет</span>
+            <button class="select-btn" id="selectLeft">Выбрать</button>
+          </div>
+          <div class="slot-body">
+            <div class="slot-emoji" id="leftEmoji">❓</div>
+            <div class="slot-name" id="leftName">Не выбран</div>
+            <div class="slot-value" id="leftValue">0₽</div>
+            <div class="selected-list" id="leftSelectedList"></div>
+          </div>
+        </div>
+        <div class="chance-circle">
+          <div class="ring-wrap">
+            <svg class="ring-svg" width="160" height="160">
+              <circle class="ring-bg" cx="80" cy="80" r="64"></circle>
+              <circle class="ring-progress" id="ringProgress" cx="80" cy="80" r="64" stroke-dasharray="402" stroke-dashoffset="402"></circle>
+            </svg>
+            <div class="ring-pointer" id="ringPointer">
+              <div class="ring-pointer-dot"></div>
+            </div>
+            <div class="chance-percent" id="chancePercent" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);">0%</div>
+          </div>
+          <div class="chance-label">Шанс улучшения</div>
+          <button class="upgrade-btn" id="upgradeBtn">Улучшить</button>
+          <div class="fast-toggle">
+            <span>Быстро</span>
+            <input type="checkbox" id="fastMode">
+          </div>
+          <div class="mult-row">
+            <button class="mult-btn" data-mult="1.5">x1.5</button>
+            <button class="mult-btn" data-mult="2">x2</button>
+            <button class="mult-btn" data-mult="3">x3</button>
+            <button class="mult-btn" data-mult="5">x5</button>
+            <button class="mult-btn" data-mult="10">x10</button>
+          </div>
+          <div class="balance-use">
+            <div>Используйте баланс на: <span id="balanceUseText">0</span>₽</div>
+            <input type="range" id="balanceUseRange" min="0" max="0" step="1" value="0">
+          </div>
+        </div>
+        <div class="item-slot" id="rightSlot">
+          <div class="slot-header">
+            <span>Целевой предмет</span>
+            <button class="select-btn" id="selectRight">Выбрать</button>
+          </div>
+          <div class="slot-body">
+            <div class="slot-emoji" id="rightEmoji">❓</div>
+            <div class="slot-name" id="rightName">Не выбран</div>
+            <div class="slot-value" id="rightValue">0₽</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="inventoryContainer"></div>
+      <div id="upgradeResult" style="text-align:center; margin-top:14px; min-height:28px;"></div>
+      <div class="result-modal" id="upgradeResultModal">
+        <div class="result-card" id="upgradeResultCard">
+          <div class="result-title" id="upgradeResultTitle">—</div>
+          <div class="result-text" id="upgradeResultText">—</div>
+          <button class="result-btn" onclick="closeUpgradeResult()">Ок</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="selectModal">
+      <div class="modal-body">
+        <div class="modal-actions">
+          <div class="section-title" id="modalTitle">Выберите предмет</div>
+          <div style="display:flex; gap:8px; align-items:center; width: 60%;">
+            <button class="btn" id="sortPriceBtn">Цена ↑</button>
+            <input type="text" id="searchInput" placeholder="Поиск по названию">
+            <button class="btn" id="closeModalBtn">Закрыть</button>
+          </div>
+        </div>
+        <div class="inventory-grid" id="modalItemsGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn" onclick="location.href='index.html'"><span>🏠</span><span class="nav-label">Главная</span></button>
+    <button class="nav-btn" onclick="location.href='inventory.html'"><span>🎒</span><span class="nav-label">Инвентарь</span></button>
+    <button class="nav-btn" onclick="location.href='profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+      authDomain: "dropwin-8d94b.firebaseapp.com",
+      projectId: "dropwin-8d94b",
+      storageBucket: "dropwin-8d94b.firebasestorage.app",
+      messagingSenderId: "988974289403",
+      appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+      measurementId: "G-BK010MHN8N"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let userId = null;
+    let isGuest = false;
+    let leftIndex = null;
+    let rightIndex = null;
+    let modalMode = null;
+    let modalSortAsc = true;
+    let modalItems = [];
+    let fastMode = false;
+    let currentMult = null;
+    let balanceUse = 0;
+    let battleCatalog = [];
+    let rightSelected = null;
+    let selectedLeftIndices = [];
+
+    function createParticles() {
+      const container = document.getElementById('particles');
+      if (!container) return;
+      for (let i = 0; i < 40; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.animationDuration = Math.random() * 15 + 10 + 's';
+        p.style.animationDelay = Math.random() * 5 + 's';
+        container.appendChild(p);
+      }
+    }
+
+    function updateBalance() {
+      document.getElementById('balance').textContent = currentUser ? (currentUser.balance || 0) : 0;
+      const btn = document.getElementById('authBtn');
+      btn.textContent = isGuest ? 'Гость' : (currentUser ? currentUser.username : 'Войти');
+      btn.onclick = () => location.href = 'profile.html';
+    }
+
+    async function saveUser() {
+      if (isGuest) {
+        let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+        const idx = users.findIndex(u => u.username === 'Гость');
+        if (idx !== -1) users[idx] = currentUser;
+        localStorage.setItem('dropwin_users', JSON.stringify(users));
+      } else if (userId) {
+        await updateDoc(doc(db, 'users', userId), {
+          balance: currentUser.balance || 0,
+          inventory: currentUser.inventory || []
+        });
+      }
+    }
+
+    function isBattleItem(item) {
+      return (item && typeof item.source === 'string') && item.source.includes('Баттл');
+    }
+
+    const cases = {
+      bomj: { price: 5, items: [
+        {emoji:'🧦',name:'Дырявый носок',value:1},
+        {emoji:'🍞',name:'Чёрствый хлеб',value:3},
+        {emoji:'🗑️',name:'Мусорный пакет',value:7},
+        {emoji:'🍺',name:'Тёплое пиво 0.5',value:12},
+        {emoji:'🪙',name:'Горстка мелочи',value:25},
+        {emoji:'🧥',name:'Старая куртка',value:50},
+        {emoji:'📱',name:'Сломанный Nokia',value:100},
+        {emoji:'💸',name:'Заначка под матрасом',value:180},
+      ]},
+      vibe: { price: 45, items: [
+        {emoji:'💖',name:'Сердце',value:15},
+        {emoji:'🌹',name:'Роза',value:25},
+        {emoji:'🚀',name:'Ракета',value:50},
+        {emoji:'💐',name:'Цветы',value:50},
+        {emoji:'💍',name:'Кольцо',value:100},
+        {emoji:'💎',name:'Алмаз',value:100},
+        {emoji:'🍭',name:'Лол-поп',value:325},
+        {emoji:'🐶',name:'Суп Дог',value:425},
+        {emoji:'🤡',name:'Шапка шута',value:500},
+        {emoji:'⭐',name:'Звезда',value:200},
+      ]},
+      dvornik:{ price:25, items:[
+        {emoji:'🧹',name:'Метла',value:5},
+        {emoji:'🪣',name:'Ведро',value:10},
+        {emoji:'🧼',name:'Мыло',value:15},
+        {emoji:'🪓',name:'Топор старый',value:35},
+        {emoji:'🧤',name:'Перчатки рабочие',value:50},
+        {emoji:'⛏️',name:'Лопата',value:80},
+        {emoji:'🛠️',name:'Набор инструментов',value:150},
+        {emoji:'🚲',name:'Велосипед б/у',value:400},
+      ]},
+      schoolboy:{ price:250, items:[
+        {emoji:'📚',name:'Учебник',value:80},
+        {emoji:'🎒',name:'Рюкзак',value:150},
+        {emoji:'📱',name:'Смартфон',value:400},
+        {emoji:'💻',name:'Ноутбук',value:700},
+        {emoji:'🎮',name:'PlayStation',value:1000},
+        {emoji:'🚗',name:'Машинка',value:1300},
+        {emoji:'🏠',name:'Квартира',value:4000},
+      ]},
+      event:{ price:500, items:[
+        {emoji:'🎉',name:'Конфетти',value:150},
+        {emoji:'🎁',name:'Подарок',value:300},
+        {emoji:'🎈',name:'Воздушный шар',value:400},
+        {emoji:'🍾',name:'Шампанское',value:600},
+        {emoji:'🎤',name:'Микрофон',value:900},
+        {emoji:'🎬',name:'Кино',value:1500},
+        {emoji:'✈️',name:'Путешествие',value:3000},
+      ]},
+      milioner:{ price:1000, items:[
+        {emoji:'💵',name:'Деньги',value:500},
+        {emoji:'🏦',name:'Банк',value:1000},
+        {emoji:'💰',name:'Мешок денег',value:2000},
+        {emoji:'📈',name:'График роста',value:3000},
+        {emoji:'🤑',name:'Миллионер',value:5000},
+        {emoji:'🚀',name:'Ракета',value:10000},
+        {emoji:'🏰',name:'Дворец',value:50000},
+      ]},
+    };
+
+    function buildBattleCatalog() {
+      const res = [];
+      Object.keys(cases).forEach(key => {
+        cases[key].items.forEach(it => {
+          res.push({ emoji: it.emoji, name: it.name, value: it.value, source: 'Баттл:'+key });
+        });
+      });
+      res.sort((a,b) => a.value - b.value);
+      battleCatalog = res;
+    }
+
+    function renderInventory() {
+      const container = document.getElementById('inventoryContainer');
+      const allInv = currentUser?.inventory || [];
+      const inventory = allInv;
+      if (inventory.length === 0) {
+        container.innerHTML = `
+          <div class="empty-inventory">
+            <div class="empty-icon">📦</div>
+            <h3>Нет предметов из баттлов</h3>
+            <p style="margin-top: 12px;">Сохраняйте предметы из баттлов.</p>
+          </div>
+        `;
+        return;
+      }
+      const wrapper = document.createElement('div');
+      const title = document.createElement('div');
+      title.className = 'section-title';
+      title.textContent = 'Мои предметы';
+      const grid = document.createElement('div');
+      grid.className = 'inventory-grid';
+      inventory.forEach((item, idx) => {
+        const actualIndex = allInv.indexOf(item);
+        const d = document.createElement('div');
+        const isActive = selectedLeftIndices.includes(actualIndex);
+        d.className = `inventory-item ${isActive ? 'active' : ''}`;
+        d.innerHTML = `
+          <div class="inv-emoji">${item.emoji || '❓'}</div>
+          <div class="inv-name">${item.name || ''}</div>
+          <div class="inv-value">${item.value || 0}₽</div>
+        `;
+        d.onclick = () => {
+          if (selectedLeftIndices.includes(actualIndex)) {
+            selectedLeftIndices = selectedLeftIndices.filter(i => i !== actualIndex);
+          } else {
+            if (selectedLeftIndices.length >= 4) {
+              alert('Максимум 4 предмета для улучшения');
+              return;
+            }
+            selectedLeftIndices = [...selectedLeftIndices, actualIndex];
+          }
+          applySelection();
+        };
+        grid.appendChild(d);
+      });
+      wrapper.appendChild(title);
+      wrapper.appendChild(grid);
+      container.innerHTML = '';
+      container.appendChild(wrapper);
+    }
+
+    function applySelection() {
+      const inv = currentUser?.inventory || [];
+      const selected = selectedLeftIndices.map(i => inv[i]).filter(Boolean);
+      const right = rightSelected;
+      const total = selected.reduce((sum, it) => sum + (it.value || 0), 0);
+      const first = selected[0] || null;
+      document.getElementById('leftEmoji').textContent = first ? (first.emoji || '❓') : '❓';
+      document.getElementById('leftName').textContent = selected.length > 0 ? `Выбрано ${selected.length}` : 'Не выбран';
+      document.getElementById('leftValue').textContent = `${total}₽`;
+      const list = document.getElementById('leftSelectedList');
+      if (list) {
+        list.innerHTML = '';
+        selected.forEach(it => {
+          const d = document.createElement('div');
+          d.className = 'selected-item';
+          d.innerHTML = `
+            <div class="selected-emoji">${it.emoji || '❓'}</div>
+            <div class="selected-value">${it.value || 0}₽</div>
+          `;
+          list.appendChild(d);
+        });
+      }
+      document.getElementById('rightEmoji').textContent = right ? (right.emoji || '❓') : '❓';
+      document.getElementById('rightName').textContent = right ? (right.name || 'Предмет') : 'Не выбран';
+      document.getElementById('rightValue').textContent = (right && right.value) ? `${right.value}₽` : '0₽';
+      const effectiveBase = total + balanceUse;
+      const valid = selected.length >= 1 && selected.length <= 4 && right && right.value > effectiveBase;
+      const chance = valid ? Math.max(1, Math.min(95, (effectiveBase / right.value) * 100)) : 0;
+      document.getElementById('chancePercent').textContent = `${chance.toFixed(2)}%`;
+      const circumference = 2 * Math.PI * 64;
+      const offset = circumference * (1 - Math.min(0.95, chance / 100));
+      document.getElementById('ringProgress').setAttribute('stroke-dasharray', `${circumference}`);
+      document.getElementById('ringProgress').setAttribute('stroke-dashoffset', `${offset}`);
+      const ringPtr = document.getElementById('ringPointer');
+      if (ringPtr) {
+        ringPtr.style.transition = 'none';
+        ringPtr.style.transform = 'rotate(0deg)';
+      }
+      updateUpgradeButtonState(valid);
+      renderInventory();
+      updateBalanceUseRange();
+    }
+
+    function updateUpgradeButtonState(valid) {
+      const btn = document.getElementById('upgradeBtn');
+      if (!btn) return;
+      btn.disabled = !valid;
+      btn.style.opacity = valid ? '1' : '0.6';
+      btn.textContent = valid ? 'Улучшить' : 'Выберите корректные предметы';
+    }
+
+    function showSelectModal(mode) {
+      modalMode = mode;
+      const inv = currentUser?.inventory || [];
+      const battleInv = inv.filter(isBattleItem);
+      let list = mode === 'right' ? battleCatalog.slice() : inv;
+      if (mode === 'right' && leftIndex != null) {
+        const base = inv[leftIndex];
+        const minVal = base.value + balanceUse;
+        list = list.filter(it => it.value > minVal);
+      }
+      modalItems = list.map(it => ({ ...it }));
+      renderModalItems();
+      document.getElementById('modalTitle').textContent = mode === 'left' ? 'Выберите базовый предмет' : 'Выберите целевой предмет (все скины баттлов)';
+      document.getElementById('selectModal').style.display = 'flex';
+    }
+
+    function renderModalItems() {
+      const grid = document.getElementById('modalItemsGrid');
+      const search = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+      let items = modalItems.slice();
+      if (search) {
+        items = items.filter(it => (it.name || '').toLowerCase().includes(search));
+      }
+      items.sort((a,b) => modalSortAsc ? a.value - b.value : b.value - a.value);
+      grid.innerHTML = '';
+      items.forEach(it => {
+        const d = document.createElement('div');
+        let active = false;
+        if (modalMode === 'left') {
+          const idx = (currentUser?.inventory || []).findIndex(x => x.emoji === it.emoji && x.name === it.name && x.value === it.value && isBattleItem(x));
+          active = selectedLeftIndices.includes(idx);
+        }
+        d.className = `inventory-item ${active ? 'active' : ''}`;
+        d.innerHTML = `
+          <div class="inv-emoji">${it.emoji || '❓'}</div>
+          <div class="inv-name">${it.name || ''}</div>
+          <div class="inv-value">${it.value || 0}₽</div>
+        `;
+        d.onclick = () => {
+          if (modalMode === 'left') {
+            const idx = (currentUser?.inventory || []).findIndex(x => x.emoji === it.emoji && x.name === it.name && x.value === it.value && isBattleItem(x));
+            if (idx >= 0) {
+              if (selectedLeftIndices.includes(idx)) {
+                selectedLeftIndices = selectedLeftIndices.filter(i => i !== idx);
+              } else {
+                if (selectedLeftIndices.length >= 4) {
+                  alert('Максимум 4 предмета для улучшения');
+                  return;
+                }
+                selectedLeftIndices = [...selectedLeftIndices, idx];
+              }
+            }
+            renderModalItems();
+            applySelection();
+          } else {
+            rightSelected = { emoji: it.emoji, name: it.name, value: it.value };
+            applySelection();
+            document.getElementById('selectModal').style.display = 'none';
+          }
+        };
+        grid.appendChild(d);
+      });
+    }
+
+    function updateBalanceUseRange() {
+      const range = document.getElementById('balanceUseRange');
+      const max = Math.floor(currentUser?.balance || 0);
+      range.max = String(max);
+      if (balanceUse > max) balanceUse = max;
+      range.value = String(balanceUse);
+      document.getElementById('balanceUseText').textContent = balanceUse;
+    }
+
+
+    function autoSelectTargetByMult() {
+      const inv = currentUser?.inventory || [];
+      const selected = selectedLeftIndices.map(i => inv[i]).filter(Boolean);
+      if (selected.length === 0 || !currentMult) return;
+      const total = selected.reduce((sum, it) => sum + (it.value || 0), 0);
+      const targetVal = (total + balanceUse) * currentMult;
+      let candidate = null;
+      for (let i = 0; i < battleCatalog.length; i++) {
+        if (battleCatalog[i].value >= targetVal) { candidate = battleCatalog[i]; break; }
+      }
+      if (!candidate) candidate = battleCatalog[battleCatalog.length - 1];
+      rightSelected = { emoji: candidate.emoji, name: candidate.name, value: candidate.value };
+      applySelection();
+    }
+
+    async function tryUpgrade() {
+      const inv = currentUser?.inventory || [];
+      if (selectedLeftIndices.length === 0 || !rightSelected) {
+        document.getElementById('upgradeResult').innerHTML = '<span style="color:#f87171">Выберите 1–4 предмета и цель</span>';
+        return;
+      }
+      const selected = selectedLeftIndices.map(i => inv[i]).filter(Boolean);
+      const target = rightSelected;
+      const total = selected.reduce((sum, it) => sum + (it.value || 0), 0);
+      const effectiveBase = total + balanceUse;
+      if (!(target.value > effectiveBase)) {
+        document.getElementById('upgradeResult').innerHTML = '<span style="color:#f87171">Целевой должен быть дороже базового</span>';
+        return;
+      }
+      const chance = Math.max(1, Math.min(95, (effectiveBase / target.value) * 100));
+      const proceed = true;
+      let success = false;
+      const arc = Math.max(1, Math.min(95, chance)) * 3.6;
+      const rollByAngle = (angleIn360) => angleIn360 <= arc;
+      const runAnimation = () => new Promise(resolve => {
+        if (fastMode) {
+          const ringPtr = document.getElementById('ringPointer');
+          if (ringPtr) {
+            const angleIn360 = Math.random() * 360;
+            ringPtr.style.transition = 'transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)';
+            ringPtr.style.transform = `rotate(${angleIn360}deg)`;
+            setTimeout(() => resolve(rollByAngle(angleIn360)), 800);
+            return;
+          }
+          resolve(rollByAngle(Math.random() * 360));
+          return;
+        }
+        const ringPtr = document.getElementById('ringPointer');
+        const baseSpins = 5 * 360;
+        const angleIn360 = Math.random() * 360;
+        const totalAngle = baseSpins + angleIn360;
+        if (ringPtr) {
+          ringPtr.style.transition = 'transform 2.8s cubic-bezier(0.11, 0.89, 0.32, 1.00)';
+          ringPtr.style.transform = `rotate(${totalAngle}deg)`;
+        }
+        setTimeout(() => resolve(rollByAngle(angleIn360)), 2800);
+      });
+      success = await runAnimation();
+      {
+        const modal = document.getElementById('upgradeResultModal');
+        const card = document.getElementById('upgradeResultCard');
+        const title = document.getElementById('upgradeResultTitle');
+        const text = document.getElementById('upgradeResultText');
+        if (modal && card && title && text) {
+          card.className = `result-card ${success ? 'success' : 'fail'}`;
+          title.className = `result-title ${success ? 'success' : 'fail'}`;
+          title.textContent = success ? 'Победа!' : 'Проигрыш';
+          text.textContent = success ? `Получено: ${target.value}₽` : 'Предмет потерян';
+          modal.style.display = 'flex';
+        }
+      }
+      await runTransaction(db, async (tx) => {
+        const userRef = doc(db, 'users', userId);
+        const snap = await tx.get(userRef);
+        if (!snap.exists()) throw new Error('user not found');
+        const data = snap.data();
+        const curInv = Array.isArray(data.inventory) ? data.inventory.slice() : [];
+        const toRemove = selected.map(s => ({ emoji: s.emoji, name: s.name, value: s.value }));
+        toRemove.forEach(s => {
+          const idx = curInv.findIndex(it => it && it.emoji === s.emoji && it.name === s.name && it.value === s.value);
+          if (idx !== -1) curInv.splice(idx, 1);
+        });
+        if (success) {
+          curInv.push({
+            id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(16).slice(2)),
+            emoji: target.emoji,
+            name: target.name,
+            value: target.value,
+            source: 'Апгрейд',
+            timestamp: Date.now()
+          });
+        }
+        const newBalance = Math.max(0, ((data.balance || 0) - balanceUse));
+        tx.update(userRef, { inventory: curInv, balance: newBalance });
+        currentUser.inventory = curInv;
+        currentUser.balance = newBalance;
+      });
+      updateBalance();
+      selectedLeftIndices = [];
+      balanceUse = 0;
+      applySelection();
+      updateBalance();
+      document.getElementById('upgradeResult').innerHTML = success
+        ? `<span style="color:#34d399">Успех! Получено: ${target.value}₽</span>`
+        : `<span style="color:#f87171">Неудача. Предмет потерян.</span>`;
+    }
+
+    function bindSelectors() {
+      document.getElementById('selectLeft')?.addEventListener('click', () => showSelectModal('left'));
+      document.getElementById('selectRight')?.addEventListener('click', () => showSelectModal('right'));
+      document.getElementById('upgradeBtn')?.addEventListener('click', tryUpgrade);
+      document.getElementById('sortPriceBtn')?.addEventListener('click', () => {
+        modalSortAsc = !modalSortAsc;
+        document.getElementById('sortPriceBtn').textContent = modalSortAsc ? 'Цена ↑' : 'Цена ↓';
+        renderModalItems();
+      });
+      document.getElementById('searchInput')?.addEventListener('input', renderModalItems);
+      document.getElementById('closeModalBtn')?.addEventListener('click', () => {
+        document.getElementById('selectModal').style.display = 'none';
+      });
+      document.getElementById('fastMode')?.addEventListener('change', e => {
+        fastMode = !!e.target.checked;
+      });
+      document.querySelectorAll('.mult-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.mult-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentMult = parseFloat(btn.dataset.mult);
+          autoSelectTargetByMult();
+        });
+      });
+      document.getElementById('balanceUseRange')?.addEventListener('input', e => {
+        balanceUse = Math.floor(parseFloat(e.target.value || '0'));
+        document.getElementById('balanceUseText').textContent = balanceUse;
+        applySelection();
+      });
+    }
+    window.closeUpgradeResult = function() {
+      const modal = document.getElementById('upgradeResultModal');
+      if (modal) modal.style.display = 'none';
+    };
+
+    function loadCurrentUser() {
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          userId = user.uid;
+          const snap = await getDoc(doc(db, 'users', user.uid));
+          if (snap.exists()) {
+            currentUser = snap.data();
+            if (!Array.isArray(currentUser.inventory)) currentUser.inventory = [];
+            isGuest = false;
+            updateBalance();
+            buildBattleCatalog();
+            renderInventory();
+            applySelection();
+          }
+        } else {
+          const username = localStorage.getItem('dropwin_current_username');
+          if (username === 'Гость') {
+            const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+            currentUser = users.find(u => u.username === 'Гость') || { username: 'Гость', balance: 0, inventory: [] };
+            isGuest = true;
+            updateBalance();
+            buildBattleCatalog();
+            renderInventory();
+            applySelection();
+          } else {
+            location.href = 'register.html';
+          }
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      createParticles();
+      loadCurrentUser();
+      bindSelectors();
+    });
+  </script>
+</body>
+</html>

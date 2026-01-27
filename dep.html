@@ -28,6 +28,194 @@
       text-align: center;
     }
 
+    /* Окно подтверждения */
+    #confirmModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    #confirmModal.show {
+      display: flex;
+    }
+    .confirm-box {
+      background: linear-gradient(145deg, #1e1b4b, #312e81);
+      border-radius: 24px;
+      padding: 32px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      border: 2px solid #4f46e5;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    }
+    .confirm-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+    .confirm-amount {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #34d399;
+      margin: 20px 0;
+    }
+    .confirm-details {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 20px 0;
+      text-align: left;
+      color: #d1d5db;
+      font-size: 0.95rem;
+    }
+    .confirm-details div {
+      margin: 8px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+    .confirm-details span:last-child {
+      color: #fff;
+      font-weight: 600;
+    }
+    .confirm-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .confirm-btn {
+      flex: 1;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+    }
+    .confirm-btn.cancel {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border: 2px solid #ef4444;
+    }
+    .confirm-btn.cancel:hover {
+      background: rgba(239, 68, 68, 0.4);
+    }
+    .confirm-btn.confirm {
+      background: linear-gradient(135deg, #34d399, #10b981);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(52, 211, 153, 0.4);
+    }
+    .confirm-btn.confirm:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(52, 211, 153, 0.5);
+    }
+
+    /* Окно оплаты */
+    #paymentModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    #paymentModal.show {
+      display: flex;
+    }
+    .payment-box {
+      background: linear-gradient(145deg, #1e1b4b, #312e81);
+      border-radius: 24px;
+      padding: 32px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      border: 2px solid #4f46e5;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    }
+    .payment-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+    .payment-amount {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #fbbf24;
+      margin: 16px 0;
+    }
+    .payment-id {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 12px;
+      border-radius: 10px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      color: #a78bfa;
+      margin: 16px 0;
+    }
+    .payment-link {
+      display: block;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      padding: 16px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin: 20px 0;
+      transition: all 0.3s;
+    }
+    .payment-link:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+    }
+    .payment-timer {
+      color: #9ca3af;
+      font-size: 0.9rem;
+      margin-top: 12px;
+    }
+    .payment-close {
+      background: transparent;
+      border: 2px solid #6b7280;
+      color: #9ca3af;
+      padding: 12px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 16px;
+      transition: all 0.3s;
+    }
+    .payment-close:hover {
+      border-color: #fff;
+      color: #fff;
+    }
+    .payment-status {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+    }
+    .payment-status.pending {
+      background: rgba(251, 191, 36, 0.2);
+      color: #fbbf24;
+    }
+    .payment-status.processing {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+    }
+
     #promoFloat {
       position: fixed;
       top: 80px;
@@ -92,6 +280,41 @@
 <body>
 <div class="particles" id="particles"></div>
 
+<!-- Окно подтверждения -->
+<div id="confirmModal">
+  <div class="confirm-box">
+    <div class="confirm-title">📋 Подтверждение оплаты</div>
+    <div class="confirm-amount" id="confirmAmount">0 ₽</div>
+    <div class="confirm-details">
+      <div><span>Сумма:</span><span id="detailAmount">0 ₽</span></div>
+      <div><span>Бонус:</span><span id="detailBonus">+0 ₽</span></div>
+      <div><span>Итого:</span><span id="detailTotal" style="color:#34d399;">0 ₽</span></div>
+      <div><span>Метод:</span><span>Telegram Бот</span></div>
+    </div>
+    <div class="confirm-buttons">
+      <button class="confirm-btn cancel" onclick="closeConfirmModal()">Отмена</button>
+      <button class="confirm-btn confirm" onclick="submitPayment()">Подтвердить →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Окно оплаты -->
+<div id="paymentModal">
+  <div class="payment-box">
+    <div class="payment-title">💳 Оплата через Telegram</div>
+    <div class="payment-amount" id="paymentAmount">0 ₽</div>
+    <div class="payment-id">ID: <span id="paymentId">---</span></div>
+    <div class="payment-status pending" id="paymentStatus">
+      ⏳ Ожидает оплаты... Бот свяжется с вами в Telegram
+    </div>
+    <a href="#" class="payment-link" id="paymentLink" target="_blank">
+      📱 Открыть Telegram Бот
+    </a>
+    <div class="payment-timer">Создано: <span id="paymentTime">--:--</span></div>
+    <button class="payment-close" onclick="closePaymentModal()">Закрыть</button>
+  </div>
+</div>
+
 <div id="promoFloat">
   <strong>Секретный промокод на +20%!</strong><br>
   Сейчас часто выпадает <b id="randomPromoCode">DEP-X7K9P2</b><br>
@@ -117,9 +340,9 @@
       Чем больше пополнение — тем больше бонус!
     </div>
 
-    <div id="method-rub" class="method-card active">
-      <h3>🇷🇺 Рубли (карта • СБП • ЮMoney)</h3>
-      <p>Мгновенно • без комиссии</p>
+    <div id="method-tg" class="method-card active">
+      <h3>📱 Telegram Бот</h3>
+      <p>Карта • СБП • ЮMoney • Крипта</p>
     </div>
 
     <div style="margin: 24px 0; position: relative;">
@@ -138,7 +361,7 @@
 
     <button class="btn" onclick="activatePromoOnDep()" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">Применить промокод</button>
 
-    <button class="btn" onclick="processDeposit()" style="margin-top: 16px;">Пополнить</button>
+    <button class="btn" onclick="showConfirmModal()" style="margin-top: 16px; background: linear-gradient(135deg, #34d399, #10b981);">💳 Перейти к оплате</button>
 
     <div id="depStatus"></div>
   </div>
@@ -153,7 +376,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
@@ -172,6 +395,7 @@
   let currentUser = null;
   let userId = null;
   let activePromoCode = null;
+  let pendingPayment = null;
 
   function createParticles() {
     const container = document.getElementById('particles');
@@ -187,22 +411,41 @@
   }
 
   function showRandomPromo() {
-    const codes = ["DEP-X7K9P2", "DEP-L4M8Q1", "DEP-R9T2V5", "DEP-B3N6Z8", "DEP-K1P4W7"];
-    const code = codes[Math.floor(Math.random() * codes.length)];
-    document.getElementById('randomPromoCode').textContent = code;
     const float = document.getElementById('promoFloat');
-    float.style.display = 'block';
-    setTimeout(() => {
-      float.classList.add('fade-out');
-      setTimeout(() => float.style.display = 'none', 1200);
-    }, 20000);
+    if (float) float.style.display = 'none';
   }
 
   window.copyPromoCode = function() {
-    const code = document.getElementById('randomPromoCode').textContent;
+    const el = document.getElementById('randomPromoCode');
+    if (!el) return;
+    const code = el.textContent;
     navigator.clipboard.writeText(code).then(() => {
       alert('Промокод скопирован!');
     });
+  };
+
+  window.checkAndShowDailyPromo = function() {
+    try {
+      const float = document.getElementById('promoFloat');
+      const codeEl = document.getElementById('randomPromoCode');
+      if (!float || !codeEl) return;
+      const code = currentUser?.activePromoCode;
+      const type = currentUser?.activePromoType;
+      const used = currentUser?.activePromoUsed;
+      if (code && type && type.startsWith('dep') && !used) {
+        codeEl.textContent = code;
+        float.style.display = 'block';
+        float.classList.remove('fade-out');
+        setTimeout(() => {
+          float.classList.add('fade-out');
+          setTimeout(() => float.style.display = 'none', 1000);
+        }, 20000);
+      } else {
+        float.style.display = 'none';
+      }
+    } catch (e) {
+      console.error('Ошибка показа промо:', e);
+    }
   };
 
   window.activatePromoOnDep = async function() {
@@ -214,8 +457,8 @@
 
     let calculatedBonus = 0;
 
-    // Проверяем промокод из ежедневного кейса
-    if (currentUser?.activePromoCode === code) {
+    // Проверяем единоразовый промокод пользователя
+    if (currentUser?.activePromoCode === code && !currentUser?.activePromoUsed) {
       const promoType = currentUser.activePromoType;
       const promoValue = currentUser.activePromoValue;
 
@@ -238,10 +481,19 @@
       };
 
       document.getElementById('totalWithBonus').textContent = `= ${amount + calculatedBonus}₽`;
+
+      try {
+        await updateDoc(doc(db, 'users', userId), { activePromoUsed: true });
+        currentUser.activePromoUsed = true;
+        const float = document.getElementById('promoFloat');
+        if (float) float.style.display = 'none';
+      } catch (e) {
+        console.error('Не удалось отметить промокод использованным:', e);
+      }
     }
-    // Проверяем стандартные промокоды
-    else if (code.startsWith('DEP-') || code.startsWith('DROPWIN-')) {
-      calculatedBonus = Math.round(amount * 0.20);
+    // Проверяем стандартные промокоды формата DROPWIN-
+    else if (code.startsWith('DROPWIN-')) {
+      calculatedBonus = Math.round(amount * 0.20); // базовый пример
 
       activePromoCode = {
         code: code,
@@ -257,133 +509,196 @@
     }
   };
 
-  window.processDeposit = async function() {
-    const amountInput = document.getElementById('depAmount');
-    const amount = Number(amountInput.value);
+  // Показать окно подтверждения
+  window.showConfirmModal = function() {
+    const amount = Number(document.getElementById('depAmount').value);
     if (!amount || amount < 50) return alert('Минимальная сумма — 50 ₽');
 
-    const status = document.getElementById('depStatus');
-    const loading = document.getElementById('loadingLine');
+    let bonus = calculateBonus(amount);
+    let total = amount + bonus;
 
-    status.innerHTML = '<div style="color:#fbbf24;">Обработка...</div>';
-    loading.style.width = '0%';
-    setTimeout(() => loading.style.width = '100%', 50);
+    document.getElementById('confirmAmount').textContent = `${total} ₽`;
+    document.getElementById('detailAmount').textContent = `${amount} ₽`;
+    document.getElementById('detailBonus').textContent = bonus > 0 ? `+${bonus} ₽` : '0 ₽';
+    document.getElementById('detailTotal').textContent = `${total} ₽`;
 
-    await new Promise(r => setTimeout(r, 1600));
+    document.getElementById('confirmModal').classList.add('show');
+  };
 
-    let bonus = 0;
-    let bonusSource = '';
+  // Закрыть окно подтверждения
+  window.closeConfirmModal = function() {
+    document.getElementById('confirmModal').classList.remove('show');
+  };
 
-    // Применяем бонус от промокода (если есть)
+  // Рассчитать бонус
+  function calculateBonus(amount) {
     if (activePromoCode) {
       const promoType = activePromoCode.type;
       const promoValue = activePromoCode.value;
 
-      if (promoType === 'dep20') {
-        bonus = Math.round(amount * 0.20);
-        bonusSource = '+20%';
-      } else if (promoType === 'dep25') {
-        bonus = Math.round(amount * 0.25);
-        bonusSource = '+25%';
-      } else if (promoType === 'dep30') {
-        bonus = Math.round(amount * 0.30);
-        bonusSource = '+30%';
-      } else if (promoType && promoType.startsWith('bonus')) {
-        bonus = promoValue;
-        bonusSource = 'фиксированный';
-      }
-
-      // Очищаем использованный промокод из Firebase
-      if (currentUser?.activePromoCode === activePromoCode.code) {
-        await updateDoc(doc(db, 'users', userId), {
-          activePromoCode: null,
-          activePromoType: null,
-          activePromoValue: null
-        });
-        currentUser.activePromoCode = null;
-        currentUser.activePromoType = null;
-        currentUser.activePromoValue = null;
-      }
-
-      activePromoCode = null;
+      if (promoType === 'dep20') return Math.round(amount * 0.20);
+      if (promoType === 'dep25') return Math.round(amount * 0.25);
+      if (promoType === 'dep30') return Math.round(amount * 0.30);
+      if (promoType && promoType.startsWith('bonus')) return promoValue;
     }
-    // Случайный бонус в рублях в зависимости от суммы депозита
-    else if (amount >= 1000) {
-      bonus = Math.floor(Math.random() * 100) + 1; // 1-100₽
-      bonusSource = 'случайный';
-    } else if (amount >= 500) {
-      bonus = Math.floor(Math.random() * 50) + 1; // 1-50₽
-      bonusSource = 'случайный';
-    } else if (amount >= 250) {
-      bonus = Math.floor(Math.random() * 30) + 1; // 1-30₽
-      bonusSource = 'случайный';
-    } else if (amount >= 100) {
-      bonus = Math.floor(Math.random() * 15) + 1; // 1-15₽
-      bonusSource = 'случайный';
-    }
+    return 0;
+  }
 
+  // Создать заявку на оплату
+  window.submitPayment = async function() {
+    const amount = Number(document.getElementById('depAmount').value);
+    const bonus = calculateBonus(amount);
     const total = amount + bonus;
 
-    // Генерируем новый промокод на бонус в рублях
+    closeConfirmModal();
+
+    const status = document.getElementById('depStatus');
+    status.innerHTML = '<div style="color:#fbbf24;">Создание заявки...</div>';
+
+    // Генерируем ID заявки
+    const paymentId = 'PAY' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase();
+
+    // Сохраняем заявку в Firestore
+    const paymentData = {
+      paymentId: paymentId,
+      userId: userId,
+      username: currentUser?.username || currentUser?.email || 'Unknown',
+      amount: amount,
+      bonus: bonus,
+      total: total,
+      status: 'pending', // pending, processing, completed, cancelled
+      method: 'telegram_bot',
+      promoCode: activePromoCode?.code || null,
+      promoType: activePromoCode?.type || null,
+      promoValue: activePromoCode?.value || null,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+
+    try {
+      await setDoc(doc(db, 'payments', paymentId), paymentData);
+
+      // Показываем окно оплаты
+      document.getElementById('paymentAmount').textContent = `${total} ₽`;
+      document.getElementById('paymentId').textContent = paymentId;
+      document.getElementById('paymentTime').textContent = new Date().toLocaleTimeString('ru-RU');
+
+      // Ссылка на бота
+      const tgLink = `https://t.me/DropWins_Bot?start=${paymentId}`;
+      document.getElementById('paymentLink').href = tgLink;
+
+      document.getElementById('paymentModal').classList.add('show');
+
+      status.innerHTML = '';
+
+      // Сохраняем pending payment для отслеживания
+      pendingPayment = {
+        paymentId: paymentId,
+        amount: total,
+        bonus: bonus
+      };
+
+      // Начинаем проверку статуса
+      checkPaymentStatus(paymentId);
+
+    } catch (error) {
+      console.error('Ошибка создания заявки:', error);
+      status.innerHTML = '<div style="color:#ef4444;">Ошибка создания заявки. Попробуйте снова.</div>';
+    }
+  };
+
+  // Проверка статуса оплаты
+  async function checkPaymentStatus(paymentId) {
+    const checkInterval = setInterval(async () => {
+      if (!pendingPayment || pendingPayment.paymentId !== paymentId) {
+        clearInterval(checkInterval);
+        return;
+      }
+
+      try {
+        const docSnap = await getDoc(doc(db, 'payments', paymentId));
+        if (docSnap.exists()) {
+          const payment = docSnap.data();
+
+          if (payment.status === 'completed') {
+            clearInterval(checkInterval);
+            await processCompletedPayment(payment);
+          } else if (payment.status === 'cancelled') {
+            clearInterval(checkInterval);
+            closePaymentModal();
+            alert('Заявка отменена');
+            pendingPayment = null;
+          }
+        }
+      } catch (error) {
+        console.error('Ошибка проверки статуса:', error);
+      }
+    }, 3000); // Проверка каждые 3 секунды
+
+    // Останавливаем проверку через 30 минут
+    setTimeout(() => {
+      clearInterval(checkInterval);
+    }, 30 * 60 * 1000);
+  }
+
+  // Обработка успешной оплаты
+  async function processCompletedPayment(payment) {
+    closePaymentModal();
+
+    const amount = payment.amount;
+    const bonus = payment.bonus;
+    const total = payment.total;
+
+    // Генерируем новый промокод
     let newPromoCode = null;
     let newPromoBonus = 0;
 
-    if (amount >= 1000) {
-      newPromoBonus = Math.floor(Math.random() * 100) + 1; // 1-100₽
-    } else if (amount >= 500) {
-      newPromoBonus = Math.floor(Math.random() * 50) + 1; // 1-50₽
-    } else if (amount >= 250) {
-      newPromoBonus = Math.floor(Math.random() * 30) + 1; // 1-30₽
-    } else if (amount >= 100) {
-      newPromoBonus = Math.floor(Math.random() * 15) + 1; // 1-15₽
-    }
+    if (amount >= 1000) newPromoBonus = Math.floor(Math.random() * 100) + 1;
+    else if (amount >= 500) newPromoBonus = Math.floor(Math.random() * 50) + 1;
+    else if (amount >= 250) newPromoBonus = Math.floor(Math.random() * 30) + 1;
+    else if (amount >= 100) newPromoBonus = Math.floor(Math.random() * 15) + 1;
 
     if (newPromoBonus > 0) {
       const randomPart = Math.random().toString(36).substring(2, 9).toUpperCase();
       newPromoCode = `BONUS-${randomPart}`;
     }
 
-    // ─── Запись депозита в историю ───
+    // Записываем в историю
     if (!currentUser.cryptoTransactions) currentUser.cryptoTransactions = [];
     currentUser.cryptoTransactions.push({
       type: 'deposit',
       amount: total,
       originalAmount: amount,
       bonus: bonus > 0 ? bonus : undefined,
-      promoCode: activePromoCode?.code || null,
-      method: 'RUB (карта/СБП/ЮMoney)',
+      promoCode: payment.promoCode || null,
+      method: 'Telegram Bot',
+      paymentId: payment.paymentId,
       timestamp: Date.now()
     });
 
-    // Сохраняем в Firebase
-    if (db && userId && currentUser) {
-      currentUser.balance = (currentUser.balance || 0) + total;
+    // Обновляем баланс
+    currentUser.balance = (currentUser.balance || 0) + total;
 
-      const updateData = {
-        balance: currentUser.balance,
-        cryptoTransactions: currentUser.cryptoTransactions
-      };
+    const updateData = {
+      balance: currentUser.balance,
+      cryptoTransactions: currentUser.cryptoTransactions,
+      lastDepositAt: Date.now(),
+      lastDepositAmount: amount,
+      gamesPlayedAtLastDeposit: currentUser.gamesPlayed || 0,
+      totalBetAtLastDeposit: currentUser.totalBet || 0
+    };
 
-      // Если есть новый промокод, сохраняем его
-      if (newPromoCode) {
-        updateData.activePromoCode = newPromoCode;
-        updateData.activePromoType = `bonus${newPromoBonus}`;
-        updateData.activePromoValue = newPromoBonus;
-        currentUser.activePromoCode = newPromoCode;
-        currentUser.activePromoType = `bonus${newPromoBonus}`;
-        currentUser.activePromoValue = newPromoBonus;
-      }
-
-      await updateDoc(doc(db, 'users', userId), updateData);
-      document.getElementById('balance').textContent = currentUser.balance;
+    if (newPromoCode) {
+      updateData.activePromoCode = newPromoCode;
+      updateData.activePromoType = `bonus${newPromoBonus}`;
+      updateData.activePromoValue = newPromoBonus;
     }
 
-    // Сбрасываем форму
-    document.getElementById('totalWithBonus').textContent = '';
-    document.getElementById('depPromoCode').value = '';
+    await updateDoc(doc(db, 'users', userId), updateData);
+    document.getElementById('balance').textContent = currentUser.balance;
 
-    loading.style.width = '0%';
-
+    // Показываем результат
+    const status = document.getElementById('depStatus');
     let promoMessage = '';
     if (newPromoCode) {
       promoMessage = `
@@ -395,7 +710,6 @@
             ${newPromoCode}
           </div>
           <div style="color:#fbbf24; font-size: 0.95rem;">Активируйте в профиле: +${newPromoBonus}₽</div>
-          <div style="color:#9ca3af; font-size: 0.85rem; margin-top: 4px;">👆 Нажмите на промокод чтобы скопировать</div>
         </div>
       `;
     }
@@ -404,21 +718,26 @@
       <div style="color:#34d399; font-weight:700; font-size:1.4rem;">
         ✅ Успешно зачислено +${total} ₽
       </div>
-      ${bonus ? `<div style="color:#fbbf24; margin-top:8px;">Бонус от промокода: +${bonus}₽${bonusSource === 'случайный' ? ' (сюрприз!)' : bonusSource !== 'фиксированный' ? ' (' + bonusSource + ')' : ''}</div>` : ''}
+      ${bonus ? `<div style="color:#fbbf24; margin-top:8px;">Бонус: +${bonus}₽</div>` : ''}
       ${promoMessage}
     `;
     status.classList.add('success');
 
-    // Не скрываем сообщение автоматически если есть промокод
-    if (!newPromoCode) {
+    setTimeout(() => {
+      status.classList.add('fade-out');
       setTimeout(() => {
-        status.classList.add('fade-out');
-        setTimeout(() => {
-          status.innerHTML = '';
-          status.classList.remove('success', 'fade-out');
-        }, 1200);
-      }, 4000);
-    }
+        status.innerHTML = '';
+        status.classList.remove('success', 'fade-out');
+      }, 1200);
+    }, 6000);
+
+    pendingPayment = null;
+  }
+
+  // Закрыть окно оплаты
+  window.closePaymentModal = function() {
+    document.getElementById('paymentModal').classList.remove('show');
+    pendingPayment = null;
   };
 
   onAuthStateChanged(auth, async (user) => {
@@ -429,6 +748,7 @@
         if (snap.exists()) {
           currentUser = snap.data();
           document.getElementById('balance').textContent = currentUser.balance || 0;
+          checkAndShowDailyPromo();
         }
       } catch (e) {
         console.error("Ошибка загрузки профиля:", e);
@@ -440,8 +760,9 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     createParticles();
-    showRandomPromo();
+    setTimeout(() => { checkAndShowDailyPromo(); }, 500);
   });
 </script>
 </body>
 </html>
+

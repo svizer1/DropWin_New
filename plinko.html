@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Plinko | DropWin</title>
+  <link rel="stylesheet" href="../style.css">
+
+  <style>
+    .plinko-board {
+      width: 100%;
+      height: 500px;
+      background: linear-gradient(180deg, #1a1f35 0%, #0d1117 100%);
+      border-radius: 24px;
+      position: relative;
+      overflow: hidden;
+      margin: 24px 0;
+      border: 2px solid rgba(99,102,241,0.3);
+      box-shadow: 0 15px 50px rgba(0,0,0,0.7), inset 0 0 30px rgba(99,102,241,0.1);
+    }
+
+    .pins {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .pin {
+      position: absolute;
+      width: 9px;
+      height: 9px;
+      background: radial-gradient(circle, #e2e8f0 0%, #94a3b8 100%);
+      border-radius: 50%;
+      box-shadow: 0 0 12px rgba(148,163,184,0.5), 0 2px 4px rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .ball {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: radial-gradient(circle at 30% 30%, #fde047, #facc15, #eab308);
+      border-radius: 50%;
+      border: 2px solid #ca8a04;
+      box-shadow:
+        0 0 20px rgba(250,204,21,0.8),
+        0 4px 8px rgba(0,0,0,0.4),
+        inset -2px -2px 4px rgba(0,0,0,0.2),
+        inset 2px 2px 4px rgba(255,255,255,0.3);
+      transform: translate(-50%, -50%);
+      z-index: 20;
+      transition: none;
+    }
+
+    .bucket {
+      position: absolute;
+      bottom: 0;
+      height: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: white;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.9);
+      border-radius: 8px 8px 0 0;
+      transition: all 0.3s;
+      backdrop-filter: blur(8px);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.2),
+        inset 0 -1px 0 rgba(0,0,0,0.3),
+        0 -2px 10px rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-bottom: none;
+    }
+
+    .bucket:hover {
+      transform: translateY(-3px);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.3),
+        inset 0 -1px 0 rgba(0,0,0,0.3),
+        0 -4px 15px rgba(0,0,0,0.4);
+    }
+
+    .bucket-multiplier {
+      font-size: 1rem;
+      font-weight: 900;
+      margin-bottom: 2px;
+      letter-spacing: 0.3px;
+      filter: drop-shadow(0 0 8px rgba(0,0,0,0.5));
+    }
+
+    .bucket-label {
+      font-size: 0.5rem;
+      opacity: 0.95;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+    }
+
+    /* 11 бакетов - большие множители по краям */
+    .bucket.b0 {
+      background: linear-gradient(180deg, #7c3aed 0%, #6d28d9 100%);
+      width: 8.5%;
+      left: 0.5%;
+    }
+    .bucket.b1 {
+      background: linear-gradient(180deg, #15803d 0%, #16a34a 100%);
+      width: 8.5%;
+      left: 9.5%;
+    }
+    .bucket.b2 {
+      background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
+      width: 8.5%;
+      left: 18.5%;
+    }
+    .bucket.b3 {
+      background: linear-gradient(180deg, #a16207 0%, #ca8a04 100%);
+      width: 8.5%;
+      left: 27.5%;
+    }
+    .bucket.b4 {
+      background: linear-gradient(180deg, #9a3412 0%, #c2410c 100%);
+      width: 8.5%;
+      left: 36.5%;
+    }
+    .bucket.b5 {
+      background: linear-gradient(180deg, #7f1d1d 0%, #991b1b 100%);
+      width: 8.5%;
+      left: 45.5%;
+    }
+    .bucket.b6 {
+      background: linear-gradient(180deg, #9a3412 0%, #c2410c 100%);
+      width: 8.5%;
+      left: 54.5%;
+    }
+    .bucket.b7 {
+      background: linear-gradient(180deg, #a16207 0%, #ca8a04 100%);
+      width: 8.5%;
+      left: 63.5%;
+    }
+    .bucket.b8 {
+      background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
+      width: 8.5%;
+      left: 72.5%;
+    }
+    .bucket.b9 {
+      background: linear-gradient(180deg, #15803d 0%, #16a34a 100%);
+      width: 8.5%;
+      left: 81.5%;
+    }
+    .bucket.b10 {
+      background: linear-gradient(180deg, #7c3aed 0%, #6d28d9 100%);
+      width: 8.5%;
+      left: 90.5%;
+    }
+
+    .bucket.active {
+      animation: bucketGlow 0.6s ease-out;
+    }
+
+    @keyframes bucketGlow {
+      0%, 100% { transform: translateY(0); box-shadow: none; }
+      50% { transform: translateY(-8px); box-shadow: 0 12px 30px rgba(251,191,36,0.6); }
+    }
+
+    .ball-trail {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: radial-gradient(circle, rgba(250,204,21,0.5), transparent);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: trailFade 0.4s ease-out forwards;
+      z-index: 15;
+    }
+
+    @keyframes trailFade {
+      to { opacity: 0; transform: scale(0.3); }
+    }
+
+    .info-text {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-bottom: 12px;
+      padding: 10px;
+      background: rgba(30,41,59,0.4);
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<div class="header">
+  <div class="logo">💎 DROPWIN</div>
+  <div class="balance-container">
+    <div class="balance">💰 <span id="balance">0</span>₽</div>
+    <button class="auth-btn" id="authBtn">Аккаунт</button>
+    <button class="auth-btn" onclick="window.open('https://t.me/DropWinHelp_bot','_blank')">Поддержка</button>
+  </div>
+</div>
+
+<div class="content">
+  <button class="back-btn" onclick="location.href='../index.html'">← Назад</button>
+
+  <div class="game-card">
+    <div class="game-title">🎯 Plinko</div>
+
+    <div class="info-text">
+      Множитель умножает вашу ставку. Можно бросать несколько шариков одновременно!
+    </div>
+
+    <div class="plinko-board" id="plinkoBoard"></div>
+
+    <div class="input-group">
+      <label class="input-label">Ставка</label>
+      <input type="number" id="bet" value="50" min="10" step="10">
+    </div>
+
+    <div class="input-group">
+      <label class="input-label">Количество шариков (1-5)</label>
+      <input type="number" id="ballCount" value="1" min="1" max="5" step="1">
+    </div>
+
+    <button class="btn" id="dropBtn">Бросить шарик</button>
+
+    <div class="result" id="result">Сделайте ставку и бросайте!</div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn" onclick="location.href='../index.html'"><span>🏠</span><span class="nav-label">Главная</span></button>
+  <button class="nav-btn" onclick="location.href='../profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
+  <button class="nav-btn" onclick="location.href='../register.html'"><span>🔐</span><span class="nav-label">Вход</span></button>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+    authDomain: "dropwin-8d94b.firebaseapp.com",
+    projectId: "dropwin-8d94b",
+    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    messagingSenderId: "988974289403",
+    appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+    measurementId: "G-BK010MHN8N"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let currentUser = null;
+  let isGuest = false;
+  let userId = null;
+
+  // ─── Particles ──────────────────────────────────────────────────────────────
+  function createParticles() {
+    const container = document.getElementById('particles');
+    if (!container) return;
+    for (let i = 0; i < 60; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.width = p.style.height = (Math.random()*4 + 1.5)+'px';
+      p.style.left = Math.random()*100 + '%';
+      p.style.animationDuration  = (Math.random()*25 + 15)+'s';
+      p.style.animationDelay     = Math.random()*10 + 's';
+      container.appendChild(p);
+    }
+  }
+
+  // ─── User loading ───────────────────────────────────────────────────────────
+  function loadCurrentUser() {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        userId = user.uid;
+        isGuest = false;
+        getDoc(doc(db, 'users', user.uid)).then(docSnap => {
+          if (docSnap.exists()) {
+            currentUser = docSnap.data();
+            renderUser();
+          } else {
+            goToLogin();
+          }
+        }).catch(err => console.error("Firestore load error:", err));
+      } else {
+        const username = localStorage.getItem('dropwin_current_username');
+        if (username === 'Гость') {
+          isGuest = true;
+          const users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+          currentUser = users.find(u => u.username === 'Гость');
+          if (currentUser) {
+            renderUser();
+          } else {
+            goToLogin();
+          }
+        } else {
+          goToLogin();
+        }
+      }
+    });
+  }
+
+  function renderUser() {
+    document.getElementById('balance').textContent = Math.floor(currentUser.balance || 0);
+    const btn = document.getElementById('authBtn');
+    btn.textContent = isGuest ? 'Гость' : (currentUser.username || 'Игрок');
+    btn.onclick = () => location.href = '../profile.html';
+  }
+
+  function goToLogin() {
+    alert('Пожалуйста, войдите в аккаунт');
+    location.href = '../register.html';
+  }
+
+  function saveUser(updates = {}) {
+    if (!currentUser) return;
+    Object.assign(currentUser, updates);
+
+    if (isGuest) {
+      let users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+      const idx = users.findIndex(u => u.username === 'Гость');
+      if (idx !== -1) {
+        users[idx] = { ...currentUser };
+      }
+      localStorage.setItem('dropwin_users', JSON.stringify(users));
+    } else if (userId) {
+      updateDoc(doc(db, 'users', userId), updates)
+        .catch(err => console.error("Firestore save error:", err));
+    }
+  }
+
+  function addToHistory(game, change) {
+    const entry = {
+      game,
+      time: new Date().toLocaleString('ru-RU'),
+      win: change,
+      result: change > 0 ? 'win' : (change < 0 ? 'loss' : 'draw')
+    };
+    currentUser.history = currentUser.history || [];
+    currentUser.history.unshift(entry);
+    if (currentUser.history.length > 30) currentUser.history = currentUser.history.slice(0, 30);
+    saveUser({ history: currentUser.history });
+  }
+
+  // ─── Plinko logic ───────────────────────────────────────────────────────────
+  let activeDrops = 0;
+  const maxActiveDrops = 5;
+
+  // Физика Plinko
+  function dropBall() {
+    if (!currentUser) return alert('Сессия истекла. Войдите заново.');
+
+    const betInput = document.getElementById('bet');
+    const ballCountInput = document.getElementById('ballCount');
+    const bet = Number(betInput.value);
+    const ballCount = Math.min(5, Math.max(1, Number(ballCountInput.value) || 1));
+
+    if (isNaN(bet) || bet < 10) {
+      return alert('Минимальная ставка 10 ₽');
+    }
+
+    const totalBet = bet * ballCount;
+    if (totalBet > currentUser.balance) {
+      return alert(`Недостаточно средств. Нужно ${totalBet}₽ для ${ballCount} шариков`);
+    }
+
+    if (activeDrops + ballCount > maxActiveDrops) {
+      return alert(`Максимум ${maxActiveDrops} шариков одновременно`);
+    }
+
+    // Снимаем общую ставку сразу
+    currentUser.balance = (currentUser.balance || 0) - totalBet;
+    currentUser.totalBet = (currentUser.totalBet || 0) + totalBet;
+    currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + ballCount;
+
+    saveUser({
+      balance: currentUser.balance,
+      totalBet: currentUser.totalBet,
+      gamesPlayed: currentUser.gamesPlayed
+    });
+
+    document.getElementById('balance').textContent = Math.floor(currentUser.balance);
+    document.getElementById('result').textContent = `Запущено ${ballCount} шариков...`;
+
+    // Бросаем несколько шариков с небольшой задержкой
+    for (let i = 0; i < ballCount; i++) {
+      setTimeout(() => {
+        dropSingleBall(bet);
+      }, i * 150);
+    }
+  }
+
+  function dropSingleBall(bet) {
+    activeDrops++;
+
+    const board = document.getElementById('plinkoBoard');
+
+    // Если это первый шарик, создаём пины и бакеты
+    if (activeDrops === 1) {
+      board.innerHTML = '';
+
+      // Pins расположение - пирамида для направления к центру
+      const rows = 13;
+      const pinsPerRow = 11;
+      const boardWidth = board.clientWidth;
+      const boardHeight = board.clientHeight;
+
+      const pinsDiv = document.createElement('div');
+      pinsDiv.className = 'pins';
+      pinsDiv.id = 'pinsContainer';
+
+      for (let row = 0; row < rows; row++) {
+        const cols = pinsPerRow;
+        const spacing = boardWidth / (cols + 1);
+        const offset = (row % 2) * (spacing / 2);
+
+        for (let col = 0; col < cols; col++) {
+          const x = spacing * (col + 1) + offset;
+          const y = (boardHeight / (rows + 3)) * (row + 2);
+
+          const pin = document.createElement('div');
+          pin.className = 'pin';
+          pin.style.left = x + 'px';
+          pin.style.top = y + 'px';
+          pinsDiv.appendChild(pin);
+        }
+      }
+      board.appendChild(pinsDiv);
+
+      // 11 бакетов с множителями - сбалансированная игра
+      const multipliers = [5, 2, 1.5, 0.8, 0.5, 0.3, 0.5, 0.8, 1.5, 2, 5];
+      const labels = ['🔥', '', '', '', '', '', '', '', '', '', '🔥'];
+
+      for (let i = 0; i < 11; i++) {
+        const bucket = document.createElement('div');
+        bucket.className = `bucket b${i}`;
+        bucket.id = `bucket${i}`;
+        bucket.innerHTML = `
+          <div class="bucket-multiplier">×${multipliers[i]}</div>
+          <div class="bucket-label">${labels[i]}</div>
+        `;
+        bucket.dataset.index = i;
+        bucket.dataset.multiplier = multipliers[i];
+        board.appendChild(bucket);
+      }
+    }
+
+    const boardWidth = board.clientWidth;
+    const boardHeight = board.clientHeight;
+
+    // Получаем позиции пинов
+    const pins = document.querySelectorAll('.pin');
+    const pinPositions = Array.from(pins).map(pin => ({
+      x: parseFloat(pin.style.left),
+      y: parseFloat(pin.style.top)
+    }));
+
+    // Физика шарика
+    const ball = document.createElement('div');
+    ball.className = 'ball';
+    board.appendChild(ball);
+
+    let x = boardWidth / 2 + (Math.random() - 0.5) * 60;
+    let y = 30;
+    let vx = (Math.random() - 0.5) * 1.8;
+    let vy = 0;
+    const gravity = 0.5;
+    const bounce = 0.6;
+    const friction = 0.988;
+
+    ball.style.left = x + 'px';
+    ball.style.top = y + 'px';
+
+    let lastTrail = 0;
+    let frameCount = 0;
+
+    const isMobile = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) || window.innerWidth < 768;
+    const animate = () => {
+      frameCount++;
+
+      // Применяем гравитацию и движение
+      vy += gravity;
+      x += vx;
+      y += vy;
+
+      // Минимальная вертикальная скорость для избежания зависания
+      if (Math.abs(vy) < 0.5) {
+        vy += gravity * 2;
+      }
+
+      // Отскок от стенок
+      const wallPadding = 12;
+      if (x < wallPadding) {
+        x = wallPadding;
+        vx = Math.abs(vx) * bounce;
+      }
+      if (x > boardWidth - wallPadding) {
+        x = boardWidth - wallPadding;
+        vx = -Math.abs(vx) * bounce;
+      }
+
+      // Столкновение с пинами - реалистичная физика
+      pinPositions.forEach(pin => {
+        const dx = x - pin.x;
+        const dy = y - pin.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const minDist = 13;
+
+        if (dist < minDist) {
+          // Вычисляем угол столкновения
+          const angle = Math.atan2(dy, dx);
+          const overlap = minDist - dist;
+
+          // Отталкиваем шарик от пина
+          x += Math.cos(angle) * overlap;
+          y += Math.sin(angle) * overlap;
+
+          // Изменяем скорость с учетом угла
+          const speed = Math.sqrt(vx * vx + vy * vy);
+          const newSpeed = Math.max(speed * bounce, 0.5);
+          vx = Math.cos(angle) * newSpeed;
+          vy = Math.sin(angle) * newSpeed;
+
+          // Умеренное притяжение к выигрышным зонам ×1.5 и ×2
+          const zones = [
+            { pos: boardWidth * 0.14, strength: 0.006 },  // ×2
+            { pos: boardWidth * 0.23, strength: 0.008 },  // ×1.5
+            { pos: boardWidth * 0.77, strength: 0.008 },  // ×1.5
+            { pos: boardWidth * 0.86, strength: 0.006 }   // ×2
+          ];
+
+          zones.forEach(zone => {
+            const dist = Math.abs(x - zone.pos);
+            if (dist < boardWidth * 0.15) {
+              vx += (zone.pos - x) * zone.strength;
+            }
+          });
+
+          // Добавляем случайность
+          vx += (Math.random() - 0.5) * 0.8;
+        }
+      });
+
+      // Применяем трение
+      vx *= friction;
+      vy *= friction;
+
+      // Трейл эффект (каждые 3 кадра)
+      if (frameCount % 3 === 0 && Date.now() - lastTrail > 30) {
+        const trail = document.createElement('div');
+        trail.className = 'ball-trail';
+        trail.style.left = x + 'px';
+        trail.style.top = y + 'px';
+        board.appendChild(trail);
+        setTimeout(() => trail.remove(), 400);
+        lastTrail = Date.now();
+      }
+
+      ball.style.left = x + 'px';
+      ball.style.top = y + 'px';
+
+      // Проверка достижения дна
+      if (y < boardHeight - 75) {
+        if (isMobile) {
+          setTimeout(animate, 16);
+        } else {
+          requestAnimationFrame(animate);
+        }
+      } else {
+        // Определяем в какой бакет попал (11 бакетов)
+        const bucketIndex = Math.floor((x / boardWidth) * 11);
+        const finalIndex = Math.max(0, Math.min(10, bucketIndex));
+
+        // Анимация бакета
+        const buckets = document.querySelectorAll('.bucket');
+        buckets[finalIndex].classList.add('active');
+
+        setTimeout(() => {
+          const buckets = document.querySelectorAll('.bucket');
+          const targetBucket = buckets[finalIndex];
+          const mult = parseFloat(targetBucket.dataset.multiplier);
+
+          // Правильный расчет: ставка × множитель = выплата
+          let payout = Math.round(bet * mult);
+          let net = payout - bet; // чистая прибыль/убыток
+
+          currentUser.balance = (currentUser.balance || 0) + payout;
+
+          if (net > 0) {
+            currentUser.totalWin = (currentUser.totalWin || 0) + net;
+            currentUser.wins = (currentUser.wins || 0) + 1;
+          } else if (net < 0) {
+            currentUser.losses = (currentUser.losses || 0) + 1;
+          }
+
+          document.getElementById('balance').textContent = Math.floor(currentUser.balance);
+
+          addToHistory('Plinko', net);
+          saveUser({
+            balance: currentUser.balance,
+            totalWin: currentUser.totalWin,
+            wins: currentUser.wins,
+            losses: currentUser.losses
+          });
+
+          activeDrops--;
+
+          // Обновляем результат только когда все шарики упали
+          if (activeDrops === 0) {
+            let message = '';
+            if (net > 0) {
+              message = `<span style="color:#34d399; font-size:1.15rem">Выигрыш! +${net}₽ (×${mult}) 🎉</span>`;
+            } else if (net === 0) {
+              message = `<span style="color:#fbbf24">Возврат ${payout}₽ (×${mult})</span>`;
+            } else {
+              message = `<span style="color:#f87171">Потеря ${Math.abs(net)}₽ (×${mult})</span>`;
+            }
+            document.getElementById('result').innerHTML = message;
+          }
+
+          targetBucket.classList.remove('active');
+        }, 500);
+      }
+    };
+
+    if (isMobile) {
+      setTimeout(animate, 16);
+    } else {
+      requestAnimationFrame(animate);
+    }
+  }
+
+  // ─── Init ───────────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    createParticles();
+    loadCurrentUser();
+
+    document.getElementById('dropBtn').onclick = dropBall;
+  });
+</script>
+</body>
+</html>

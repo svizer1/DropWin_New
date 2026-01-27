@@ -172,6 +172,7 @@
   let currentUser = null;
   let userId = null;
   let portfolio = {};
+  const PRICE_DRIFT_INTERVAL_MS = 30000;
 
   const coins = [
     { id: 'wincoin',      name: 'WinCoin',      startPrice: 1.00     },
@@ -224,6 +225,35 @@
         }
         await setDoc(ref, data);
       }
+    }
+  }
+
+  async function catchUpCryptoPrices() {
+    for (const coin of coins) {
+      const ref = doc(db, 'cryptoPrices', coin.id);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) continue;
+      let data = snap.data();
+      let price = data.price;
+      let history = Array.isArray(data.history) ? data.history.slice() : [data.price];
+      let volume = data.volume || 0;
+      let last = data.lastUpdate?.toMillis ? data.lastUpdate.toMillis() : Date.now();
+      const now = Date.now();
+      let steps = Math.floor((now - last) / PRICE_DRIFT_INTERVAL_MS);
+      if (steps <= 0) continue;
+      steps = Math.min(steps, 120);
+      for (let i = 0; i < steps; i++) {
+        const change = (Math.random() * 0.03 - 0.015);
+        price *= (1 + change);
+        price = Math.max(price, 0.00001);
+        history.push(price);
+        if (history.length > 60) history.shift();
+        const isBuy = Math.random() > 0.5;
+        const impact = Math.random() * 0.002 + 0.001;
+        price *= isBuy ? (1 + impact) : (1 - impact);
+        volume += Math.random() * 500 + 100;
+      }
+      await updateDoc(ref, { price, history, volume, lastUpdate: serverTimestamp() });
     }
   }
 
@@ -700,6 +730,7 @@
   document.addEventListener('DOMContentLoaded', async () => {
     createParticles();
     await initPrices();
+    await catchUpCryptoPrices();
   });
 </script>
 </body>

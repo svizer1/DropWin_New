@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <title>Баттлы Кейсов | DropWin</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .mode-select {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin: 16px 0;
+        }
+        .mode-btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6d28d9, #4c1d95);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(167, 139, 250, 0.4);
+            transition: all 0.3s ease;
+        }
+        .mode-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(167, 139, 250, 0.6); }
+        .mode-btn.active {
+            background: linear-gradient(135deg, #a855f7, #8b5cf6);
+            box-shadow: 0 6px 16px rgba(192, 132, 252, 0.6);
+        }
+
+        .case-select-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px;
+            margin: 16px 0;
+        }
+        .case-card {
+            background: transparent;
+            padding: 10px;
+            border-radius: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+            overflow: hidden;
+            aspect-ratio: 1 / 1;
+            position: relative;
+        }
+        .case-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+        .case-card.selected {
+            border: 3px solid #d946ef;
+            transform: scale(1.06);
+            box-shadow: 0 0 25px #d946ef88;
+        }
+        .case-card .name {
+            position: absolute;
+            bottom: 36px; left: 0; right: 0;
+            font-weight: 700; color: white;
+            text-shadow: 0 0 6px black; font-size: 1.1rem;
+        }
+        .case-card .price {
+            position: absolute;
+            bottom: 8px; left: 0; right: 0;
+            color: #fde047; text-shadow: 0 0 6px black; font-size: 1.05rem;
+        }
+
+        .open-results {
+            display: flex;
+            justify-content: space-between;
+            gap: 24px;
+            margin: 24px 0;
+            flex-wrap: wrap;
+        }
+        .player-opens, .opponent-opens {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(30, 30, 50, 0.75);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+        }
+        .player-opens   { border: 2px solid #8b5cf6; }
+        .opponent-opens { border: 2px solid #5b21b6; }
+
+        .case-opening-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            min-height: 160px;
+        }
+
+        .case-box {
+            width: 95px;
+            height: 95px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+            opacity: 0;
+            transform: scale(0.92);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            margin: 4px;
+        }
+
+        .case-box.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .case-box.revealed {
+            transform: scale(1.12);
+            box-shadow: 0 0 28px rgba(168, 85, 247, 0.75);
+        }
+
+        .case-box.opening {
+            animation: dramaticOpen 2.8s ease-out forwards;
+        }
+
+        @keyframes dramaticOpen {
+            0%   { transform: scale(0.75) rotate(-10deg); filter: brightness(0.7); }
+            30%  { transform: scale(1.25) rotate(8deg);   filter: brightness(1.5); }
+            55%  { transform: scale(1.05) rotate(-5deg);  filter: brightness(1.25); }
+            80%  { transform: scale(1.12) rotate(4deg);   filter: brightness(1.4);  }
+            100% { transform: scale(1.12) rotate(0deg);   filter: brightness(1.2);  }
+        }
+
+        .item-reveal {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3.6rem;
+            opacity: 0;
+            text-shadow: 0 0 16px rgba(0,0,0,0.9);
+            animation: popIn 1s ease-out forwards;
+            animation-delay: 0.7s;
+        }
+
+        @keyframes popIn {
+            0%   { transform: translate(-50%, -50%) scale(0.4) rotate(-60deg); opacity: 0; }
+            50%  { transform: translate(-50%, -50%) scale(1.55) rotate(20deg); opacity: 1; }
+            80%  { transform: translate(-50%, -50%) scale(0.95) rotate(-8deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg);     opacity: 1; }
+        }
+
+        .value-label {
+            position: absolute;
+            bottom: 8px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85);
+            color: #fde047;
+            padding: 5px 12px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: none;
+            box-shadow: 0 2px 8px black;
+        }
+        .case-box.revealed .value-label { display: block; }
+
+        .remove-btn {
+            background: linear-gradient(135deg, #ef4444, #b91c1c);
+            color: white;
+            padding: 6px 14px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            margin-left: 12px;
+            transition: all 0.2s;
+        }
+        .remove-btn:hover { transform: scale(1.08); box-shadow: 0 0 14px #ef444499; }
+
+        .claim-btn {
+            background: linear-gradient(135deg, #34d399, #059669);
+            color: white;
+            padding: 14px 36px;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            font-weight: 800;
+            margin: 24px auto;
+            display: block;
+            box-shadow: 0 6px 20px rgba(16,185,129,0.6);
+            transition: all 0.3s;
+        }
+        .claim-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(16,185,129,0.8); }
+        .claim-btn.disabled { background: #4b5563; cursor: not-allowed; box-shadow: none; }
+
+        .btn, .join-btn {
+            padding: 12px 28px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            border: none;
+            transition: all 0.25s;
+        }
+        .btn { background: linear-gradient(135deg, #a855f7, #7e22ce); color: white; box-shadow: 0 5px 16px #a855f755; }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 24px #a855f788; }
+
+        .join-btn { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; box-shadow: 0 4px 14px #3b82f655; }
+        .join-btn:hover { transform: scale(1.07); box-shadow: 0 8px 20px #3b82f688; }
+
+      .battle-item {
+    background: rgba(45, 40, 75, 0.85);
+    border-radius: 16px;
+    padding: 16px;
+    margin: 12px 0;
+    border-left: 5px solid #8b5cf6;
+    font-size: 0.95rem;
+}
+
+.battle-item > div {
+    margin: 8px 0;
+}
+
+.battle-item .nickname {
+    color: #c084fc;
+    font-weight: 700;
+}
+
+.battle-price {
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+@media (max-width: 480px) {
+    .battle-item {
+        padding: 14px;
+        font-size: 0.92rem;
+    }
+    .join-btn, .delete-battle-btn {
+        width: 100%;
+        margin-top: 12px;
+        padding: 12px;
+    }
+    .battle-item > div {
+        font-size: 0.9rem;
+    }
+}
+
+        .nickname { color: #c084fc; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+
+    <div class="header">
+        <div class="logo">💎 DROPWIN</div>
+        <div class="balance-container">
+            <div class="balance">💰 <span id="balance">0</span>₽</div>
+            <button class="auth-btn" id="authBtn">Аккаунт</button>
+            <button class="auth-btn" onclick="window.open('https://t.me/DropWinHelp_bot','_blank')">Поддержка</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <button class="back-btn" onclick="location.href='../index.html'">← Назад</button>
+
+        <div class="game-card">
+            <div class="game-title">⚔️ Баттлы Кейсов</div>
+
+            <div class="mode-select">
+                <button class="mode-btn active" id="vsBotBtn">Vs Бот</button>
+                <button class="mode-btn" id="vsPlayerBtn">Vs Игрок</button>
+            </div>
+<button id="showChancesBtn" title="Шансы выпадения из кейсов" style="
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #64748b, #475569);
+    color: white;
+    font-size: 1.2rem;
+    line-height: 36px;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    transition: all 0.18s ease;
+    z-index: 5;
+  ">ℹ️</button>
+
+<div id="chancesModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.88); z-index:9999; justify-content:center; align-items:center;">
+        <div style="background:#1e1b32; border-radius:16px; padding:20px; max-width:92%; max-height:90vh; overflow-y:auto; border:2px solid #8b5cf6; box-shadow:0 0 40px #8b5cf655;">
+            <h2 style="text-align:center; margin:0 0 20px; color:#c4b5fd;">Шансы выпадения</h2>
+            <div id="chancesContent"></div>
+            <button class="btn" id="closeChances" style="margin:20px auto 8px; display:block; min-width:140px;">Закрыть</button>
+        </div>
+    </div>
+            <div id="vsBotSection">
+                <div class="case-select-grid" id="botCaseGrid"></div>
+                <button class="btn add-case-btn" id="addBotCase">Добавить кейс</button>
+                <div class="selected-cases" id="selectedBotCases"></div>
+                <div id="botTotalCost" style="text-align:center; margin:12px 0; font-size:1.3rem;">Итого: 0₽</div>
+                <button class="btn" id="playVsBot">Играть</button>
+                <button class="btn" id="quickVsBot" style="background: linear-gradient(135deg, #fbbf24, #d97706);">Быстрое открытие</button>
+                <div id="botResults" style="margin-top:24px;"></div>
+            </div>
+
+            <div id="vsPlayerSection" style="display:none;">
+                <button class="btn" id="createBattleBtn">Создать баттл</button>
+
+                <div class="battle-form" id="createForm" style="display:none;">
+                    <div class="charity-toggle">
+                        <input type="checkbox" id="charityMode">
+                        <label for="charityMode">Благотворительный баттл (оплачиваю за двоих)</label>
+                    </div>
+
+                    <div class="case-select-grid" id="playerCaseGrid"></div>
+                    <button class="btn add-case-btn" id="addPlayerCase">Добавить кейс</button>
+                    <div class="selected-cases" id="selectedPlayerCases"></div>
+                    <div id="playerTotalCost" style="text-align:center; margin:16px 0; font-size:1.4rem;">Итого: 0₽</div>
+                    <button class="btn" id="confirmCreate">Создать</button>
+                </div>
+
+                <div class="battle-list" id="battleList"></div>
+            </div>
+
+            <div id="status" style="margin-top:20px; text-align:center; min-height:28px; font-size:1.2rem;"></div>
+        </div>
+    </div>
+
+    <div class="nav">
+        <button class="nav-btn" onclick="location.href='../index.html'"><span>🏠</span><span class="nav-label">Главная</span></button>
+        <button class="nav-btn" onclick="location.href='../profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
+        <button class="nav-btn" onclick="location.href='../register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc, collection, addDoc, onSnapshot, getDocs, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+            authDomain: "dropwin-8d94b.firebaseapp.com",
+            projectId: "dropwin-8d94b",
+            storageBucket: "dropwin-8d94b.firebasestorage.app",
+            messagingSenderId: "988974289403",
+            appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+            measurementId: "G-BK010MHN8N"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        function createParticles() {
+            const container = document.getElementById('particles');
+            if (!container) return;
+            for (let i = 0; i < 40; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDuration = Math.random() * 15 + 10 + 's';
+                p.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(p);
+            }
+        }
+function openCaseWithBotBoost(caseType) {
+        const items = cases[caseType].items;
+        const r = Math.random();
+        let sum = 0;
+
+        // даём боту ~4–6% буст на более высокие предметы
+        for (let i = 0; i < items.length; i++) {
+            let adjustedProb = items[i].prob;
+            // увеличиваем шанс на каждый следующий предмет примерно на 4–7%
+            if (i > 0) adjustedProb += 0.004 * (i + 1);
+            sum += adjustedProb;
+            if (r <= sum) return { ...items[i], caseType };
+        }
+        return { ...items[0], caseType };
+    }
+        let currentUser = null;
+        let userId = null;
+        let isGuest = false;
+        let isCharityMode = false;
+
+const cases = {
+    bomj: {
+        price: 5,
+        items: [
+            {emoji: '🧦', name: 'Дырявый носок',      value: 1,   prob: 0.58},   // было 0.42
+            {emoji: '🍞', name: 'Чёрствый хлеб',       value: 3,   prob: 0.22},   // было 0.24
+            {emoji: '🗑️', name: 'Мусорный пакет',      value: 7,   prob: 0.11},   // было 0.14
+            {emoji: '🍺', name: 'Тёплое пиво 0.5',     value: 12,  prob: 0.05},   // было 0.09
+            {emoji: '🪙', name: 'Горстка мелочи',      value: 25,  prob: 0.025},  // было 0.055
+            {emoji: '🧥', name: 'Старая куртка',       value: 50,  prob: 0.012},  // было 0.025
+            {emoji: '📱', name: 'Сломанный Nokia',     value: 100, prob: 0.003},  // было 0.015
+            {emoji: '💸', name: 'Заначка под матрасом',value: 180, prob: 0.0005}, // было 0.006
+        ],
+        color: '#6b7280',
+        icon: '🗑️'
+    },
+    vibe: {
+        price: 45,
+        items: [
+            {emoji: '💖', name: 'Сердце',          value: 15,  prob: 0.52},   // было 0.65 → меньше мелочёвки
+            {emoji: '🌹', name: 'Роза',            value: 25,  prob: 0.20},   // ↑
+            {emoji: '🚀', name: 'Ракета',          value: 50,  prob: 0.10},   // ↑
+            {emoji: '💐', name: 'Цветы',           value: 50,  prob: 0.08},   // ↑
+            {emoji: '💍', name: 'Кольцо',          value: 100, prob: 0.035},  // ↑
+            {emoji: '💎', name: 'Алмаз',           value: 100, prob: 0.03},   // ↑
+            {emoji: '🍭', name: 'Лол-поп',         value: 325, prob: 0.015},  // ↑
+            {emoji: '🐶', name: 'Суп Дог',         value: 425, prob: 0.012},  // ↑
+            {emoji: '🤡', name: 'Шапка шута',      value: 500, prob: 0.008},  // ↑
+            {emoji: '⭐', name: 'Звезда',           value: 200, prob: 0.01},   // добавлено чуть больше
+        ],
+        color: '#ec4899',
+        icon: '💖'
+            },
+            dvornik: {
+                price: 25,
+                items: [
+                    {emoji: '🧹', name: 'Метла', value: 5, prob: 0.30},
+                    {emoji: '🪣', name: 'Ведро', value: 10, prob: 0.25},
+                    {emoji: '🧼', name: 'Мыло', value: 15, prob: 0.18},
+                    {emoji: '🪓', name: 'Топор старый', value: 35, prob: 0.12},
+                    {emoji: '🧤', name: 'Перчатки рабочие', value: 50, prob: 0.08},
+                    {emoji: '⛏️', name: 'Лопата', value: 80, prob: 0.04},
+                    {emoji: '🛠️', name: 'Набор инструментов', value: 150, prob: 0.025},
+                    {emoji: '🚲', name: 'Велосипед б/у', value: 400, prob: 0.005},
+                ],
+                color: '#eab308',
+                icon: '🧹'
+            },
+            schoolboy: {
+                price: 250,
+                items: [
+                    {emoji: '📚', name: 'Учебник', value: 80, prob: 0.50},
+                    {emoji: '🎒', name: 'Рюкзак', value: 150, prob: 0.25},
+                    {emoji: '📱', name: 'Смартфон', value: 400, prob: 0.12},
+                    {emoji: '💻', name: 'Ноутбук', value: 700, prob: 0.07},
+                    {emoji: '🎮', name: 'PlayStation', value: 1000, prob: 0.03},
+                    {emoji: '🚗', name: 'Машинка', value: 1300, prob: 0.02},
+                    {emoji: '🏠', name: 'Квартира', value: 4000, prob: 0.005},
+                ],
+                color: '#3b82f6',
+                icon: '📚'
+            },
+            event: {
+                price: 500,
+                items: [
+                    {emoji: '🎉', name: 'Конфетти', value: 150, prob: 0.4},
+                    {emoji: '🎁', name: 'Подарок', value: 300, prob: 0.25},
+                    {emoji: '🎈', name: 'Воздушный шар', value: 400, prob: 0.15},
+                    {emoji: '🍾', name: 'Шампанское', value: 600, prob: 0.1},
+                    {emoji: '🎤', name: 'Микрофон', value: 900, prob: 0.04},
+                    {emoji: '🎬', name: 'Кино', value: 1500, prob: 0.025},
+                    {emoji: '✈️', name: 'Путешествие', value: 3000, prob: 0.01},
+                ],
+                color: '#ef4444',
+                icon: '🎉'
+            },
+            milioner: {
+                price: 1000,
+                items: [
+                    {emoji: '💵', name: 'Деньги', value: 500, prob: 0.48},
+                    {emoji: '🏦', name: 'Банк', value: 1000, prob: 0.24},
+                    {emoji: '💰', name: 'Мешок денег', value: 2000, prob: 0.18},
+                    {emoji: '📈', name: 'График роста', value: 3000, prob: 0.08},
+                    {emoji: '🤑', name: 'Миллионер', value: 5000, prob: 0.015},
+                    {emoji: '🚀', name: 'Ракета', value: 10000, prob: 0.007},
+                    {emoji: '🏰', name: 'Дворец', value: 50000, prob: 0.003},
+                ],
+                color: '#fbbf24',
+                icon: '💰'
+            }
+        };
+
+        const caseBackgrounds = {
+            bomj:     '../images/bomj.png',
+            vibe:     '../images/vibe.png',
+            dvornik:  '../images/dvornik.png',
+            schoolboy:'../images/schoolboy.png',
+            event:    '../images/event.png',
+            milioner: '../images/milioner.png'
+        };
+
+        const caseOpenedBackgrounds = {
+            bomj:     '../images/bomj1.png',
+            vibe:     '../images/vibe1.png',
+            dvornik:  '../images/dvornik1.png',
+            schoolboy:'../images/schoolboy1.png',
+            event:    '../images/event1.png',
+            milioner: '../images/milioner1.png'
+        };
+
+        const caseDisplayNames = {
+            bomj:     "Бомж",
+            vibe:     "Vibe",
+            dvornik:  "Дворник",
+            schoolboy:"Школьник",
+            event:    "Ивент",
+            milioner: "Миллионер"
+        };
+
+        const sortedCaseKeys = Object.keys(cases).sort((a, b) => cases[a].price - cases[b].price);
+
+        function renderCaseGrid(containerId, onSelect) {
+            const grid = document.getElementById(containerId);
+            grid.innerHTML = '';
+            sortedCaseKeys.forEach(key => {
+                const c = cases[key];
+                const card = document.createElement('div');
+                card.className = `case-card ${key}`;
+                card.innerHTML = `
+                    <img src="${caseBackgrounds[key]}" alt="${key}">
+                    <div class="name">${caseDisplayNames[key] || key}</div>
+                    <div class="price">${c.price}₽</div>
+                `;
+                card.onclick = () => onSelect(key);
+                grid.appendChild(card);
+            });
+        }
+
+        let selectedBotCases = [];
+        let selectedPlayerCases = [];
+
+        function addSelectedCase(section, caseType) {
+            const arr = section === 'bot' ? selectedBotCases : selectedPlayerCases;
+            arr.push(caseType);
+            updateSelectedCases(section);
+            updateTotalCost(section);
+        }
+
+        function updateSelectedCases(section) {
+            const cont = document.getElementById(section === 'bot' ? 'selectedBotCases' : 'selectedPlayerCases');
+            cont.innerHTML = '<h4>Выбранные кейсы:</h4>';
+            const arr = section === 'bot' ? selectedBotCases : selectedPlayerCases;
+            arr.forEach((type, i) => {
+                const div = document.createElement('div');
+                div.textContent = `${caseDisplayNames[type] || type} (${cases[type].price}₽)`;
+                const btn = document.createElement('button');
+                btn.className = 'remove-btn';
+                btn.textContent = 'Удалить';
+                btn.onclick = () => {
+                    arr.splice(i, 1);
+                    updateSelectedCases(section);
+                    updateTotalCost(section);
+                };
+                div.appendChild(btn);
+                cont.appendChild(div);
+            });
+        }
+
+        function updateTotalCost(section) {
+            const arr = section === 'bot' ? selectedBotCases : selectedPlayerCases;
+            const total = arr.reduce((s, t) => s + cases[t].price, 0);
+            const el = document.getElementById(section === 'bot' ? 'botTotalCost' : 'playerTotalCost');
+
+            if (section === 'player' && isCharityMode) {
+                el.innerHTML = `Итого: ${total * 2}₽ <span class="charity-label">за двоих!</span>`;
+            } else {
+                el.textContent = `Итого: ${total}₽`;
+            }
+        }
+
+        function openCase(caseType) {
+            const items = cases[caseType].items;
+            const r = Math.random();
+            let sum = 0;
+            for (let it of items) {
+                sum += it.prob;
+                if (r <= sum) return { ...it, caseType };
+            }
+            return { ...items[0], caseType };
+        }
+
+     async function playVsBot(quick = false) {
+    const totalCost = selectedBotCases.reduce((sum, type) => sum + cases[type].price, 0);
+    if (currentUser.balance < totalCost) {
+        alert('Недостаточно баланса');
+        return;
+    }
+    if (selectedBotCases.length === 0) {
+        alert('Выберите хотя бы один кейс');
+        return;
+    }
+
+    currentUser.balance -= totalCost;
+    await saveUser();
+    updateBalance();
+
+        const playerItems = selectedBotCases.map(type => openCase(type));
+        const playerTotal = playerItems.reduce((sum, item) => sum + item.value, 0);
+        const botItems    = selectedBotCases.map(type => openCaseWithBotBoost(type));
+        const botTotal    = botItems.reduce((sum, item) => sum + item.value, 0);
+
+    const resultsDiv = document.getElementById('botResults');
+    if (!resultsDiv) return;
+
+    resultsDiv.innerHTML = `
+        <div class="open-results">
+            <div class="player-opens">
+                <h4>Ваши кейсы (${currentUser?.username || 'Гость'}):</h4>
+                <div class="case-opening-container" id="playerCases"></div>
+                <div class="total-value" id="playerTotal">Итого: 0₽</div>
+            </div>
+            <div class="opponent-opens">
+                <h4>Бот:</h4>
+                <div class="case-opening-container" id="botCases"></div>
+                <div class="total-value" id="botTotal">Итого: 0₽</div>
+            </div>
+        </div>
+        <div id="resultText" style="text-align:center; margin-top:20px; font-size:1.4rem; min-height:40px;"></div>
+        <div style="display:flex; gap:10px; justify-content:center; margin-top:12px;">
+            <button class="btn" id="sellBotBtn" style="background: linear-gradient(135deg, #34d399, #059669);">Продать сразу</button>
+            <button class="btn" id="stashBotBtn" style="background: linear-gradient(135deg, #a855f7, #7e22ce);">Отложить всё</button>
+        </div>
+    `;
+
+    // Запускаем анимацию параллельно
+    await Promise.all([
+        animateBatchedOpenings('playerCases', selectedBotCases, playerItems, playerTotal, 'player', quick),
+        animateBatchedOpenings('botCases', selectedBotCases, botItems, botTotal, 'bot', quick)
+    ]);
+
+    // Показываем результат только после завершения обеих анимаций
+    showBotResult(playerTotal, botTotal, totalCost);
+}
+
+async function animateBatchedOpenings(containerId, caseTypes, items, total, side, quick = false) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    const totalEl = document.getElementById(containerId === 'playerCases' ? 'playerTotal' : 'botTotal');
+    if (totalEl) totalEl.textContent = `Итого: ${total}₽`;
+
+    // Создаём все кейсы сразу
+    caseTypes.forEach((type, index) => {
+        const item = items[index];
+        const box = document.createElement('div');
+        box.className = `case-box ${type}`;
+        box.dataset.type = type;
+        box.style.backgroundImage = `url('${caseBackgrounds[type] || ''}')`;
+        box.innerHTML = `
+            <div class="item-reveal">${item.emoji}</div>
+            <div class="value-label">${item.value}₽</div>
+        `;
+        container.appendChild(box);
+
+        // Плавное появление
+        setTimeout(() => box.classList.add('visible'), index * 80 + 100);
+    });
+
+    if (quick) {
+        // Быстрое открытие — всё почти одновременно
+        setTimeout(() => {
+            container.querySelectorAll('.case-box').forEach(box => {
+                const type = box.dataset.type;
+                const opened = caseOpenedBackgrounds[type];
+                if (opened) box.style.backgroundImage = `url('${opened}')`;
+                box.classList.add('opening', 'revealed');
+            });
+        }, 600);
+    } else {
+        // Нормальная анимация — по одному с задержкой
+        for (let i = 0; i < caseTypes.length; i++) {
+            await new Promise(resolve => setTimeout(resolve, 700));
+            const box = container.children[i];
+            if (!box) continue;
+            const type = box.dataset.type;
+            const opened = caseOpenedBackgrounds[type];
+            if (opened) box.style.backgroundImage = `url('${opened}')`;
+            box.classList.add('opening');
+            setTimeout(() => box.classList.add('revealed'), 1400);
+        }
+    }
+}
+
+let lastBotRun = null;
+function showBotResult(playerTotal, botTotal, totalCost) {
+    const resultTextEl = document.getElementById('resultText');
+    if (!resultTextEl) return;
+
+    let resultText = '';
+    let prize = 0;
+
+    if (playerTotal > botTotal) {
+        prize = playerTotal + botTotal;
+        resultText = `<span style="color:#34d399">Победа! Приз: ${prize}₽</span>`;
+    } else if (playerTotal < botTotal) {
+        resultText = `<span style="color:#f87171">Проигрыш</span>`;
+    } else {
+        prize = playerTotal;
+        resultText = `Ничья — доступны ваши предметы на ${prize}₽`;
+    }
+
+    resultTextEl.innerHTML = resultText;
+    lastBotRun = { prize, playerTotal, botTotal, processed: false };
+
+    const sellBtn = document.getElementById('sellBotBtn');
+    const stashBtn = document.getElementById('stashBotBtn');
+    if (sellBtn) {
+        sellBtn.onclick = async () => {
+            if (lastBotRun.processed) return;
+            sellBtn.disabled = true;
+            stashBtn.disabled = true;
+            if (prize > 0) {
+                currentUser.balance += prize;
+                await saveUser();
+                updateBalance();
+                resultTextEl.innerHTML += `<br><div style="color:#a78bfa; margin-top:12px;">Продажа выполнена (+${prize}₽)</div>`;
+            } else {
+                resultTextEl.innerHTML += `<br><div style="color:#f87171; margin-top:12px;">Продать нечего</div>`;
+            }
+            lastBotRun.processed = true;
+        };
+    }
+    if (stashBtn) {
+        stashBtn.onclick = async () => {
+            if (lastBotRun.processed) return;
+            sellBtn.disabled = true;
+            stashBtn.disabled = true;
+            const playerBoxes = document.querySelectorAll('#playerCases .case-box');
+            const botBoxes = document.querySelectorAll('#botCases .case-box');
+            const myItems = Array.from(playerBoxes).map(b => ({ emoji: b.querySelector('.item-reveal')?.textContent || '❓', name: 'Предмет', value: Number(b.querySelector('.value-label')?.textContent.replace('₽','')) || 0 }));
+            const oppItems = Array.from(botBoxes).map(b => ({ emoji: b.querySelector('.item-reveal')?.textContent || '❓', name: 'Предмет', value: Number(b.querySelector('.value-label')?.textContent.replace('₽','')) || 0 }));
+            const saveBoth = playerTotal >= botTotal;
+            const itemsToSave = saveBoth ? myItems.concat(oppItems) : myItems;
+            const userSnap = await getDoc(doc(db, 'users', userId));
+            const userData = userSnap.exists() ? userSnap.data() : {};
+            const inventory = Array.isArray(userData.inventory) ? userData.inventory : [];
+            const newItems = itemsToSave.filter(it => !inventory.some(e => e.name === it.name && e.value === it.value && e.source === 'Баттл:Бот')).map(it => ({
+                id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(16).slice(2)),
+                emoji: it.emoji,
+                name: it.name,
+                value: it.value,
+                source: 'Баттл:Бот',
+                timestamp: Date.now()
+            }));
+            const updatedInv = inventory.concat(newItems);
+            await updateDoc(doc(db, 'users', userId), { inventory: updatedInv });
+            currentUser.inventory = updatedInv;
+            resultTextEl.innerHTML += `<br><div style="text-align:center; padding:12px; color:#a78bfa;">Отложено: ${newItems.length} предметов</div>`;
+            lastBotRun.processed = true;
+        };
+    }
+}
+
+        async function saveUser() {
+            try {
+                if (isGuest) {
+                    let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+                    const idx = users.findIndex(u => u.username === 'Гость');
+                    if (idx !== -1) users[idx] = currentUser;
+                    localStorage.setItem('dropwin_users', JSON.stringify(users));
+                } else if (userId) {
+                    await updateDoc(doc(db, 'users', userId), { balance: currentUser.balance });
+                }
+            } catch (err) {
+                console.error("Ошибка сохранения:", err);
+                alert("Не удалось сохранить баланс.");
+            }
+        }
+
+        function updateBalance() {
+            document.getElementById('balance').textContent = currentUser ? currentUser.balance || 0 : 0;
+            document.getElementById('authBtn').textContent = isGuest ? 'Гость' : (currentUser ? currentUser.username : 'Войти');
+            document.getElementById('authBtn').onclick = () => location.href = '../profile.html';
+        }
+
+        function loadCurrentUser() {
+            onAuthStateChanged(auth, async (user) => {
+                try {
+                    if (user) {
+                        userId = user.uid;
+                        const snap = await getDoc(doc(db, 'users', user.uid));
+                        if (snap.exists()) {
+                            currentUser = snap.data();
+                            isGuest = false;
+                            updateBalance();
+                            if (document.getElementById('vsPlayerBtn')?.classList.contains('active')) {
+                                loadBattles();
+                            }
+                        }
+                    } else {
+                        const username = localStorage.getItem('dropwin_current_username');
+                        if (username === 'Гость') {
+                            const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+                            currentUser = users.find(u => u.username === 'Гость');
+                            isGuest = true;
+                            updateBalance();
+                        } else {
+                            location.href = '../register.html';
+                        }
+                    }
+                } catch (err) {
+                    console.error("Ошибка загрузки пользователя:", err);
+                    document.getElementById('status').textContent = "Ошибка подключения к аккаунту.";
+                }
+            });
+        }
+
+        async function createBattle() {
+            try {
+                if (isGuest) throw new Error('Только для зарегистрированных');
+                if (selectedPlayerCases.length === 0) throw new Error('Выберите кейсы');
+
+                const singleCost = selectedPlayerCases.reduce((sum, type) => sum + cases[type].price, 0);
+                const costToPay = isCharityMode ? singleCost * 2 : singleCost;
+
+                if (currentUser.balance < costToPay) throw new Error('Недостаточно баланса');
+
+                const existingQ = query(collection(db, 'battles'), where('creator', '==', userId), where('status', '==', 'open'));
+                const existingSnap = await getDocs(existingQ);
+                if (!existingSnap.empty) throw new Error('У вас уже есть открытый баттл. Удалите его сначала.');
+
+                currentUser.balance -= costToPay;
+                await saveUser();
+                updateBalance();
+
+                const battleDoc = await addDoc(collection(db, 'battles'), {
+                    creator: userId,
+                    creatorName: currentUser.username,
+                    caseTypes: selectedPlayerCases,
+                    totalCost: singleCost,          // стоимость одного игрока
+                    isCharity: isCharityMode,
+                    creatorPaid: costToPay,         // сколько заплатил создатель
+                    player1: userId,
+                    player1Name: currentUser.username,
+                    player2: null,
+                    player2Name: null,
+                    status: 'open',
+                    player1Items: [],
+                    player2Items: [],
+                    player1Total: 0,
+                    player2Total: 0,
+                    player1Claimed: false,
+                    player2Claimed: false,
+                    createdAt: new Date()
+                });
+
+                subscribeToBattle(battleDoc.id);
+
+                // Сброс формы после создания
+                selectedPlayerCases = [];
+                updateSelectedCases('player');
+                updateTotalCost('player');
+                document.getElementById('createForm').style.display = 'none';
+                document.getElementById('charityMode').checked = false;
+                isCharityMode = false;
+            } catch (err) {
+                console.error("Ошибка создания баттла:", err);
+                alert(err.message || "Ошибка создания баттла");
+            }
+        }
+
+        function subscribeToBattle(battleId) {
+            onSnapshot(doc(db, 'battles', battleId), async (snap) => {
+                try {
+                    const data = snap.data();
+                    if (!data) return;
+
+                    const statusDiv = document.getElementById('status');
+                    statusDiv.innerHTML = '';
+
+                    if (data.status === 'open') {
+                        statusDiv.innerHTML = `<div style="color:#fbbf24;">Баттл создан! Ожидание противника...</div>`;
+                    } else if (data.status === 'started') {
+                        statusDiv.innerHTML = `<div style="color:#34d399;">Противник присоединился! Открытие кейсов...</div>`;
+                        if (data.player1Items.length === 0 && userId === data.player1) {
+                            const p1Items = data.caseTypes.map(type => openCase(type));
+                            const p1Total = p1Items.reduce((sum, item) => sum + item.value, 0);
+                            const p2Items = data.caseTypes.map(type => openCase(type));
+                            const p2Total = p2Items.reduce((sum, item) => sum + item.value, 0);
+
+                            await updateDoc(snap.ref, {
+                                player1Items: p1Items.map(item => ({emoji: item.emoji, name: item.name, value: item.value})),
+                                player2Items: p2Items.map(item => ({emoji: item.emoji, name: item.name, value: item.value})),
+                                player1Total: p1Total,
+                                player2Total: p2Total,
+                                status: 'finished'
+                            });
+                        }
+                    } else if (data.status === 'finished') {
+                        const p1Total = data.player1Total;
+                        const p2Total = data.player2Total;
+                        let winner = null;
+                        if (p1Total > p2Total) winner = data.player1;
+                        else if (p2Total > p1Total) winner = data.player2;
+
+                        const isPlayer1 = userId === data.player1;
+                        const myItems = isPlayer1 ? data.player1Items : data.player2Items;
+                        const oppItems = isPlayer1 ? data.player2Items : data.player1Items;
+                        const myTotal = isPlayer1 ? p1Total : p2Total;
+                        const oppTotal = isPlayer1 ? p2Total : p1Total;
+                        const opponentName = isPlayer1 ? data.player2Name : data.player1Name;
+                        const myClaimed = isPlayer1 ? data.player1Claimed : data.player2Claimed;
+
+                        let resultText = '';
+                        let prize = 0;
+                        if (winner === userId) {
+                            prize = myTotal + oppTotal;
+                            resultText = `<span style="color:#34d399">Победа! Приз: ${prize}₽</span>`;
+                        } else if (winner) {
+                            resultText = `<span style="color:#f87171">Проигрыш</span>`;
+                        } else {
+                            prize = myTotal;
+                            resultText = `Ничья — забираешь свои ${prize}₽`;
+                        }
+
+                        statusDiv.innerHTML = `
+                            <div class="open-results">
+                                <div class="player-opens">
+                                    <h4>Ваши (<span class="nickname">${currentUser.username}</span>):</h4>
+                                    <div class="case-opening-container" id="myBattleCases"></div>
+                                    <div class="total-value">Итого: ${myTotal}₽</div>
+                                </div>
+                                <div class="opponent-opens">
+                                    <h4>${opponentName || 'Противник'}:</h4>
+                                    <div class="case-opening-container" id="oppBattleCases"></div>
+                                    <div class="total-value">Итого: ${oppTotal}₽</div>
+                                </div>
+                            </div>
+                            <div id="battleResultText" style="text-align:center; margin-top:12px;">${resultText}</div>
+                            <div style="display:flex; gap:10px; justify-content:center; margin-top:12px;">
+                              <button class="btn" id="sellItemsBtn" style="background: linear-gradient(135deg, #34d399, #059669);">Продать сразу</button>
+                              <button class="btn" id="stashItemsBtn" style="background: linear-gradient(135deg, #a855f7, #7e22ce);">Отложить всё</button>
+                            </div>
+                        `;
+
+                        await animateBatchedOpenings('myBattleCases', data.caseTypes, myItems, myTotal, 'my', false);
+                        await animateBatchedOpenings('oppBattleCases', data.caseTypes, oppItems, oppTotal, 'opp', false);
+
+                        const sellBtn = document.getElementById('sellItemsBtn');
+                        const stashBtn = document.getElementById('stashItemsBtn');
+                        if (sellBtn) {
+                            sellBtn.onclick = async () => {
+                                sellBtn.disabled = true;
+                                stashBtn.disabled = true;
+                                const freshSnap = await getDoc(snap.ref);
+                                const freshData = freshSnap.data();
+                                if (!freshData) return;
+                                const claimedField = isPlayer1 ? 'player1Claimed' : 'player2Claimed';
+                                const savedField = isPlayer1 ? 'player1Saved' : 'player2Saved';
+                                if (freshData[claimedField] || freshData[savedField]) {
+                                    statusDiv.innerHTML += '<div style="color:#f87171; text-align:center; padding:10px;">Действие уже выполнено.</div>';
+                                    return;
+                                }
+                                if (prize > 0) {
+                                    currentUser.balance += prize;
+                                    await saveUser();
+                                    updateBalance();
+                                    await updateDoc(snap.ref, { [claimedField]: true });
+                                    statusDiv.innerHTML += `<div style="text-align:center; padding:12px; color:#a78bfa;">Продажа выполнена (+${prize}₽)</div>`;
+                                } else {
+                                    statusDiv.innerHTML += `<div style="text-align:center; padding:12px; color:#f87171;">Продать нечего</div>`;
+                                }
+                            };
+                        }
+                        if (stashBtn) {
+                            stashBtn.onclick = async () => {
+                                stashBtn.disabled = true;
+                                sellBtn.disabled = true;
+                                const freshSnap = await getDoc(snap.ref);
+                                const freshData = freshSnap.data();
+                                if (!freshData) return;
+                                const claimedField = isPlayer1 ? 'player1Claimed' : 'player2Claimed';
+                                const savedFlagField = isPlayer1 ? 'player1Saved' : 'player2Saved';
+                                if (freshData[savedFlagField] || freshData[claimedField]) {
+                                    statusDiv.innerHTML += '<div style="color:#fbbf24; text-align:center; padding:10px;">Действие уже выполнено.</div>';
+                                    return;
+                                }
+                                const itemsToSave = winner === userId ? myItems.concat(oppItems) : myItems;
+                                const userSnap = await getDoc(doc(db, 'users', userId));
+                                const userData = userSnap.exists() ? userSnap.data() : {};
+                                const inventory = Array.isArray(userData.inventory) ? userData.inventory : [];
+                                const newItems = itemsToSave.filter(it => !inventory.some(e =>
+                                    e.battleId === snap.id && e.name === it.name && e.value === it.value
+                                )).map(it => ({
+                                    id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(16).slice(2)),
+                                    emoji: it.emoji,
+                                    name: it.name,
+                                    value: it.value,
+                                    source: 'Баттл',
+                                    battleId: snap.id,
+                                    timestamp: Date.now()
+                                }));
+                                const updatedInv = inventory.concat(newItems);
+                                await updateDoc(doc(db, 'users', userId), { inventory: updatedInv });
+                                currentUser.inventory = updatedInv;
+                                await updateDoc(snap.ref, { [savedFlagField]: true });
+                                statusDiv.innerHTML += `<div style="text-align:center; padding:12px; color:#a78bfa;">Отложено: ${newItems.length} предметов</div>`;
+                            };
+                        }
+                    }
+                } catch (err) {
+                    console.error("Ошибка в onSnapshot баттла:", err);
+                    document.getElementById('status').textContent = "Ошибка онлайн-баттла.";
+                }
+            });
+        }
+
+        async function loadBattles() {
+            try {
+                const q = query(collection(db, 'battles'), where('status', '==', 'open'));
+                onSnapshot(q, (querySnap) => {
+                    const listDiv = document.getElementById('battleList');
+                    listDiv.innerHTML = '';
+                    if (querySnap.empty) {
+                        listDiv.innerHTML = '<div>Пока нет открытых баттлов</div>';
+                        return;
+                    }
+                    querySnap.forEach(snap => {
+                        const data = snap.data();
+                        const priceText = data.isCharity
+                            ? '<span class="battle-price free">Бесплатно</span>'
+                            : `<span class="battle-price paid">${data.totalCost}₽</span>`;
+
+                        const charityBadge = data.isCharity
+                            ? '<span class="charity-label">Благотворительный</span>'
+                            : '';
+
+                        const div = document.createElement('div');
+                        div.className = 'battle-item';
+                        div.innerHTML = `
+                            <div>Создатель: <span class="nickname">${data.creatorName || '???'}</span> ${charityBadge}</div>
+                            <div>Кейсы: ${data.caseTypes.map(t => `${caseDisplayNames[t] || t} (${cases[t]?.price || '?'}₽)`).join(', ')}</div>
+                            <div>${priceText}</div>
+                            <button class="join-btn" data-battle-id="${snap.id}">Присоединиться</button>
+                        `;
+                        if (data.creator === userId) {
+                            const delBtn = document.createElement('button');
+                            delBtn.className = 'delete-battle-btn';
+                            delBtn.innerHTML = '🗑️ Удалить';
+                            delBtn.onclick = () => deleteBattle(snap.id);
+                            div.appendChild(delBtn);
+                        }
+                        listDiv.appendChild(div);
+                    });
+                    document.querySelectorAll('.join-btn').forEach(btn => {
+                        btn.addEventListener('click', () => joinBattle(btn.dataset.battleId));
+                    });
+                });
+            } catch (err) {
+                console.error("Ошибка загрузки списка баттлов:", err);
+                document.getElementById('battleList').innerHTML = "Ошибка загрузки баттлов.";
+            }
+        }
+
+        async function joinBattle(battleId) {
+            try {
+                const battleRef = doc(db, 'battles', battleId);
+                const battleSnap = await getDoc(battleRef);
+                const data = battleSnap.data();
+                if (!data || data.status !== 'open') throw new Error('Баттл уже закрыт');
+                if (data.creator === userId) throw new Error('Нельзя присоединиться к своему баттлу');
+
+                if (!data.isCharity) {
+                    const totalCost = data.totalCost;
+                    if (currentUser.balance < totalCost) throw new Error('Недостаточно средств');
+                    currentUser.balance -= totalCost;
+                    await saveUser();
+                    updateBalance();
+                }
+
+                await updateDoc(battleRef, {
+                    player2: userId,
+                    player2Name: currentUser.username,
+                    status: 'started'
+                });
+
+                subscribeToBattle(battleId);
+            } catch (err) {
+                console.error("Ошибка присоединения:", err);
+                alert(err.message || "Не удалось присоединиться");
+            }
+        }
+
+        async function deleteBattle(battleId) {
+            try {
+                const battleRef = doc(db, 'battles', battleId);
+                const battleSnap = await getDoc(battleRef);
+                const data = battleSnap.data();
+                if (!data || data.creator !== userId || data.status !== 'open') {
+                    throw new Error('Нельзя удалить этот баттл');
+                }
+                const refund = data.creatorPaid || data.totalCost;
+                currentUser.balance += refund;
+                await saveUser();
+                updateBalance();
+                await deleteDoc(battleRef);
+                alert(`Баттл удалён, возвращено ${refund}₽`);
+            } catch (err) {
+                console.error("Ошибка удаления:", err);
+                alert(err.message || "Ошибка удаления баттла");
+            }
+        }
+
+document.addEventListener('DOMContentLoaded', () => {
+    createParticles();
+    loadCurrentUser();
+
+    renderCaseGrid('botCaseGrid', type => addSelectedCase('bot', type));
+    renderCaseGrid('playerCaseGrid', type => addSelectedCase('player', type));
+
+    // Переключение режимов
+    const vsBotBtn      = document.getElementById('vsBotBtn');
+    const vsPlayerBtn   = document.getElementById('vsPlayerBtn');
+    const botSection    = document.getElementById('vsBotSection');
+    const playerSection = document.getElementById('vsPlayerSection');
+
+    function setBotMode() {
+        vsBotBtn.classList.add('active');
+        vsPlayerBtn.classList.remove('active');
+        botSection.style.display = 'block';
+        playerSection.style.display = 'none';
+    }
+
+    function setPlayerMode() {
+        if (isGuest) {
+            alert('Только зарегистрированные пользователи могут играть Vs Игрок');
+            return;
+        }
+        vsPlayerBtn.classList.add('active');
+        vsBotBtn.classList.remove('active');
+        botSection.style.display = 'none';
+        playerSection.style.display = 'block';
+        loadBattles();
+    }
+
+    vsBotBtn.addEventListener('click', setBotMode);
+    vsPlayerBtn.addEventListener('click', setPlayerMode);
+    setBotMode(); // начальное состояние
+
+    // ─── Кнопки "Играть" и "Быстро" — защита от дублирования ───────
+    const playBtn = document.getElementById('playVsBot');
+    const quickBtn = document.getElementById('quickVsBot');
+
+    if (playBtn) {
+        // Клонируем → убираем все старые слушатели
+        const cleanPlay = playBtn.cloneNode(true);
+        playBtn.parentNode.replaceChild(cleanPlay, playBtn);
+        cleanPlay.addEventListener('click', () => playVsBot(false));
+    }
+
+    if (quickBtn) {
+        const cleanQuick = quickBtn.cloneNode(true);
+        quickBtn.parentNode.replaceChild(cleanQuick, quickBtn);
+        cleanQuick.addEventListener('click', () => playVsBot(true));
+    }
+
+    // остальные слушатели
+    document.getElementById('createBattleBtn')?.addEventListener('click', () => {
+        document.getElementById('createForm').style.display = 'block';
+    });
+
+    document.getElementById('confirmCreate')?.addEventListener('click', createBattle);
+
+    document.getElementById('charityMode')?.addEventListener('change', e => {
+        isCharityMode = e.target.checked;
+        updateTotalCost('player');
+    });
+
+    // кнопка шансов
+    document.getElementById('showChancesBtn')?.addEventListener('click', () => {
+        const modal = document.getElementById('chancesModal');
+        const content = document.getElementById('chancesContent');
+        if (!modal || !content) return;
+
+        content.innerHTML = '';
+        sortedCaseKeys.forEach(key => {
+            const c = cases[key];
+            let html = `<div style="margin:14px 0; padding:14px; background:rgba(35,30,60,0.65); border-radius:10px; border-left:4px solid ${c.color}">
+                <h3 style="margin:0 0 10px; color:${c.color}">${caseDisplayNames[key] || key} — ${c.price}₽</h3>`;
+
+            c.items.forEach(it => {
+                const percent = (it.prob * 100).toFixed(2).replace(/\.?0+$/, "");
+                html += `<div style="display:flex; justify-content:space-between; margin:5px 0; font-size:0.96rem;">
+                    <span>${it.emoji} ${it.name}</span>
+                    <span style="color:#fde047; font-weight:600;">${it.value}₽ — ${percent}%</span>
+                </div>`;
+            });
+            html += '</div>';
+            content.innerHTML += html;
+        });
+        modal.style.display = 'flex';
+    });
+
+    document.getElementById('closeChances')?.addEventListener('click', () => {
+        document.getElementById('chancesModal').style.display = 'none';
+    });
+});
+    </script>
+</body>
+</html>

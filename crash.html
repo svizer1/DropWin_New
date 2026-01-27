@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Краш | DropWin</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    body { margin:0; font-family:system-ui,-apple-system,sans-serif; background:linear-gradient(to bottom,#0f172a,#020617); color:white; min-height:100vh; }
+    .header { display:flex; justify-content:space-between; align-items:center; padding:16px 20px; background:rgba(15,23,42,0.8); border-bottom:1px solid #334155; }
+    .logo { font-size:1.6rem; font-weight:bold; }
+    .balance-container { display:flex; align-items:center; gap:16px; }
+    .balance { font-size:1.3rem; font-weight:600; }
+    .auth-btn { padding:8px 16px; background:#334155; border:none; border-radius:8px; color:white; cursor:pointer; }
+    #crashGraph { width:100%; height:280px; background:rgba(15,23,42,0.7); border-radius:16px; border:2px solid #334155; margin:20px 0; position:relative; overflow:hidden; }
+    #crashLine { position:absolute; bottom:0; left:0; width:100%; height:100%; stroke:#fbbf24; stroke-width:6; fill:none; filter:drop-shadow(0 0 14px #fbbf24); transition:transform 0.12s; }
+    #crashGraph.shake { animation:shake 0.7s cubic-bezier(.36,.07,.19,.97) both; }
+    @keyframes shake { 10%,90% {transform:translate3d(-3px,1px,0);} 20%,80% {transform:translate3d(5px,-1px,0);} 30%,50%,70% {transform:translate3d(-7px,2px,0);} 40%,60% {transform:translate3d(7px,-2px,0);} }
+    #crashMultiplier { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:6rem; font-weight:900; color:#fef08a; text-shadow:0 0 30px #fbbf24, 0 0 70px #f97316; z-index:10; transition:all 0.3s; }
+    .crashed { color:#f87171 !important; text-shadow:0 0 50px #ef4444, 0 0 100px #b91c1c; animation:flash 0.6s infinite alternate; }
+    @keyframes flash { to {opacity:0.65;} }
+    .controls { display:flex; flex-direction:column; gap:16px; max-width:380px; margin:24px auto; }
+    .cashout-btn { padding:18px 40px; font-size:1.5rem; font-weight:bold; background:linear-gradient(135deg,#10b981,#059669); color:white; border:none; border-radius:14px; cursor:pointer; transition:all 0.25s; }
+    .cashout-btn:disabled { background:#4b5563; cursor:not-allowed; opacity:0.6; }
+    .result { font-size:1.45rem; font-weight:600; text-align:center; margin:20px 0; min-height:70px; line-height:1.4; }
+    .last-crashes { margin:28px auto; padding:16px; background:rgba(30,41,59,0.5); border-radius:14px; border:1px solid #334155; max-width:380px; }
+    .last-crashes-title { font-size:1.25rem; font-weight:600; margin-bottom:14px; color:#94a3b8; text-align:center; }
+    .crash-history-list { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; }
+    .crash-item { padding:8px 16px; border-radius:999px; font-weight:bold; font-size:1.1rem; min-width:74px; text-align:center; background:#1e293b; border:1px solid #475569; }
+    .crash-item.low    { color:#fca5a5; border-color:#fca5a5; }
+    .crash-item.medium { color:#fbbf24; border-color:#fbbf24; }
+    .crash-item.high   { color:#6ee7b7; border-color:#6ee7b7; }
+    .crash-item.very-high { color:#60a5fa; border-color:#60a5fa; background:rgba(96,165,250,0.15); }
+    #explosion { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:0; height:0; background:radial-gradient(circle at 35% 35%,#fef08a 10%,#fbbf24 30%,#f97316 60%,#ef4444 85%,transparent 100%); border-radius:50%; opacity:0; z-index:5; pointer-events:none; box-shadow:0 0 100px #ef4444, 0 0 180px #991b1b; }
+    .explode { animation:explodeAnim 1.5s ease-out forwards; }
+    @keyframes explodeAnim { 0% {width:0;height:0;opacity:0.95;transform:translate(-50%,-50%) scale(0.05);} 35% {width:420px;height:420px;opacity:0.92;transform:translate(-50%,-50%) scale(1.15);} 65% {width:620px;height:620px;opacity:0.65;transform:translate(-50%,-50%) scale(1.4);} 100% {width:900px;height:900px;opacity:0;transform:translate(-50%,-50%) scale(1.8);} }
+    .particle-expl { position:absolute; width:7px; height:7px; background:#fbbf24; border-radius:50%; pointer-events:none; z-index:6; opacity:0; will-change:transform,opacity; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">💎 DROPWIN</div>
+    <div class="balance-container">
+      <div class="balance">💰 <span id="balance">0</span>₽</div>
+      <button class="auth-btn" id="authBtn">Аккаунт</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <button class="back-btn" onclick="location.href='../index.html'">← Назад</button>
+
+    <div class="game-card">
+      <div class="game-title">🚀 Краш</div>
+
+      <div id="crashGraph">
+        <svg id="graphSvg" width="100%" height="100%" preserveAspectRatio="none">
+          <polyline id="crashLine" points="0,280" />
+        </svg>
+        <div id="crashMultiplier">1.00×</div>
+        <div id="explosion"></div>
+      </div>
+
+      <div class="controls">
+        <div class="input-group">
+          <label class="input-label">Ставка</label>
+          <input type="number" id="betCrash" value="100" min="10" step="10">
+        </div>
+        <button class="btn" id="startBtn">Запустить</button>
+        <button class="cashout-btn" id="cashoutBtn" disabled>
+          Забрать ×<span id="currentMult">1.00</span>
+        </button>
+      </div>
+
+      <div class="result" id="crashResult">Готов запустить ракету?</div>
+
+      <div class="last-crashes" id="lastCrashes">
+        <div class="last-crashes-title">Последние 5 крашей</div>
+        <div id="crashHistory" class="crash-history-list"></div>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+    authDomain: "dropwin-8d94b.firebaseapp.com",
+    projectId: "dropwin-8d94b",
+    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    messagingSenderId: "988974289403",
+    appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+    measurementId: "G-BK010MHN8N"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let currentUser = null;
+  let isGuest = false;
+  let userId = null;
+
+  let gameRunning = false;
+  let multiplier = 1.00;
+  let crashPoint = 0;
+  let animationFrame;
+  let betAmount = 0;
+  let crashHistory = [];
+
+  // ────────────────────────────────────────────────
+  //  Функция добавления в общую историю (для профиля)
+  // ────────────────────────────────────────────────
+  function addToHistory(game, change) {
+    const entry = {
+      game: game || 'Игра',
+      time: new Date().toLocaleString('ru-RU'),
+      win: change,
+      result: change > 0 ? 'win' : (change < 0 ? 'loss' : 'draw')
+    };
+
+    currentUser.history = currentUser.history || [];
+    currentUser.history.unshift(entry);
+
+    if (currentUser.history.length > 50) {
+      currentUser.history = currentUser.history.slice(0, 50);
+    }
+  }
+
+  // ────────────────────────────────────────────────
+  //  Загрузка пользователя
+  // ────────────────────────────────────────────────
+  function loadCurrentUser() {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        userId = user.uid;
+        isGuest = false;
+        getDoc(doc(db, 'users', user.uid)).then(docSnap => {
+          if (docSnap.exists()) {
+            currentUser = docSnap.data();
+            renderUser();
+            loadCrashHistory();
+          } else {
+            goToLogin();
+          }
+        }).catch(err => console.error("Firestore load error:", err));
+      } else {
+        const username = localStorage.getItem('dropwin_current_username');
+        if (username === 'Гость') {
+          isGuest = true;
+          const users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+          currentUser = users.find(u => u.username === 'Гость');
+          if (currentUser) {
+            renderUser();
+            loadCrashHistory();
+          } else {
+            goToLogin();
+          }
+        } else {
+          goToLogin();
+        }
+      }
+    });
+  }
+
+  function renderUser() {
+    document.getElementById('balance').textContent = Math.floor(currentUser.balance || 0);
+    const btn = document.getElementById('authBtn');
+    btn.textContent = isGuest ? 'Гость' : (currentUser.username || 'Игрок');
+    btn.onclick = () => location.href = '../profile.html';
+  }
+
+  function goToLogin() {
+    alert('Пожалуйста, войдите в аккаунт');
+    location.href = '../register.html';
+  }
+
+  function saveUser() {
+    if (!currentUser) return;
+
+    if (isGuest) {
+      let users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+      const idx = users.findIndex(u => u.username === 'Гость');
+      if (idx !== -1) {
+        users[idx] = { ...currentUser };
+      } else {
+        users.push({ ...currentUser });
+      }
+      localStorage.setItem('dropwin_users', JSON.stringify(users));
+    } else if (userId) {
+      updateDoc(doc(db, 'users', userId), currentUser)
+        .catch(err => console.error("Firestore save error:", err));
+    }
+  }
+
+  function saveCrashHistory() {
+    if (isGuest) {
+      localStorage.setItem('dropwin_crash_history', JSON.stringify(crashHistory));
+    } else if (userId) {
+      updateDoc(doc(db, 'users', userId), { crashHistory: crashHistory.slice(0, 20) })
+        .catch(err => console.error(err));
+    }
+  }
+
+  function loadCrashHistory() {
+    if (currentUser.crashHistory && Array.isArray(currentUser.crashHistory)) {
+      crashHistory = currentUser.crashHistory;
+    } else if (isGuest) {
+      const saved = localStorage.getItem('dropwin_crash_history');
+      if (saved) crashHistory = JSON.parse(saved);
+    }
+    updateCrashHistoryDisplay();
+  }
+
+  // ────────────────────────────────────────────────
+  //  Логика игры
+  // ────────────────────────────────────────────────
+  function updateCrashHistoryDisplay() {
+    const container = document.getElementById('crashHistory');
+    container.innerHTML = '';
+    crashHistory.slice(0, 5).reverse().forEach(point => {
+      const item = document.createElement('div');
+      item.className = 'crash-item';
+      if      (point < 1.4)  item.classList.add('low');
+      else if (point < 2.8)  item.classList.add('medium');
+      else if (point < 7.5)  item.classList.add('high');
+      else                   item.classList.add('very-high');
+      item.textContent = point.toFixed(2) + '×';
+      container.appendChild(item);
+    });
+  }
+
+  function startCrash() {
+    if (gameRunning) return;
+
+    betAmount = Number(document.getElementById('betCrash').value);
+    if (isNaN(betAmount) || betAmount < 10 || betAmount > (currentUser.balance || 0)) {
+      alert('Неверная ставка (мин 10 ₽, не больше баланса)');
+      return;
+    }
+
+    currentUser.balance = (currentUser.balance || 0) - betAmount;
+    document.getElementById('balance').textContent = Math.floor(currentUser.balance);
+    saveUser();
+
+    gameRunning = true;
+    multiplier = 1.00;
+
+    const r = Math.random();
+    if      (r < 0.38) crashPoint = 1.00 + Math.random() * 0.40;
+    else if (r < 0.68) crashPoint = 1.40 + Math.random() * 0.80;
+    else if (r < 0.88) crashPoint = 2.20 + Math.random() * 2.50;
+    else if (r < 0.97) crashPoint = 4.70 + Math.random() * 5.30;
+    else               crashPoint = 10.0 + Math.random() * 20.0;
+
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('cashoutBtn').disabled = false;
+    document.getElementById('crashResult').textContent = 'Ракета запущена...';
+    document.getElementById('crashMultiplier').classList.remove('crashed');
+
+    animateCrash();
+  }
+
+  function animateCrash() {
+    if (!gameRunning) return;
+
+    multiplier += 0.0013 + multiplier * 0.0026;
+    if (multiplier >= crashPoint) {
+      crash();
+      return;
+    }
+
+    document.getElementById('crashMultiplier').textContent = multiplier.toFixed(2) + '×';
+    document.getElementById('currentMult').textContent = multiplier.toFixed(2);
+
+    const x = multiplier * 34;
+    const y = 280 - multiplier * 30;
+    document.getElementById('crashLine').setAttribute('points', `0,280 ${x},${y}`);
+
+    animationFrame = requestAnimationFrame(animateCrash);
+  }
+
+  function createExplosionParticles() {
+    const graph = document.getElementById('crashGraph');
+    for (let i = 0; i < 28; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle-expl';
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 60 + Math.random() * 180;
+      const size = 4 + Math.random() * 11;
+      const hue = 15 + Math.random() * 50;
+      p.style.background = `hsl(${hue}, 100%, 65%)`;
+      p.style.width = p.style.height = size + 'px';
+      p.style.left = '50%';
+      p.style.top = '50%';
+      graph.appendChild(p);
+
+      setTimeout(() => {
+        p.style.transition = 'all 1.3s ease-out';
+        p.style.transform = `translate(-50%,-50%) translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px) scale(0.2)`;
+        p.style.opacity = '0';
+      }, 30 + Math.random() * 80);
+
+      setTimeout(() => p.remove(), 1600);
+    }
+  }
+
+  function cashOut() {
+    if (!gameRunning) return;
+    gameRunning = false;
+    cancelAnimationFrame(animationFrame);
+
+    const win = Math.round(betAmount * multiplier);
+    const profit = win - betAmount;
+
+    currentUser.balance = (currentUser.balance || 0) + win;
+    currentUser.totalWin = (currentUser.totalWin || 0) + win;
+    currentUser.wins = (currentUser.wins || 0) + 1;
+    currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
+    currentUser.totalBet = (currentUser.totalBet || 0) + betAmount;
+
+    addToHistory('Crash', profit);
+
+    document.getElementById('crashResult').innerHTML =
+      `✅ Забрали <b>${win}₽</b> (+${profit}₽) на <b>${multiplier.toFixed(2)}×</b>`;
+
+    crashHistory.unshift(crashPoint);
+    saveUser();
+    saveCrashHistory();
+
+    document.getElementById('crashResult').innerHTML +=
+      `<br><small style="color:#94a3b8">Долетело бы до ${crashPoint.toFixed(2)}×</small>`;
+
+    updateCrashHistoryDisplay();
+    document.getElementById('balance').textContent = Math.floor(currentUser.balance);
+    resetGame();
+  }
+
+  function crash() {
+    gameRunning = false;
+    cancelAnimationFrame(animationFrame);
+
+    const multEl = document.getElementById('crashMultiplier');
+    multEl.textContent = crashPoint.toFixed(2) + '×';
+    multEl.classList.add('crashed');
+
+    document.getElementById('crashResult').innerHTML =
+      `💥 Краш на <b>${crashPoint.toFixed(2)}×</b> — проиграно ${betAmount}₽`;
+
+    document.getElementById('crashGraph').classList.add('shake');
+    document.getElementById('explosion').classList.add('explode');
+    createExplosionParticles();
+
+    setTimeout(() => document.getElementById('crashGraph').classList.remove('shake'), 900);
+
+    addToHistory('Crash', -betAmount);
+
+    crashHistory.unshift(crashPoint);
+    saveUser();
+    saveCrashHistory();
+
+    document.getElementById('crashResult').innerHTML +=
+      `<br><small style="color:#94a3b8">(это и был предел раунда)</small>`;
+
+    updateCrashHistoryDisplay();
+    resetGame();
+  }
+
+  function resetGame() {
+    setTimeout(() => {
+      multiplier = 1.00;
+      document.getElementById('crashMultiplier').textContent = '1.00×';
+      document.getElementById('crashLine').setAttribute('points', '0,280');
+      document.getElementById('crashMultiplier').classList.remove('crashed');
+      document.getElementById('startBtn').disabled = false;
+      document.getElementById('cashoutBtn').disabled = true;
+      document.getElementById('crashResult').textContent = 'Готов запустить снова?';
+    }, 4200);
+  }
+
+  // ─── Инициализация ──────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    loadCurrentUser();
+
+    document.getElementById('startBtn').addEventListener('click', startCrash);
+    document.getElementById('cashoutBtn').addEventListener('click', cashOut);
+  });
+</script>
+</body>
+</html>

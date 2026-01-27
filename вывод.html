@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Вывод средств | DropWin</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Styles adapted from dep.html */
+    .method-card {
+      background: rgba(30,27,71,0.75);
+      border-radius: 16px;
+      padding: 18px;
+      margin: 16px 0;
+      border: 2px solid #6b7280;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+    .method-card.active {
+      border-color: #f97316;
+      background: rgba(249, 115, 22, 0.15);
+      box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
+    }
+    .bonus-notice {
+      background: linear-gradient(135deg, #1e40af, #1e3a8a);
+      padding: 16px;
+      border-radius: 16px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .min-info {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      color: #e5e7eb;
+      opacity: 0.9;
+    }
+
+    /* Modals */
+    #confirmModal, #successModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 10000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    #confirmModal.show, #successModal.show {
+      display: flex;
+    }
+    .modal-box {
+      background: linear-gradient(145deg, #1e1b4b, #312e81);
+      border-radius: 24px;
+      padding: 32px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      border: 2px solid #4f46e5;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    }
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+    .modal-amount {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #f97316;
+      margin: 20px 0;
+    }
+    .modal-details {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 20px 0;
+      text-align: left;
+      color: #d1d5db;
+      font-size: 0.95rem;
+    }
+    .modal-details div {
+      margin: 8px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+    .modal-details span:last-child {
+      color: #fff;
+      font-weight: 600;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .modal-btn {
+      flex: 1;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+    }
+    .modal-btn.cancel {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border: 2px solid #ef4444;
+    }
+    .modal-btn.cancel:hover {
+      background: rgba(239, 68, 68, 0.4);
+    }
+    .modal-btn.confirm {
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+    }
+    .modal-btn.confirm:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5);
+    }
+    .payment-id {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 12px;
+      border-radius: 10px;
+      font-family: monospace;
+      font-size: 0.9rem;
+      color: #a78bfa;
+      margin: 16px 0;
+    }
+    .payment-link {
+      display: block;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      padding: 16px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin: 20px 0;
+      transition: all 0.3s;
+    }
+    .payment-link:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+    }
+    .payment-status {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      background: rgba(251, 191, 36, 0.2);
+      color: #fbbf24;
+    }
+    .payment-close {
+      background: transparent;
+      border: 2px solid #6b7280;
+      color: #9ca3af;
+      padding: 12px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 16px;
+      transition: all 0.3s;
+    }
+    .payment-close:hover {
+      border-color: #fff;
+      color: #fff;
+    }
+    
+    .support-link {
+      margin-top: 18px;
+      font-size: 0.9rem;
+      color: #9ca3af;
+      text-align: center;
+    }
+    .support-link a {
+      color: #60a5fa;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .support-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+<div class="particles" id="particles"></div>
+
+<!-- Окно подтверждения -->
+<div id="confirmModal">
+  <div class="modal-box">
+    <div class="modal-title">📋 Подтверждение вывода</div>
+    <div class="modal-amount" id="confirmAmount">0 ₽</div>
+    <div class="modal-details">
+      <div><span>Сумма списания:</span><span id="detailAmount">0 ₽</span></div>
+      <div><span>Комиссия:</span><span>0%</span></div>
+      <div><span>К получению:</span><span id="detailTotal" style="color:#f97316;">0 ₽</span></div>
+      <div><span>Метод:</span><span>Telegram Бот</span></div>
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-btn cancel" onclick="closeConfirmModal()">Отмена</button>
+      <button class="modal-btn confirm" onclick="submitWithdraw()">Подтвердить →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Окно успеха (как Payment Modal) -->
+<div id="successModal">
+  <div class="modal-box">
+    <div class="modal-title">✅ Заявка создана</div>
+    <div class="modal-amount" id="successAmount">0 ₽</div>
+    <div class="payment-id">ID: <span id="successId">---</span></div>
+    <div class="payment-status" id="successStatus">
+      ⏳ Ожидает обработки администратором
+    </div>
+    <a href="#" class="payment-link" id="successLink" target="_blank">
+      📱 Проверить статус в боте
+    </a>
+    <div style="color: #9ca3af; font-size: 0.9rem; margin-top: 12px;">Создано: <span id="successTime">--:--</span></div>
+    <button class="payment-close" onclick="closeSuccessModal()">Закрыть</button>
+  </div>
+</div>
+
+<div class="header">
+  <div class="logo">💎 DROPWIN</div>
+  <div class="balance-container">
+    <div class="balance">💰 <span id="balance">—</span>₽</div>
+  </div>
+</div>
+
+<div class="content">
+  <button class="back-btn" onclick="location.href='profile.html'">← Профиль</button>
+
+  <div class="game-card">
+    <div class="game-title">Вывод средств</div>
+
+    <div class="bonus-notice" style="background: linear-gradient(135deg, #1e40af, #1e3a8a);">
+      <strong>⚠️ Минимальный вывод — 1000₽</strong><br>
+      Запрос на вывод не может превышать ваш текущий баланс.
+      <div class="min-info">
+        Баланс обновится после обработки заявки.
+      </div>
+    </div>
+
+    <!-- Cooldown Warning Block -->
+    <div id="cooldownWarning" style="display: none; background: rgba(239, 68, 68, 0.2); color: #fca5a5; padding: 12px; border-radius: 12px; margin: 16px 0; border: 1px solid #ef4444; text-align: center;">
+      ⛔ Вывод временно ограничен.<br>
+      Подождите <span id="cooldownTimer" style="font-weight: bold; color: #fff;">--:--</span> после последнего пополнения.
+    </div>
+    
+    <!-- No Games Warning Block -->
+    <div id="noGamesWarning" style="display: none; background: rgba(239, 68, 68, 0.2); color: #fca5a5; padding: 12px; border-radius: 12px; margin: 16px 0; border: 1px solid #ef4444; text-align: center;">
+      ⛔ Вывод недоступен.<br>
+      Вам необходимо сыграть хотя бы в одну игру перед выводом средств.
+    </div>
+
+    <div class="method-card active">
+      <h3>📱 Telegram Бот</h3>
+      <p>Вывод средств через бота DropWins</p>
+    </div>
+
+    <div style="margin: 24px 0; position: relative;">
+      <label class="input-label">Сумма вывода (₽)</label>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <input type="number" id="withdrawAmount" placeholder="1000" min="1000" step="100"
+               style="font-size:1.4rem; padding:16px; flex: 1; width: 100%;">
+      </div>
+    </div>
+
+    <button class="btn" id="withdrawBtn" onclick="showConfirmModal()"
+            style="background: linear-gradient(135deg, #f97316, #ea580c); margin-top: 16px;">
+      💸 Отправить заявку
+    </button>
+
+    <div id="withdrawStatus" style="margin-top: 16px; min-height: 24px;"></div>
+
+    <div class="support-link">
+      По всем вопросам вывода обращайтесь в поддержку:
+      <a href="https://t.me/DropWinHelp_bot" target="_blank">@DropWinHelp_bot</a>
+    </div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn" onclick="location.href='index.html'"><span>🏠</span>Главная</button>
+  <button class="nav-btn" onclick="location.href='profile.html'"><span>👤</span>Профиль</button>
+  <button class="nav-btn active"><span>💸</span>Вывод</button>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+    authDomain: "dropwin-8d94b.firebaseapp.com",
+    projectId: "dropwin-8d94b",
+    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    messagingSenderId: "988974289403",
+    appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+    measurementId: "G-BK010MHN8N"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let currentUser = null;
+  let userId = null;
+
+  function createParticles() {
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDuration = Math.random() * 15 + 10 + 's';
+      p.style.animationDelay = Math.random() * 5 + 's';
+      container.appendChild(p);
+    }
+  }
+
+  async function loadUserAndBalance(user) {
+    userId = user.uid;
+    try {
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      if (!snap.exists()) {
+        document.getElementById('withdrawStatus').innerHTML =
+          '<span style="color:#f87171;">Профиль не найден. Зайдите в аккаунт ещё раз.</span>';
+        return;
+      }
+      currentUser = snap.data();
+      const balance = currentUser.balance || 0;
+      document.getElementById('balance').textContent = balance;
+
+      const btn = document.getElementById('withdrawBtn');
+      const amountInput = document.getElementById('withdrawAmount');
+
+      // Проверка количества игр и оборота
+      const gamesPlayed = currentUser.gamesPlayed || 0;
+      const totalBet = currentUser.totalBet || 0;
+      const minGames = 5;
+      const minTurnover = balance * 0.30;
+
+      if (gamesPlayed < minGames || totalBet < minTurnover) {
+        const noGamesWarn = document.getElementById('noGamesWarning');
+        const btn = document.getElementById('withdrawBtn');
+        const amountInput = document.getElementById('withdrawAmount');
+        
+        if (noGamesWarn) {
+          noGamesWarn.style.display = 'block';
+          noGamesWarn.innerHTML = `
+            ⛔ Вывод недоступен.<br>
+            Необходимо сыграть минимум ${minGames} игр и сделать ставок на сумму не менее 30% от баланса.<br>
+            <div style="margin-top:8px; font-size:0.9em; opacity:0.8;">
+               Сыграно: ${gamesPlayed}/${minGames}<br>
+               Ставок: ${Math.floor(totalBet)} / ${Math.floor(minTurnover)} ₽
+            </div>
+          `;
+        }
+        if (btn) {
+          btn.disabled = true;
+          btn.style.opacity = '0.5';
+          btn.textContent = 'Не выполнены условия вывода';
+        }
+        if (amountInput) amountInput.disabled = true;
+        return;
+      }
+
+      // Дополнительный депозит: требуем 5 игр и оборот 30% от суммы доп. депозита
+      const lastWithdrawalAt = currentUser.lastWithdrawalAt || 0;
+      const lastDepositAt = currentUser.lastDepositAt || 0;
+      const lastDepositAmount = currentUser.lastDepositAmount || 0;
+      const isAdditionalDeposit = !!(lastDepositAt && lastWithdrawalAt && lastDepositAt > lastWithdrawalAt);
+      if (isAdditionalDeposit && lastDepositAmount > 0) {
+        const gamesAtDep = currentUser.gamesPlayedAtLastDeposit || 0;
+        const betAtDep = currentUser.totalBetAtLastDeposit || 0;
+        const gamesSinceDep = Math.max(0, (currentUser.gamesPlayed || 0) - gamesAtDep);
+        const betSinceDep = Math.max(0, (currentUser.totalBet || 0) - betAtDep);
+        const depMinGames = 5;
+        const depMinTurnover = Math.floor(lastDepositAmount * 0.30);
+        if (gamesSinceDep < depMinGames || betSinceDep < depMinTurnover) {
+          const noGamesWarn = document.getElementById('noGamesWarning');
+          if (noGamesWarn) {
+            noGamesWarn.style.display = 'block';
+            noGamesWarn.innerHTML = `
+              ⛔ Вывод недоступен.<br>
+              После дополнительного депозита требуется сыграть минимум ${depMinGames} игр и сделать ставок на сумму не менее 30% от суммы депозита.<br>
+              <div style="margin-top:8px; font-size:0.9em; opacity:0.8;">
+                 Сыграно после депозита: ${gamesSinceDep}/${depMinGames}<br>
+                 Ставок после депозита: ${Math.floor(betSinceDep)} / ${depMinTurnover} ₽
+              </div>
+            `;
+          }
+          if (btn) {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.textContent = 'Не выполнены условия вывода';
+          }
+          if (amountInput) amountInput.disabled = true;
+          return;
+        }
+      }
+
+      // Проверка задержки 1 час
+      let lastDepositAtCool = currentUser.lastDepositAt || 0;
+      if (!lastDepositAtCool && Array.isArray(currentUser.cryptoTransactions)) {
+        lastDepositAtCool = currentUser.cryptoTransactions
+          .filter(t => t && t.type === 'deposit')
+          .reduce((m, t) => Math.max(m, t.timestamp || 0), 0);
+      }
+      
+      const cooldownMs = 60 * 60 * 1000;
+      const timeSinceDep = Date.now() - lastDepositAtCool;
+      
+      if (lastDepositAtCool && timeSinceDep < cooldownMs) {
+        // Блокировка вывода
+        const warning = document.getElementById('cooldownWarning');
+        const timerSpan = document.getElementById('cooldownTimer');
+        warning.style.display = 'block';
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+        btn.textContent = 'Вывод временно недоступен';
+        amountInput.disabled = true;
+        
+        // Запуск таймера
+        const updateTimer = () => {
+          const remaining = cooldownMs - (Date.now() - lastDepositAt);
+          if (remaining <= 0) {
+             warning.style.display = 'none';
+             btn.disabled = false;
+             btn.style.opacity = '1';
+             btn.textContent = '💸 Отправить заявку';
+             amountInput.disabled = false;
+             return;
+          }
+          const minutes = Math.floor(remaining / 60000);
+          const seconds = Math.floor((remaining % 60000) / 1000);
+          timerSpan.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+          requestAnimationFrame(updateTimer);
+        };
+        updateTimer();
+        return; // Прерываем дальнейшую логику UI, чтобы не перебить disabled
+      }
+
+      if (balance < 1000) {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.textContent = 'Недостаточно средств';
+        amountInput.disabled = true;
+        document.getElementById('withdrawStatus').innerHTML =
+          '<span style="color:#fbbf24;">Для вывода необходимо минимум 1000₽ на балансе.</span>';
+      } else {
+        amountInput.max = balance;
+      }
+    } catch (e) {
+      console.error('Ошибка загрузки пользователя:', e);
+      document.getElementById('withdrawStatus').innerHTML =
+        '<span style="color:#f87171;">Ошибка загрузки профиля. Попробуйте позже.</span>';
+    }
+  }
+
+  // Модальные окна
+  window.showConfirmModal = function() {
+    if (!currentUser) return alert('Войдите в аккаунт');
+    
+    const balance = currentUser.balance || 0;
+    const amount = Number(document.getElementById('withdrawAmount').value);
+
+    if (!amount || amount < 1000) return alert('Минимальная сумма вывода — 1000₽');
+    if (amount > balance) return alert('Нельзя выводить больше, чем у вас на балансе.');
+
+    document.getElementById('confirmAmount').textContent = `${amount} ₽`;
+    document.getElementById('detailAmount').textContent = `${amount} ₽`;
+    document.getElementById('detailTotal').textContent = `${amount} ₽`;
+
+    document.getElementById('confirmModal').classList.add('show');
+  };
+
+  window.closeConfirmModal = function() {
+    document.getElementById('confirmModal').classList.remove('show');
+  };
+  
+  window.closeSuccessModal = function() {
+    document.getElementById('successModal').classList.remove('show');
+    location.reload(); // Обновляем страницу после закрытия успешной заявки
+  };
+
+  window.submitWithdraw = async function() {
+    closeConfirmModal();
+    const status = document.getElementById('withdrawStatus');
+    status.innerHTML = '<div style="color:#fbbf24;">Создание заявки...</div>';
+
+    const amount = Number(document.getElementById('withdrawAmount').value);
+    const withdrawId = 'WD' + Date.now().toString(36).toUpperCase() +
+      Math.random().toString(36).substring(2, 6).toUpperCase();
+
+    const data = {
+      paymentId: withdrawId,
+      withdrawId: withdrawId,
+      userId: userId,
+      username: currentUser.username || currentUser.email || 'Unknown',
+      amount: amount,
+      status: 'pending',
+      method: 'telegram_bot',
+      kind: 'withdraw',
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+
+    try {
+      await runTransaction(db, async (transaction) => {
+        const userRef = doc(db, 'users', userId);
+        const userDoc = await transaction.get(userRef);
+        
+        if (!userDoc.exists()) {
+          throw new Error("Пользователь не найден");
+        }
+        
+        const d = userDoc.data();
+        const currentBalance = d.balance || 0;
+        const cooldownMs = 60 * 60 * 1000; // 1 час задержки после пополнения
+        let lastDepositAt = d.lastDepositAt || 0;
+        if (!lastDepositAt && Array.isArray(d.cryptoTransactions)) {
+          lastDepositAt = d.cryptoTransactions
+            .filter(t => t && t.type === 'deposit')
+            .reduce((m, t) => Math.max(m, t.timestamp || 0), 0);
+        }
+        if (lastDepositAt && (Date.now() - lastDepositAt) < cooldownMs) {
+          throw new Error("Вывод недоступен: действует задержка 1 час после пополнения");
+        }
+        // Дополнительный депозит: проверяем требование 5 игр и 30% от суммы депозита
+        const lastWithdrawalAt = d.lastWithdrawalAt || 0;
+        const lastDepositAmount = d.lastDepositAmount || 0;
+        const isAdditionalDeposit = !!(lastDepositAt && lastWithdrawalAt && lastDepositAt > lastWithdrawalAt);
+        if (isAdditionalDeposit && lastDepositAmount > 0) {
+          const gamesAtDep = d.gamesPlayedAtLastDeposit || 0;
+          const betAtDep = d.totalBetAtLastDeposit || 0;
+          const gamesSinceDep = Math.max(0, (d.gamesPlayed || 0) - gamesAtDep);
+          const betSinceDep = Math.max(0, (d.totalBet || 0) - betAtDep);
+          const depMinGames = 5;
+          const depMinTurnover = Math.floor(lastDepositAmount * 0.30);
+          if (gamesSinceDep < depMinGames || betSinceDep < depMinTurnover) {
+            throw new Error("После дополнительного депозита требуется 5 игр и оборот 30% от суммы депозита");
+          }
+        }
+        if (currentBalance < amount) {
+          throw new Error("Недостаточно средств");
+        }
+        
+        transaction.update(userRef, { 
+          balance: currentBalance - amount,
+          lastWithdrawalAt: Date.now()
+        });
+        transaction.set(doc(db, 'payments', withdrawId), data);
+      });
+      
+      status.innerHTML = '';
+      
+      // Показываем Success Modal
+      document.getElementById('successAmount').textContent = `${amount} ₽`;
+      document.getElementById('successId').textContent = withdrawId;
+      document.getElementById('successTime').textContent = new Date().toLocaleTimeString('ru-RU');
+      
+      // Ссылка на бота
+      const tgLink = `https://t.me/DropWins_Bot?start=${withdrawId}`;
+      document.getElementById('successLink').href = tgLink;
+
+      document.getElementById('successModal').classList.add('show');
+
+    } catch (e) {
+      console.error('Ошибка создания заявки на вывод:', e);
+      status.innerHTML =
+        '<span style="color:#f87171;">Ошибка создания заявки. Попробуйте позже.</span>';
+    }
+  };
+
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      location.href = 'register.html';
+      return;
+    }
+    loadUserAndBalance(user);
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    createParticles();
+  });
+</script>
+</body>
+</html>

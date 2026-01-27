@@ -200,6 +200,7 @@
         Пополнить →
       </div>
     </div>
+    <button class="auth-btn" onclick="location.href='inventory.html'">Инвентарь</button>
   </div>
 
   <div class="content">
@@ -216,7 +217,13 @@
                 style="margin-top:16px; background: linear-gradient(135deg, #10b981, #059669); font-size:1.15rem; padding:14px 40px;">
           Пополнить баланс
         </button>
+      <button class="btn" onclick="location.href='вывод.html'"
+              style="margin-top:12px; background: linear-gradient(135deg, #f97316, #ea580c); font-size:1.15rem; padding:14px 40px;">
+        Вывести средства
+      </button>
       </div>
+
+
 
       <div class="referral-card">
         <div class="referral-title">Ваш реферальный код</div>
@@ -339,6 +346,7 @@
 
   let currentUser = null;
   let userId = null;
+
 
   // ─── ВСЕ ФУНКЦИИ ВЫШЕ addEventListener ───
 
@@ -547,6 +555,22 @@
             document.getElementById('refCount').textContent = currentUser.referralCount || 0;
             document.getElementById('refEarnings').textContent = (currentUser.referralEarnings || 0) + ' ₽';
 
+            // Показ ежедневного депоз. промокода (если активен и не истёк)
+            const now = Date.now();
+            const promoBox = document.getElementById('dailyDepPromoBox');
+            
+            if (promoBox) {
+                if (currentUser.activePromoCode && currentUser.activePromoType && currentUser.activePromoType.startsWith('dep') && currentUser.activePromoExpiresAt && currentUser.activePromoExpiresAt > now) {
+                  const codeEl = document.getElementById('dailyDepPromoCode');
+                  const timerEl = document.getElementById('dailyDepPromoTimer');
+                  if (codeEl) codeEl.textContent = currentUser.activePromoCode;
+                  promoBox.style.display = 'block';
+                  if (timerEl) startDailyPromoTimer(currentUser.activePromoExpiresAt, timerEl, promoBox);
+                } else {
+                  promoBox.style.display = 'none';
+                }
+            }
+
             // История игр
             const historyList = document.getElementById('historyList');
             historyList.innerHTML = '';
@@ -646,7 +670,70 @@
     document.getElementById('gotoDeposit')?.addEventListener('click', () => {
       location.href = 'dep.html';
     });
+
   });
+
+  async function getDailyDepositPromo() {
+    if (!currentUser || !userId) return alert('Войдите в аккаунт');
+    
+    try {
+      const today = new Date().toDateString();
+      if (currentUser.lastDailyDepPromoDate === today) {
+        alert('Промокод на депозит можно получать только один раз в сутки');
+        return;
+      }
+      const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const code = `DEP-${randomPart}`;
+      const expiresAt = Date.now() + 20 * 60 * 1000;
+      
+      currentUser.activePromoCode = code;
+      currentUser.activePromoType = 'dep20';
+      currentUser.activePromoValue = 20;
+      currentUser.activePromoExpiresAt = expiresAt;
+      currentUser.lastDailyDepPromoDate = today;
+      currentUser.activePromoUsed = false;
+      
+      await updateDoc(doc(db, 'users', userId), {
+        activePromoCode: code,
+        activePromoType: 'dep20',
+        activePromoValue: 20,
+        activePromoExpiresAt: expiresAt,
+        lastDailyDepPromoDate: today,
+        activePromoUsed: false
+      });
+      
+      const box = document.getElementById('dailyDepPromoBox');
+      const codeEl = document.getElementById('dailyDepPromoCode');
+      const timerEl = document.getElementById('dailyDepPromoTimer');
+      
+      // Проверка DOM элементов
+      if (box && codeEl) {
+        codeEl.textContent = code;
+        box.style.display = 'block';
+        if (timerEl) startDailyPromoTimer(expiresAt, timerEl, box);
+      }
+      
+      alert('Промокод создан. Введите его на странице депозита!');
+    } catch (e) {
+      console.error("Ошибка в getDailyDepositPromo:", e);
+    }
+  }
+
+  function startDailyPromoTimer(expiresAt, timerEl, boxEl) {
+    if (dailyPromoInterval) clearInterval(dailyPromoInterval);
+    function update() {
+      const remaining = Math.max(0, expiresAt - Date.now());
+      const m = Math.floor(remaining / 60000);
+      const s = Math.floor((remaining % 60000) / 1000);
+      timerEl.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      if (remaining <= 0) {
+        clearInterval(dailyPromoInterval);
+        boxEl.style.display = 'none';
+      }
+    }
+    update();
+    dailyPromoInterval = setInterval(update, 1000);
+  }
 </script>
 </body>
 </html>

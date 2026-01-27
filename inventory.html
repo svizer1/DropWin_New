@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <title>Инвентарь | DropWin</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .inventory-item {
+            background: rgba(30, 30, 50, 0.7);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .inventory-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(192, 132, 252, 0.5);
+            border-color: rgba(192, 132, 252, 0.6);
+        }
+
+        .inventory-item.selected {
+            border-color: #d946ef;
+            box-shadow: 0 0 20px rgba(217, 70, 239, 0.6);
+            transform: scale(1.05);
+        }
+
+        .item-emoji {
+            font-size: 4rem;
+            margin: 12px 0;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+        }
+
+        .item-name {
+            font-weight: 700;
+            color: #e0e0ff;
+            margin: 8px 0;
+            font-size: 1.05rem;
+        }
+
+        .item-value {
+            color: #fde047;
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin: 4px 0;
+        }
+
+        .item-source {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            margin-top: 6px;
+        }
+
+        .item-date {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .inventory-actions {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 20, 40, 0.95);
+            backdrop-filter: blur(12px);
+            padding: 20px;
+            border-radius: 20px;
+            border: 2px solid rgba(139, 92, 246, 0.4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            display: none;
+            z-index: 100;
+            max-width: 90%;
+            width: 400px;
+        }
+
+        .inventory-actions.visible {
+            display: block;
+        }
+
+        .action-info {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .action-total {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #34d399;
+            margin: 8px 0;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 14px;
+            border: none;
+            font-weight: 700;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+
+        .sell-btn {
+            background: linear-gradient(135deg, #34d399, #059669);
+            color: white;
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+        }
+
+        .sell-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+        }
+
+        .cancel-btn {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+            box-shadow: 0 4px 16px rgba(107, 114, 128, 0.4);
+        }
+
+        .cancel-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(107, 114, 128, 0.6);
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(30, 30, 50, 0.6);
+            padding: 16px;
+            border-radius: 16px;
+            margin: 16px 0 24px;
+            border: 1px solid rgba(139, 92, 246, 0.25);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #a78bfa;
+            margin: 4px 0;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .empty-inventory {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .empty-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin: 16px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border-radius: 12px;
+            background: rgba(99, 102, 241, 0.2);
+            border: 2px solid rgba(99, 102, 241, 0.3);
+            color: #c4b5fd;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: rgba(99, 102, 241, 0.3);
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            border-color: #a78bfa;
+            color: white;
+        }
+
+        .select-all-btn {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border: none;
+            padding: 12px 28px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            margin: 16px auto;
+            display: block;
+            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+            transition: all 0.25s;
+        }
+
+        .select-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
+        }
+
+        @media (max-width: 480px) {
+            .inventory-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .inventory-item {
+                padding: 12px;
+            }
+
+            .item-emoji {
+                font-size: 3rem;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+
+    <div class="header">
+        <div class="logo">💎 DROPWIN</div>
+        <div class="balance-container">
+            <div class="balance">💰 <span id="balance">0</span>₽</div>
+            <button class="auth-btn" id="authBtn">Аккаунт</button>
+            <button class="auth-btn" onclick="window.open('https://t.me/DropWinHelp_bot','_blank')">Поддержка</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <button class="back-btn" onclick="location.href='index.html'">← Назад</button>
+
+        <div class="game-card">
+            <div class="game-title">🎒 Инвентарь</div>
+
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalItems">0</div>
+                    <div class="stat-label">Предметов</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="totalValue">0₽</div>
+                    <div class="stat-label">Общая ценность</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="selectedCount">0</div>
+                    <div class="stat-label">Выбрано</div>
+                </div>
+            </div>
+
+            <div class="filter-bar">
+                <button class="filter-btn active" data-filter="all">Все</button>
+                <button class="filter-btn" data-filter="high">Дорогие (100+₽)</button>
+                <button class="filter-btn" data-filter="medium">Средние (20-100₽)</button>
+                <button class="filter-btn" data-filter="low">Дешевые (<20₽)</button>
+            </div>
+
+            <button class="select-all-btn" id="goUpgradeBtn" style="background: linear-gradient(135deg, #22c55e, #16a34a);">⚙️ Улучшить</button>
+            <button class="select-all-btn" id="selectAllBtn">Выбрать все</button>
+
+            <div id="inventoryContainer"></div>
+        </div>
+    </div>
+
+    <div class="inventory-actions" id="actionsPanel">
+        <div class="action-info">
+            <div style="color: #c4b5fd; margin-bottom: 8px;">Выбрано предметов: <span id="actionCount">0</span></div>
+            <div class="action-total" id="actionTotal">0₽</div>
+        </div>
+        <div class="action-buttons">
+            <button class="sell-btn" id="sellBtn">💰 Продать</button>
+            <button class="cancel-btn" id="cancelBtn">✖ Отмена</button>
+        </div>
+    </div>
+
+    <div class="nav">
+        <button class="nav-btn" onclick="location.href='index.html'"><span>🏠</span><span class="nav-label">Главная</span></button>
+        <button class="nav-btn active" onclick="location.href='inventory.html'"><span>🎒</span><span class="nav-label">Инвентарь</span></button>
+        <button class="nav-btn" onclick="location.href='profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+            authDomain: "dropwin-8d94b.firebaseapp.com",
+            projectId: "dropwin-8d94b",
+            storageBucket: "dropwin-8d94b.firebasestorage.app",
+            messagingSenderId: "988974289403",
+            appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+            measurementId: "G-BK010MHN8N"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let userId = null;
+        let isGuest = false;
+        let selectedItems = new Set();
+        let currentFilter = 'all';
+
+        function createParticles() {
+            const container = document.getElementById('particles');
+            if (!container) return;
+            for (let i = 0; i < 40; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDuration = Math.random() * 15 + 10 + 's';
+                p.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(p);
+            }
+        }
+
+        function renderInventory() {
+            const container = document.getElementById('inventoryContainer');
+            const inventory = currentUser?.inventory || [];
+
+            if (inventory.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-inventory">
+                        <div class="empty-icon">📦</div>
+                        <h3>Инвентарь пуст</h3>
+                        <p style="margin-top: 12px;">Играйте в батлы и сохраняйте предметы!</p>
+                        <button class="btn" onclick="location.href='games/battles.html'" style="margin-top: 24px; max-width: 300px;">
+                            ⚔️ К батлам
+                        </button>
+                    </div>
+                `;
+                updateStats();
+                return;
+            }
+
+            // Фильтрация
+            let filtered = inventory;
+            if (currentFilter === 'high') {
+                filtered = inventory.filter(item => item.value >= 100);
+            } else if (currentFilter === 'medium') {
+                filtered = inventory.filter(item => item.value >= 20 && item.value < 100);
+            } else if (currentFilter === 'low') {
+                filtered = inventory.filter(item => item.value < 20);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-inventory">
+                        <div class="empty-icon">🔍</div>
+                        <h3>Нет предметов в этой категории</h3>
+                    </div>
+                `;
+                updateStats();
+                return;
+            }
+
+            const grid = document.createElement('div');
+            grid.className = 'inventory-grid';
+
+            filtered.forEach((item, index) => {
+                const actualIndex = inventory.indexOf(item);
+                const div = document.createElement('div');
+                div.className = `inventory-item ${selectedItems.has(actualIndex) ? 'selected' : ''}`;
+                div.dataset.index = actualIndex;
+
+                const date = new Date(item.timestamp || Date.now());
+                const dateStr = date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+
+                div.innerHTML = `
+                    <div class="item-emoji">${item.emoji || '❓'}</div>
+                    <div class="item-name">${item.name || 'Предмет'}</div>
+                    <div class="item-value">${item.value || 0}₽</div>
+                    <div class="item-source">${item.source || 'Неизвестно'}</div>
+                    <div class="item-date">${dateStr}</div>
+                `;
+
+                div.addEventListener('click', () => toggleSelection(actualIndex));
+                grid.appendChild(div);
+            });
+
+            container.innerHTML = '';
+            container.appendChild(grid);
+            updateStats();
+        }
+
+        function toggleSelection(index) {
+            if (selectedItems.has(index)) {
+                selectedItems.delete(index);
+            } else {
+                selectedItems.add(index);
+            }
+            renderInventory();
+            updateActionsPanel();
+        }
+
+        function updateStats() {
+            const inventory = currentUser?.inventory || [];
+            const total = inventory.reduce((sum, item) => sum + (item.value || 0), 0);
+
+            document.getElementById('totalItems').textContent = inventory.length;
+            document.getElementById('totalValue').textContent = total + '₽';
+            document.getElementById('selectedCount').textContent = selectedItems.size;
+        }
+
+        function updateActionsPanel() {
+            const panel = document.getElementById('actionsPanel');
+            const inventory = currentUser?.inventory || [];
+
+            if (selectedItems.size === 0) {
+                panel.classList.remove('visible');
+                return;
+            }
+
+            const selectedTotal = Array.from(selectedItems).reduce((sum, idx) => {
+                return sum + (inventory[idx]?.value || 0);
+            }, 0);
+
+            document.getElementById('actionCount').textContent = selectedItems.size;
+            document.getElementById('actionTotal').textContent = selectedTotal + '₽';
+            panel.classList.add('visible');
+        }
+
+        async function refreshFromServer() {
+            if (isGuest || !userId) return;
+            try {
+                const snap = await getDoc(doc(db, 'users', userId));
+                if (snap.exists()) {
+                    currentUser = snap.data() || {};
+                    if (!Array.isArray(currentUser.inventory)) currentUser.inventory = [];
+                    updateBalance();
+                    renderInventory();
+                    updateActionsPanel();
+                }
+            } catch (err) {
+                console.error("Ошибка обновления инвентаря:", err);
+            }
+        }
+
+        async function sellSelected() {
+            if (selectedItems.size === 0) return;
+            const selected = Array.from(selectedItems);
+
+            await refreshFromServer();
+            const inventory = currentUser?.inventory || [];
+            const validItems = selected.filter(idx => inventory[idx]);
+            if (validItems.length === 0) {
+                selectedItems.clear();
+                renderInventory();
+                updateActionsPanel();
+                return;
+            }
+
+            const itemsToSell = validItems.sort((a, b) => b - a);
+
+            let totalValue = 0;
+            itemsToSell.forEach(idx => {
+                totalValue += inventory[idx]?.value || 0;
+                inventory.splice(idx, 1);
+            });
+
+            currentUser.balance = (currentUser.balance || 0) + totalValue;
+            currentUser.inventory = inventory;
+
+            await saveUser();
+            updateBalance();
+
+            selectedItems.clear();
+            renderInventory();
+            updateActionsPanel();
+
+            alert(`✅ Продано ${itemsToSell.length} предметов на сумму ${totalValue}₽!`);
+        }
+
+        function selectAll() {
+            const inventory = currentUser?.inventory || [];
+            if (selectedItems.size === inventory.length) {
+                selectedItems.clear();
+            } else {
+                selectedItems.clear();
+                inventory.forEach((_, index) => selectedItems.add(index));
+            }
+            renderInventory();
+            updateActionsPanel();
+        }
+
+        async function saveUser() {
+            try {
+                if (isGuest) {
+                    let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+                    const idx = users.findIndex(u => u.username === 'Гость');
+                    if (idx !== -1) users[idx] = currentUser;
+                    localStorage.setItem('dropwin_users', JSON.stringify(users));
+                } else if (userId) {
+                    await updateDoc(doc(db, 'users', userId), {
+                        balance: currentUser.balance,
+                        inventory: currentUser.inventory || []
+                    });
+                }
+            } catch (err) {
+                console.error("Ошибка сохранения:", err);
+                alert("Не удалось сохранить данные.");
+            }
+        }
+
+        function updateBalance() {
+            document.getElementById('balance').textContent = currentUser ? currentUser.balance || 0 : 0;
+            document.getElementById('authBtn').textContent = isGuest ? 'Гость' : (currentUser ? currentUser.username : 'Войти');
+            document.getElementById('authBtn').onclick = () => location.href = 'profile.html';
+        }
+
+        function loadCurrentUser() {
+            onAuthStateChanged(auth, async (user) => {
+                try {
+                    if (user) {
+                        userId = user.uid;
+                        const snap = await getDoc(doc(db, 'users', user.uid));
+                        if (snap.exists()) {
+                            currentUser = snap.data();
+                            if (!currentUser.inventory) {
+                                currentUser.inventory = [];
+                            }
+                            isGuest = false;
+                            updateBalance();
+                            renderInventory();
+                        }
+                    } else {
+                        const username = localStorage.getItem('dropwin_current_username');
+                        if (username === 'Гость') {
+                            const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+                            currentUser = users.find(u => u.username === 'Гость');
+                            if (!currentUser) {
+                                currentUser = { username: 'Гость', balance: 0, inventory: [] };
+                            }
+                            if (!currentUser.inventory) {
+                                currentUser.inventory = [];
+                            }
+                            isGuest = true;
+                            updateBalance();
+                            renderInventory();
+                        } else {
+                            location.href = 'register.html';
+                        }
+                    }
+                } catch (err) {
+                    console.error("Ошибка загрузки пользователя:", err);
+                    alert("Ошибка подключения к аккаунту.");
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            createParticles();
+            loadCurrentUser();
+
+            document.getElementById('sellBtn')?.addEventListener('click', sellSelected);
+            document.getElementById('cancelBtn')?.addEventListener('click', () => {
+                selectedItems.clear();
+                renderInventory();
+                updateActionsPanel();
+            });
+            document.getElementById('goUpgradeBtn')?.addEventListener('click', () => {
+                location.href = 'upgrader.html';
+            });
+
+            document.getElementById('selectAllBtn')?.addEventListener('click', selectAll);
+
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
+                    selectedItems.clear();
+                    renderInventory();
+                    updateActionsPanel();
+                });
+            });
+
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    refreshFromServer();
+                }
+            });
+            window.addEventListener('focus', () => {
+                refreshFromServer();
+            });
+        });
+    </script>
+</body>
+</html>

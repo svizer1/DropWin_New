@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Кости | DropWin</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    /* твой стиль для кубиков остаётся без изменений */
+    .dice-container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin: 40px 0;
+      perspective: 800px;
+    }
+    .dice {
+      width: 110px;
+      height: 110px;
+      background: linear-gradient(145deg, #f1f5f9, #e2e8f0);
+      border-radius: 20px;
+      border: 5px solid #1e293b;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7), inset 0 4px 10px rgba(255,255,255,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4.2rem;
+      font-weight: bold;
+      color: #111;
+      transform-style: preserve-3d;
+      transition: transform 0.4s;
+    }
+    .dice.rolling {
+      animation: rollDice3D 1.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) 3;
+    }
+    @keyframes rollDice3D {
+      0%   { transform: rotateX(0deg) rotateY(0deg) scale(1); }
+      25%  { transform: rotateX(180deg) rotateY(180deg) scale(1.12); }
+      50%  { transform: rotateX(360deg) rotateY(360deg) scale(0.92); }
+      75%  { transform: rotateX(540deg) rotateY(540deg) scale(1.08); }
+      100% { transform: rotateX(720deg) rotateY(720deg) scale(1); }
+    }
+    .dice-face-1 { color: #ef4444; }
+    .dice-face-2, .dice-face-3 { color: #10b981; }
+    .dice-face-4, .dice-face-5, .dice-face-6 { color: #6366f1; }
+
+    .result {
+      font-size: 1.5rem;
+      font-weight: 600;
+      min-height: 80px;
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .bot-dice-container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin: 20px 0;
+      perspective: 800px;
+    }
+    .bot-label {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #fbbf24;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<div class="header">
+  <div class="logo">💎 DROPWIN</div>
+  <div class="balance-container">
+    <div class="balance">💰 <span id="balance">0</span>₽</div>
+    <button class="auth-btn" id="authBtn">Аккаунт</button>
+  </div>
+</div>
+
+<div class="content">
+  <button class="back-btn" onclick="location.href='../index.html'">← Назад</button>
+
+  <div class="game-card">
+    <div class="game-title">🎲 Кости</div>
+
+    <div class="dice-container" id="diceContainer">
+      <div class="dice" id="dice1">?</div>
+      <div class="dice" id="dice2">?</div>
+    </div>
+
+    <div class="bot-label">Кости бота:</div>
+    <div class="bot-dice-container" id="botDiceContainer">
+      <div class="dice" id="botDice1">?</div>
+      <div class="dice" id="botDice2">?</div>
+    </div>
+
+    <div class="input-group" style="max-width:300px; margin:30px auto;">
+      <label class="input-label">Ставка</label>
+      <input type="number" id="betDice" value="100" min="10" step="10">
+    </div>
+
+    <button class="btn" id="rollBtn">Бросить кости</button>
+
+    <div class="result" id="diceResult">Готовы к броску? Бот тоже готов!</div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+    authDomain: "dropwin-8d94b.firebaseapp.com",
+    projectId: "dropwin-8d94b",
+    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    messagingSenderId: "988974289403",
+    appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+    measurementId: "G-BK010MHN8N"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  let currentUser = null;
+  let isGuest = false;
+  let userId = null;
+
+  // ────────────────────────────────────────────────
+  //  Загрузка пользователя (Firebase или Гость)
+  // ────────────────────────────────────────────────
+  function loadCurrentUser() {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Firebase-юзер
+        userId = user.uid;
+        isGuest = false;
+        getDoc(doc(db, 'users', user.uid)).then(docSnap => {
+          if (docSnap.exists()) {
+            currentUser = docSnap.data();
+            renderUser();
+          } else {
+            goToLogin();
+          }
+        });
+      } else {
+        // Проверяем гостя
+        const username = localStorage.getItem('dropwin_current_username');
+        if (username === 'Гость') {
+          isGuest = true;
+          const users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+          currentUser = users.find(u => u.username === 'Гость');
+          if (currentUser) {
+            renderUser();
+          } else {
+            goToLogin();
+          }
+        } else {
+          goToLogin();
+        }
+      }
+    });
+  }
+
+  function renderUser() {
+    document.getElementById('balance').textContent = currentUser.balance || 0;
+    const btn = document.getElementById('authBtn');
+    btn.textContent = isGuest ? 'Гость' : (currentUser.username || 'Игрок');
+    btn.onclick = () => location.href = '../profile.html';
+  }
+
+  function goToLogin() {
+    alert('Пожалуйста, войдите в аккаунт');
+    location.href = '../register.html';
+  }
+
+  function saveUser() {
+    if (!currentUser) return;
+
+    if (isGuest) {
+      let users = JSON.parse(localStorage.getItem('dropwin_users') || '[]');
+      const idx = users.findIndex(u => u.username === 'Гость');
+      if (idx !== -1) {
+        users[idx] = { ...currentUser };
+      }
+      localStorage.setItem('dropwin_users', JSON.stringify(users));
+    } else if (userId) {
+      updateDoc(doc(db, 'users', userId), currentUser)
+        .catch(err => console.error("Ошибка сохранения в Firestore:", err));
+    }
+  }
+
+  function addToHistory(game, change) {
+    const entry = {
+      game,
+      time: new Date().toLocaleString('ru-RU'),
+      win: change,
+      result: change > 0 ? 'win' : (change < 0 ? 'loss' : 'draw')
+    };
+    currentUser.history = currentUser.history || [];
+    currentUser.history.unshift(entry);
+    if (currentUser.history.length > 30) currentUser.history = currentUser.history.slice(0, 30);
+    saveUser();
+  }
+
+  // ────────────────────────────────────────────────
+  //  Логика игры
+  // ────────────────────────────────────────────────
+  function createParticles() {
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDuration = Math.random() * 15 + 10 + 's';
+      p.style.animationDelay = Math.random() * 5 + 's';
+      container.appendChild(p);
+    }
+  }
+
+  async function rollDice() {
+    if (!currentUser) return alert('Войдите в аккаунт');
+
+    const btn = document.getElementById('rollBtn');
+    if (btn.disabled) return;
+
+    const betInput = document.getElementById('betDice');
+    const bet = Number(betInput.value);
+    if (isNaN(bet) || bet < 10 || bet > currentUser.balance) {
+      return alert('Некорректная ставка (мин 10 ₽, не больше баланса)');
+    }
+
+    btn.disabled = true;
+    currentUser.balance -= bet;
+    document.getElementById('balance').textContent = currentUser.balance;
+    saveUser();
+
+    document.getElementById('diceResult').innerHTML = 'Бросаем кости...';
+
+    // Анимация
+    document.getElementById('dice1').classList.add('rolling');
+    document.getElementById('dice2').classList.add('rolling');
+    document.getElementById('botDice1').classList.add('rolling');
+    document.getElementById('botDice2').classList.add('rolling');
+
+    await new Promise(r => setTimeout(r, 4200));
+
+    // Результаты
+    const p1 = Math.floor(Math.random() * 6) + 1;
+    const p2 = Math.floor(Math.random() * 6) + 1;
+    const playerSum = p1 + p2;
+
+    const b1 = Math.floor(Math.random() * 6) + 1;
+    const b2 = Math.floor(Math.random() * 6) + 1;
+    const botSum = b1 + b2;
+
+    document.getElementById('dice1').textContent = p1;
+    document.getElementById('dice2').textContent = p2;
+    document.getElementById('botDice1').textContent = b1;
+    document.getElementById('botDice2').textContent = b2;
+
+    document.querySelectorAll('.dice').forEach(d => d.classList.remove('rolling'));
+
+    let resultText = `Ваша сумма: <b>${playerSum}</b> | Бот: <b>${botSum}</b><br>`;
+    let profit = 0;
+
+    currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
+    currentUser.totalBet = (currentUser.totalBet || 0) + bet;
+
+    if (playerSum > botSum) {
+      profit = bet * 2;
+      currentUser.balance += profit;
+      currentUser.totalWin = (currentUser.totalWin || 0) + profit;
+      currentUser.wins = (currentUser.wins || 0) + 1;
+      resultText += `<span style="color:#22c55e;font-weight:bold">Выиграно +${profit}₽!</span>`;
+      addToHistory('Кости', profit - bet);
+    } else if (playerSum < botSum) {
+      currentUser.losses = (currentUser.losses || 0) + 1;
+      resultText += `<span style="color:#ef4444;font-weight:bold">Проигрыш −${bet}₽</span>`;
+      addToHistory('Кости', -bet);
+    } else {
+      currentUser.balance += bet; // возврат
+      resultText += `<span style="color:#fbbf24;font-weight:bold">Ничья — ставка возвращена</span>`;
+      addToHistory('Кости', 0);
+    }
+
+    document.getElementById('diceResult').innerHTML = resultText;
+    document.getElementById('balance').textContent = currentUser.balance;
+    saveUser();
+
+    setTimeout(() => { btn.disabled = false; }, 800);
+  }
+
+  // Запуск
+  document.addEventListener('DOMContentLoaded', () => {
+    createParticles();
+    loadCurrentUser();
+    document.getElementById('rollBtn').addEventListener('click', rollDice);
+  });
+</script>
+</body>
+</html>

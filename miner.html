@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Минёр | DropWin</title>
+  <link rel="stylesheet" href="../style.css">
+
+  <style>
+    .miner-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 20px auto;
+      max-width: 360px;
+    }
+    .miner-cell {
+      aspect-ratio: 1;
+      background: rgba(40,40,80,0.7);
+      border-radius: 10px;
+      font-size: 2.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.16s;
+      border: 2px solid #4b5563;
+    }
+    .miner-cell:hover:not(.revealed) { transform: scale(1.08); border-color: #8b5cf6; }
+    .miner-cell.revealed { cursor: default; transform: none; }
+    .miner-cell.gem { background: linear-gradient(145deg, #10b981, #34d399); box-shadow: 0 0 18px #10b98180; }
+    .miner-cell.bomb { background: linear-gradient(145deg, #ef4444, #f87171); box-shadow: 0 0 18px #ef444480; }
+    .multiplier-display {
+      font-size: 2.6rem;
+      font-weight: bold;
+      text-align: center;
+      color: #c4b5fd;
+      margin: 8px 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="particles" id="particles"></div>
+
+<div class="header">
+  <div class="logo">💎 DROPWIN</div>
+  <div class="balance-container">
+    <div class="balance">💰 <span id="balance">0</span>₽</div>
+    <button class="auth-btn" id="authBtn">Аккаунт</button>
+  </div>
+</div>
+
+<div class="content">
+  <button class="back-btn" onclick="location.href='../index.html'">← Назад</button>
+
+  <div class="game-card">
+    <div class="game-title">💎 Минёр</div>
+    <div class="multiplier-display" id="multiplier">x1.00</div>
+    <div style="text-align:center; color:#94a3b8; margin-bottom:8px;">
+      Открыто клеток: <span id="openedInfo">0</span> / <span>2</span>
+    </div>
+
+    <div class="miner-grid" id="grid"></div>
+
+    <div class="input-group">
+      <label>Ставка (₽)</label>
+      <input type="number" id="betInput" value="50" min="10" step="10">
+    </div>
+    <div class="input-group">
+      <label>Бомбы</label>
+      <select id="bombsSelect">
+        <option value="3">3 бомбы (12 клеток)</option>
+        <option value="4">4 бомбы (16 клеток)</option>
+        <option value="5" selected>5 бомб (20 клеток)</option>
+      </select>
+    </div>
+
+    <button class="btn" id="startBtn">Начать</button>
+    <button class="btn" id="cashoutBtn" style="display:none; background:#8b5cf6;">Забрать</button>
+
+    <div id="status" style="margin-top:16px; text-align:center; min-height:24px;"></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn" onclick="location.href='../index.html'"><span>🏠</span><span class="nav-label">Главная</span></button>
+  <button class="nav-btn" onclick="location.href='../profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
+  <button class="nav-btn" onclick="location.href='../register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
+</div>
+
+<script type="module">
+  // Firebase конфиг (как в твоих других файлах)
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+    authDomain: "dropwin-8d94b.firebaseapp.com",
+    projectId: "dropwin-8d94b",
+    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    messagingSenderId: "988974289403",
+    appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+    measurementId: "G-BK010MHN8N"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // Переменные
+  let currentUser = null;
+  let userId = null;
+  let isGuest = false;
+
+  let bet = 0;
+  let bombsCount = 3;
+  let totalCells = 0;
+  let revealedSafe = 0;
+  let gameActive = false;
+  let bombPositions = [];
+  let gridCells = [];
+
+  const baseMultiplier = 0.12;
+  const riskBonusPerBomb = 0.035;
+
+  // Частицы
+  function createParticles() {
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 35; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDuration = Math.random() * 12 + 8 + 's';
+      container.appendChild(p);
+    }
+  }
+
+  // Загрузка пользователя
+  function loadCurrentUser() {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        userId = user.uid;
+        getDoc(doc(db, 'users', user.uid)).then((snap) => {
+          if (snap.exists()) {
+            currentUser = snap.data();
+            isGuest = false;
+            updateBalance();
+          } else {
+            location.href = '../register.html';
+          }
+        });
+      } else {
+        const username = localStorage.getItem('dropwin_current_username');
+        if (username !== 'Гость') {
+          location.href = '../register.html';
+          return;
+        }
+        const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+        currentUser = users.find(u => u.username === 'Гость');
+        if (!currentUser) {
+          location.href = '../register.html';
+          return;
+        }
+        isGuest = true;
+        updateBalance();
+      }
+    });
+  }
+
+  function updateBalance() {
+    document.getElementById('balance').textContent = Math.floor(currentUser.balance || 0);
+    document.getElementById('authBtn').textContent = isGuest ? 'Гость' : (currentUser.username || 'Игрок');
+    document.getElementById('authBtn').onclick = () => location.href = '../profile.html';
+  }
+
+  // Сохранение
+  async function saveUser() {
+    if (!currentUser) return;
+    if (!isGuest && userId) {
+      await updateDoc(doc(db, 'users', userId), currentUser).catch(console.error);
+    } else if (isGuest) {
+      let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+      const idx = users.findIndex(u => u.username === 'Гость');
+      if (idx !== -1) {
+        users[idx] = currentUser;
+        localStorage.setItem('dropwin_users', JSON.stringify(users));
+      }
+    }
+  }
+
+  function addToHistory(winAmount) {
+    const entry = {
+      game: 'Минёр',
+      time: new Date().toLocaleString('ru-RU'),
+      win: winAmount,
+      result: winAmount > 0 ? 'win' : 'loss'
+    };
+    currentUser.history = currentUser.history || [];
+    currentUser.history.unshift(entry);
+    if (currentUser.history.length > 25) currentUser.history.pop();
+  }
+
+  // Старт игры
+  function startGame() {
+    if (gameActive) return;
+
+    bet = Number(document.getElementById('betInput').value);
+    bombsCount = Number(document.getElementById('bombsSelect').value);
+
+    if (isNaN(bet) || bet < 10 || bet > (currentUser.balance || 0)) {
+      alert('Ставка от 10 до баланса');
+      return;
+    }
+
+    totalCells = bombsCount === 3 ? 12 : bombsCount === 4 ? 16 : 20;
+
+    currentUser.balance -= bet;
+    currentUser.totalBet = (currentUser.totalBet || 0) + bet;
+    currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
+    saveUser();
+    updateBalance();
+
+    // Генерация бомб
+    let positions = Array.from({length: totalCells}, (_, i) => i);
+    positions.sort(() => Math.random() - 0.5);
+    bombPositions = positions.slice(0, bombsCount);
+
+    revealedSafe = 0;
+    gameActive = true;
+
+    document.getElementById('multiplier').textContent = 'x1.00';
+    document.getElementById('openedInfo').textContent = '0';
+    document.getElementById('startBtn').style.display = 'none';
+    document.getElementById('cashoutBtn').style.display = 'block';
+    document.getElementById('cashoutBtn').disabled = true;
+    document.getElementById('cashoutBtn').style.opacity = '0.6';
+    document.getElementById('status').textContent = 'Выбирайте клетки...';
+
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    grid.style.gridTemplateColumns = `repeat(${Math.ceil(Math.sqrt(totalCells))}, 1fr)`;
+
+    gridCells = [];
+    for (let i = 0; i < totalCells; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'miner-cell';
+      cell.addEventListener('click', () => revealCell(i));
+      grid.appendChild(cell);
+      gridCells.push(cell);
+    }
+  }
+
+  // Открытие клетки
+  function revealCell(index) {
+    if (!gameActive || gridCells[index].classList.contains('revealed')) return;
+
+    gridCells[index].classList.add('revealed');
+
+    if (bombPositions.includes(index)) {
+      gridCells[index].classList.add('bomb');
+      gridCells[index].textContent = '💣';
+      document.getElementById('status').innerHTML = '<span style="color:#f87171">ВЗРЫВ! Проигрыш</span>';
+      addToHistory(-bet);
+      currentUser.losses = (currentUser.losses || 0) + 1;
+      showAllBombs();
+      endGame(false);
+    } else {
+      gridCells[index].classList.add('gem');
+      gridCells[index].textContent = '💎';
+      revealedSafe++;
+
+      const multiplier = 1 + revealedSafe * (baseMultiplier + riskBonusPerBomb * bombsCount);
+      document.getElementById('multiplier').textContent = `x${multiplier.toFixed(2)}`;
+      document.getElementById('openedInfo').textContent = String(revealedSafe);
+      if (revealedSafe >= 2) {
+        const btn = document.getElementById('cashoutBtn');
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
+
+      if (revealedSafe === totalCells - bombsCount) {
+        const win = Math.floor(bet * multiplier);
+        finishWithWin(win);
+      }
+    }
+  }
+
+  // Забрать
+  function cashOut() {
+    if (!gameActive) return;
+    if (revealedSafe < 2) {
+      document.getElementById('status').innerHTML = '<span style="color:#fbbf24">Для получения награды откройте минимум 2 клетки</span>';
+      return;
+    }
+    const multiplier = 1 + revealedSafe * (baseMultiplier + riskBonusPerBomb * bombsCount);
+    const win = Math.floor(bet * multiplier);
+    finishWithWin(win);
+  }
+
+  function finishWithWin(amount) {
+    currentUser.balance += amount;
+    currentUser.totalWin = (currentUser.totalWin || 0) + amount;
+    currentUser.wins = (currentUser.wins || 0) + 1;
+    document.getElementById('status').innerHTML = `<span style="color:#34d399">+${amount} ₽</span>`;
+    updateBalance();
+    addToHistory(amount);
+    showAllBombs();
+    endGame(true);
+  }
+
+  function showAllBombs() {
+    bombPositions.forEach(idx => {
+      if (!gridCells[idx].classList.contains('revealed')) {
+        gridCells[idx].classList.add('revealed', 'bomb');
+        gridCells[idx].textContent = '💣';
+      }
+    });
+  }
+
+  function endGame(won = false) {
+    gameActive = false;
+    document.getElementById('startBtn').style.display = 'block';
+    document.getElementById('cashoutBtn').style.display = 'none';
+    gridCells.forEach(cell => cell.onclick = null);
+    if (!won) {
+      currentUser.losses = (currentUser.losses || 0) + 1;
+    }
+    saveUser();
+  }
+
+  // Инициализация
+  document.addEventListener('DOMContentLoaded', () => {
+    createParticles();
+    loadCurrentUser();
+
+    // Добавляем слушатели событий (чтобы избежать ошибки с onclick в module)
+    document.getElementById('startBtn').addEventListener('click', startGame);
+    document.getElementById('cashoutBtn').addEventListener('click', cashOut);
+  });
+</script>
+</body>
+</html>

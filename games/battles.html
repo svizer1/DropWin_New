@@ -31,43 +31,94 @@
 
         .case-select-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 14px;
-            margin: 16px 0;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
         }
         .case-card {
-            background: transparent;
-            padding: 10px;
+            background: #1e1b2e;
             border-radius: 16px;
-            text-align: center;
             cursor: pointer;
-            transition: all 0.25s ease;
-            box-shadow: 0 4px 18px rgba(0,0,0,0.5);
             overflow: hidden;
-            aspect-ratio: 1 / 1;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255,255,255,0.05);
+            /* aspect-ratio removed to allow content to dictate height */
+        }
+        .case-image-wrap {
+            flex: 1;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            background: radial-gradient(circle at center, #2d2a4a 0%, #1e1b2e 70%);
+            overflow: hidden;
+            min-height: 180px; /* Ensure a decent height for the image part */
         }
         .case-card img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            border-radius: 12px;
+            transition: transform 0.3s ease;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.05));
+            position: absolute;
+            top: 0; left: 0;
+        }
+        .case-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 28px rgba(139, 92, 246, 0.25);
+            border-color: #8b5cf6;
+        }
+        .case-card:hover img {
+            transform: scale(1.1) rotate(2deg);
         }
         .case-card.selected {
             border: 3px solid #d946ef;
-            transform: scale(1.06);
+            transform: scale(1.03);
             box-shadow: 0 0 25px #d946ef88;
         }
+        .case-info {
+            padding: 12px;
+            background: #2a2640; /* Lighter background than #151322 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            z-index: 2;
+            position: relative; /* Reset position */
+            bottom: auto; left: auto; right: auto;
+        }
         .case-card .name {
-            position: absolute;
-            bottom: 36px; left: 0; right: 0;
             font-weight: 700; color: white;
-            text-shadow: 0 0 6px black; font-size: 1.1rem;
+            font-size: 1.1rem;
+            text-align: center;
+            line-height: 1.2;
+            margin: 0;
+            text-shadow: none;
+        }
+        .case-card .item-count {
+            color: #64748b;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background: transparent;
+            padding: 0;
+            backdrop-filter: none;
         }
         .case-card .price {
-            position: absolute;
-            bottom: 8px; left: 0; right: 0;
-            color: #fde047; text-shadow: 0 0 6px black; font-size: 1.05rem;
+            background: #fbbf24;
+            color: #111;
+            padding: 8px 0;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 1rem;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+            margin-top: 4px;
         }
 
         .open-results {
@@ -300,7 +351,6 @@
     </div>
             <div id="vsBotSection">
                 <div class="case-select-grid" id="botCaseGrid"></div>
-                <button class="btn add-case-btn" id="addBotCase">Добавить кейс</button>
                 <div class="selected-cases" id="selectedBotCases"></div>
                 <div id="botTotalCost" style="text-align:center; margin:12px 0; font-size:1.3rem;">Итого: 0₽</div>
                 <button class="btn" id="playVsBot">Играть</button>
@@ -318,7 +368,6 @@
                     </div>
 
                     <div class="case-select-grid" id="playerCaseGrid"></div>
-                    <button class="btn add-case-btn" id="addPlayerCase">Добавить кейс</button>
                     <div class="selected-cases" id="selectedPlayerCases"></div>
                     <div id="playerTotalCost" style="text-align:center; margin:16px 0; font-size:1.4rem;">Итого: 0₽</div>
                     <button class="btn" id="confirmCreate">Создать</button>
@@ -393,14 +442,14 @@ const cases = {
     bomj: {
         price: 5,
         items: [
-            {emoji: '🧦', name: 'Дырявый носок',      value: 1,   prob: 0.58},   // было 0.42
-            {emoji: '🍞', name: 'Чёрствый хлеб',       value: 3,   prob: 0.22},   // было 0.24
-            {emoji: '🗑️', name: 'Мусорный пакет',      value: 7,   prob: 0.11},   // было 0.14
-            {emoji: '🍺', name: 'Тёплое пиво 0.5',     value: 12,  prob: 0.05},   // было 0.09
-            {emoji: '🪙', name: 'Горстка мелочи',      value: 25,  prob: 0.025},  // было 0.055
-            {emoji: '🧥', name: 'Старая куртка',       value: 50,  prob: 0.012},  // было 0.025
-            {emoji: '📱', name: 'Сломанный Nokia',     value: 100, prob: 0.003},  // было 0.015
-            {emoji: '💸', name: 'Заначка под матрасом',value: 180, prob: 0.0005}, // было 0.006
+            {emoji: '🧦', name: 'Дырявый носок',      value: 1,   prob: 0.58},
+            {emoji: '🍞', name: 'Чёрствый хлеб',       value: 3,   prob: 0.22},
+            {emoji: '🗑️', name: 'Мусорный пакет',      value: 7,   prob: 0.11},
+            {emoji: '🍺', name: 'Тёплое пиво 0.5',     value: 12,  prob: 0.05},
+            {emoji: '🪙', name: 'Горстка мелочи',      value: 25,  prob: 0.025},
+            {emoji: '🧥', name: 'Старая куртка',       value: 50,  prob: 0.012},
+            {emoji: '📱', name: 'Сломанный Nokia',     value: 100, prob: 0.003},
+            {emoji: '💸', name: 'Заначка под матрасом',value: 180, prob: 0.0005},
         ],
         color: '#6b7280',
         icon: '🗑️'
@@ -408,105 +457,173 @@ const cases = {
     vibe: {
         price: 45,
         items: [
-            {emoji: '💖', name: 'Сердце',          value: 15,  prob: 0.52},   // было 0.65 → меньше мелочёвки
-            {emoji: '🌹', name: 'Роза',            value: 25,  prob: 0.20},   // ↑
-            {emoji: '🚀', name: 'Ракета',          value: 50,  prob: 0.10},   // ↑
-            {emoji: '💐', name: 'Цветы',           value: 50,  prob: 0.08},   // ↑
-            {emoji: '💍', name: 'Кольцо',          value: 100, prob: 0.035},  // ↑
-            {emoji: '💎', name: 'Алмаз',           value: 100, prob: 0.03},   // ↑
-            {emoji: '🍭', name: 'Лол-поп',         value: 325, prob: 0.015},  // ↑
-            {emoji: '🐶', name: 'Суп Дог',         value: 425, prob: 0.012},  // ↑
-            {emoji: '🤡', name: 'Шапка шута',      value: 500, prob: 0.008},  // ↑
-            {emoji: '⭐', name: 'Звезда',           value: 200, prob: 0.01},   // добавлено чуть больше
+            {emoji: '💖', name: 'Сердце',          value: 15,  prob: 0.52},
+            {emoji: '🌹', name: 'Роза',            value: 25,  prob: 0.20},
+            {emoji: '🚀', name: 'Ракета',          value: 50,  prob: 0.10},
+            {emoji: '💐', name: 'Цветы',           value: 50,  prob: 0.08},
+            {emoji: '💍', name: 'Кольцо',          value: 100, prob: 0.035},
+            {emoji: '💎', name: 'Алмаз',           value: 100, prob: 0.03},
+            {emoji: '🍭', name: 'Лол-поп',         value: 325, prob: 0.015},
+            {emoji: '🐶', name: 'Суп Дог',         value: 425, prob: 0.012},
+            {emoji: '🤡', name: 'Шапка шута',      value: 500, prob: 0.008},
+            {emoji: '⭐', name: 'Звезда',           value: 200, prob: 0.01},
         ],
         color: '#ec4899',
         icon: '💖'
-            },
-            dvornik: {
-                price: 25,
-                items: [
-                    {emoji: '🧹', name: 'Метла', value: 5, prob: 0.30},
-                    {emoji: '🪣', name: 'Ведро', value: 10, prob: 0.25},
-                    {emoji: '🧼', name: 'Мыло', value: 15, prob: 0.18},
-                    {emoji: '🪓', name: 'Топор старый', value: 35, prob: 0.12},
-                    {emoji: '🧤', name: 'Перчатки рабочие', value: 50, prob: 0.08},
-                    {emoji: '⛏️', name: 'Лопата', value: 80, prob: 0.04},
-                    {emoji: '🛠️', name: 'Набор инструментов', value: 150, prob: 0.025},
-                    {emoji: '🚲', name: 'Велосипед б/у', value: 400, prob: 0.005},
-                ],
-                color: '#eab308',
-                icon: '🧹'
-            },
-            schoolboy: {
-                price: 250,
-                items: [
-                    {emoji: '📚', name: 'Учебник', value: 80, prob: 0.50},
-                    {emoji: '🎒', name: 'Рюкзак', value: 150, prob: 0.25},
-                    {emoji: '📱', name: 'Смартфон', value: 400, prob: 0.12},
-                    {emoji: '💻', name: 'Ноутбук', value: 700, prob: 0.07},
-                    {emoji: '🎮', name: 'PlayStation', value: 1000, prob: 0.03},
-                    {emoji: '🚗', name: 'Машинка', value: 1300, prob: 0.02},
-                    {emoji: '🏠', name: 'Квартира', value: 4000, prob: 0.005},
-                ],
-                color: '#3b82f6',
-                icon: '📚'
-            },
-            event: {
-                price: 500,
-                items: [
-                    {emoji: '🎉', name: 'Конфетти', value: 150, prob: 0.4},
-                    {emoji: '🎁', name: 'Подарок', value: 300, prob: 0.25},
-                    {emoji: '🎈', name: 'Воздушный шар', value: 400, prob: 0.15},
-                    {emoji: '🍾', name: 'Шампанское', value: 600, prob: 0.1},
-                    {emoji: '🎤', name: 'Микрофон', value: 900, prob: 0.04},
-                    {emoji: '🎬', name: 'Кино', value: 1500, prob: 0.025},
-                    {emoji: '✈️', name: 'Путешествие', value: 3000, prob: 0.01},
-                ],
-                color: '#ef4444',
-                icon: '🎉'
-            },
-            milioner: {
-                price: 1000,
-                items: [
-                    {emoji: '💵', name: 'Деньги', value: 500, prob: 0.48},
-                    {emoji: '🏦', name: 'Банк', value: 1000, prob: 0.24},
-                    {emoji: '💰', name: 'Мешок денег', value: 2000, prob: 0.18},
-                    {emoji: '📈', name: 'График роста', value: 3000, prob: 0.08},
-                    {emoji: '🤑', name: 'Миллионер', value: 5000, prob: 0.015},
-                    {emoji: '🚀', name: 'Ракета', value: 10000, prob: 0.007},
-                    {emoji: '🏰', name: 'Дворец', value: 50000, prob: 0.003},
-                ],
-                color: '#fbbf24',
-                icon: '💰'
-            }
-        };
+    },
+    dvornik: {
+        price: 25,
+        items: [
+            {emoji: '🧹', name: 'Метла', value: 5, prob: 0.30},
+            {emoji: '🪣', name: 'Ведро', value: 10, prob: 0.25},
+            {emoji: '🧼', name: 'Мыло', value: 15, prob: 0.18},
+            {emoji: '🪓', name: 'Топор старый', value: 35, prob: 0.12},
+            {emoji: '🧤', name: 'Перчатки рабочие', value: 50, prob: 0.08},
+            {emoji: '⛏️', name: 'Лопата', value: 80, prob: 0.04},
+            {emoji: '🛠️', name: 'Набор инструментов', value: 150, prob: 0.025},
+            {emoji: '🚲', name: 'Велосипед б/у', value: 400, prob: 0.005},
+        ],
+        color: '#eab308',
+        icon: '🧹'
+    },
+    schoolboy: {
+        price: 250,
+        items: [
+            {emoji: '📚', name: 'Учебник', value: 80, prob: 0.50},
+            {emoji: '🎒', name: 'Рюкзак', value: 150, prob: 0.25},
+            {emoji: '📱', name: 'Смартфон', value: 400, prob: 0.12},
+            {emoji: '💻', name: 'Ноутбук', value: 700, prob: 0.07},
+            {emoji: '🎮', name: 'PlayStation', value: 1000, prob: 0.03},
+            {emoji: '🚗', name: 'Машинка', value: 1300, prob: 0.02},
+            {emoji: '🏠', name: 'Квартира', value: 4000, prob: 0.005},
+        ],
+        color: '#3b82f6',
+        icon: '📚'
+    },
+    event: {
+        price: 500,
+        items: [
+            {emoji: '🎉', name: 'Конфетти', value: 150, prob: 0.4},
+            {emoji: '🎁', name: 'Подарок', value: 300, prob: 0.25},
+            {emoji: '🎈', name: 'Воздушный шар', value: 400, prob: 0.15},
+            {emoji: '🍾', name: 'Шампанское', value: 600, prob: 0.1},
+            {emoji: '🎤', name: 'Микрофон', value: 900, prob: 0.04},
+            {emoji: '🎬', name: 'Кино', value: 1500, prob: 0.025},
+            {emoji: '✈️', name: 'Путешествие', value: 3000, prob: 0.01},
+        ],
+        color: '#ef4444',
+        icon: '🎉'
+    },
+    milioner: {
+        price: 1000,
+        items: [
+            {emoji: '💵', name: 'Деньги', value: 450, prob: 0.52},
+            {emoji: '🏦', name: 'Банк', value: 900, prob: 0.26},
+            {emoji: '💰', name: 'Мешок денег', value: 1800, prob: 0.14},
+            {emoji: '📈', name: 'График роста', value: 2800, prob: 0.06},
+            {emoji: '🤑', name: 'Миллионер', value: 4800, prob: 0.013},
+            {emoji: '🚀', name: 'Ракета', value: 9500, prob: 0.005},
+            {emoji: '🏰', name: 'Дворец', value: 45000, prob: 0.002},
+        ],
+        color: '#fbbf24',
+        icon: '💰'
+    },
+    neoprime: {
+        price: 1500,
+        items: [
+            {emoji: '💡', name: 'Неоновая лампа', value: 450, prob: 0.65},
+            {emoji: '💾', name: 'Кибер-чип', value: 1000, prob: 0.24},
+            {emoji: '🥽', name: 'VR-очки', value: 1600, prob: 0.07},
+            {emoji: '🚁', name: 'Дрон', value: 2200, prob: 0.025},
+            {emoji: '🤖', name: 'Робот', value: 3500, prob: 0.01},
+            {emoji: '🚚', name: 'Кибер-трак', value: 7000, prob: 0.004},
+            {emoji: '🌌', name: 'Neo Prime', value: 30000, prob: 0.001},
+        ],
+        color: '#8b5cf6',
+        icon: '🌌'
+    },
+    maldives: {
+        price: 2500,
+        items: [
+            {emoji: '🐚', name: 'Ракушка', value: 700, prob: 0.60},
+            {emoji: '🥥', name: 'Кокос', value: 1600, prob: 0.28},
+            {emoji: '🍹', name: 'Коктейль', value: 2500, prob: 0.08},
+            {emoji: '🌴', name: 'Пальма', value: 4000, prob: 0.025},
+            {emoji: '🚤', name: 'Гидроцикл', value: 7500, prob: 0.01},
+            {emoji: '🏠', name: 'Бунгало', value: 18000, prob: 0.004},
+            {emoji: '🏝️', name: 'Личный остров', value: 65000, prob: 0.001},
+        ],
+        color: '#0ea5e9',
+        icon: '🏝️'
+    },
+    elka: {
+        price: 289,
+        items: [
+            {emoji: '❄️', name: 'Снежинка', value: 50, prob: 0.50},
+            {emoji: '🍬', name: 'Леденец', value: 100, prob: 0.25},
+            {emoji: '🎄', name: 'Гирлянда', value: 200, prob: 0.15},
+            {emoji: '⭐', name: 'Звезда', value: 400, prob: 0.06},
+            {emoji: '🎅', name: 'Шапка Санты', value: 800, prob: 0.03},
+            {emoji: '🍾', name: 'Шампанское', value: 1500, prob: 0.008},
+            {emoji: '🎆', name: 'Фейерверк', value: 5000, prob: 0.002},
+        ],
+        color: '#10b981',
+        icon: '🎄'
+    },
+    snowman: {
+        price: 1888,
+        items: [
+            {emoji: '🥕', name: 'Морковка', value: 400, prob: 0.50},
+            {emoji: '🧣', name: 'Шарф', value: 800, prob: 0.25},
+            {emoji: '🛷', name: 'Санки', value: 1500, prob: 0.15},
+            {emoji: '⛸️', name: 'Коньки', value: 3000, prob: 0.06},
+            {emoji: '🌨️', name: 'Снегоход', value: 7000, prob: 0.03},
+            {emoji: '🧊', name: 'Ледяной трон', value: 15000, prob: 0.008},
+            {emoji: '🏰', name: 'Ледяной дворец', value: 50000, prob: 0.002},
+        ],
+        color: '#38bdf8',
+        icon: '⛄'
+    }
+};
 
-        const caseBackgrounds = {
-            bomj:     '../images/bomj.png',
-            vibe:     '../images/vibe.png',
-            dvornik:  '../images/dvornik.png',
-            schoolboy:'../images/schoolboy.png',
-            event:    '../images/event.png',
-            milioner: '../images/milioner.png'
-        };
+const caseBackgrounds = {
+    bomj:     '../images/bomj.png',
+    vibe:     '../images/vibe.png',
+    dvornik:  '../images/dvornik.png',
+    schoolboy:'../images/schoolboy.png',
+    event:    '../images/event.png',
+    milioner: '../images/milioner.png',
+    neoprime: '../images/NeoPrime.png',
+    maldives: '../images/Maldives.png',
+    elka:     '../images/elka.png',
+    snowman:  '../images/snowman.png'
+};
 
-        const caseOpenedBackgrounds = {
-            bomj:     '../images/bomj1.png',
-            vibe:     '../images/vibe1.png',
-            dvornik:  '../images/dvornik1.png',
-            schoolboy:'../images/schoolboy1.png',
-            event:    '../images/event1.png',
-            milioner: '../images/milioner1.png'
-        };
+const caseOpenedBackgrounds = {
+    bomj:     '../images/bomj1.png',
+    vibe:     '../images/vibe1.png',
+    dvornik:  '../images/dvornik1.png',
+    schoolboy:'../images/schoolboy1.png',
+    event:    '../images/event1.png',
+    milioner: '../images/milioner1.png',
+    neoprime: '../images/NeoPrime1.png',
+    maldives: '../images/Maldives1.png',
+    elka:     '../images/elka.png',   // Fallback to closed image
+    snowman:  '../images/snowman.png' // Fallback to closed image
+};
 
-        const caseDisplayNames = {
-            bomj:     "Бомж",
-            vibe:     "Vibe",
-            dvornik:  "Дворник",
-            schoolboy:"Школьник",
-            event:    "Ивент",
-            milioner: "Миллионер"
-        };
+const caseDisplayNames = {
+    bomj:     "Бомж",
+    vibe:     "Vibe",
+    dvornik:  "Дворник",
+    schoolboy:"Школьник",
+    event:    "Ивент",
+    milioner: "Миллионер",
+    neoprime: "Neo Prime",
+    maldives: "Мальдивы",
+    elka:     "Ёлка",
+    snowman:  "Снеговик"
+};
 
         const sortedCaseKeys = Object.keys(cases).sort((a, b) => cases[a].price - cases[b].price);
 
@@ -518,9 +635,14 @@ const cases = {
                 const card = document.createElement('div');
                 card.className = `case-card ${key}`;
                 card.innerHTML = `
-                    <img src="${caseBackgrounds[key]}" alt="${key}">
-                    <div class="name">${caseDisplayNames[key] || key}</div>
-                    <div class="price">${c.price}₽</div>
+                    <div class="case-image-wrap">
+                        <img src="${caseBackgrounds[key]}" alt="${key}">
+                    </div>
+                    <div class="case-info">
+                        <div class="name">${caseDisplayNames[key] || key}</div>
+                        <div class="item-count">${c.items.length} предметов</div>
+                        <div class="price">${c.price}₽</div>
+                    </div>
                 `;
                 card.onclick = () => onSelect(key);
                 grid.appendChild(card);
@@ -707,6 +829,16 @@ function showBotResult(playerTotal, botTotal, totalCost) {
 
     const sellBtn = document.getElementById('sellBotBtn');
     const stashBtn = document.getElementById('stashBotBtn');
+    // Сразу блокируем кнопки при поражении
+    if (sellBtn && stashBtn && playerTotal < botTotal) {
+        sellBtn.disabled = true;
+        stashBtn.disabled = true;
+        sellBtn.style.background = '#6b7280';
+        stashBtn.style.background = '#6b7280';
+        sellBtn.style.cursor = 'not-allowed';
+        stashBtn.style.cursor = 'not-allowed';
+        return;
+    }
     if (sellBtn) {
         sellBtn.onclick = async () => {
             if (lastBotRun.processed) return;
@@ -732,7 +864,7 @@ function showBotResult(playerTotal, botTotal, totalCost) {
             const botBoxes = document.querySelectorAll('#botCases .case-box');
             const myItems = Array.from(playerBoxes).map(b => ({ emoji: b.querySelector('.item-reveal')?.textContent || '❓', name: 'Предмет', value: Number(b.querySelector('.value-label')?.textContent.replace('₽','')) || 0 }));
             const oppItems = Array.from(botBoxes).map(b => ({ emoji: b.querySelector('.item-reveal')?.textContent || '❓', name: 'Предмет', value: Number(b.querySelector('.value-label')?.textContent.replace('₽','')) || 0 }));
-            const saveBoth = playerTotal >= botTotal;
+            const saveBoth = playerTotal > botTotal;
             const itemsToSave = saveBoth ? myItems.concat(oppItems) : myItems;
             const userSnap = await getDoc(doc(db, 'users', userId));
             const userData = userSnap.exists() ? userSnap.data() : {};
@@ -844,6 +976,8 @@ function showBotResult(playerTotal, botTotal, totalCost) {
                     player2Total: 0,
                     player1Claimed: false,
                     player2Claimed: false,
+                    player1Saved: false,
+                    player2Saved: false,
                     createdAt: new Date()
                 });
 
@@ -903,6 +1037,9 @@ function showBotResult(playerTotal, botTotal, totalCost) {
                         const oppTotal = isPlayer1 ? p2Total : p1Total;
                         const opponentName = isPlayer1 ? data.player2Name : data.player1Name;
                         const myClaimed = isPlayer1 ? data.player1Claimed : data.player2Claimed;
+                        const mySaved = isPlayer1 ? data.player1Saved : data.player2Saved;
+                        const oppClaimed = isPlayer1 ? data.player2Claimed : data.player1Claimed;
+                        const oppSaved = isPlayer1 ? data.player2Saved : data.player1Saved;
 
                         let resultText = '';
                         let prize = 0;
@@ -941,6 +1078,19 @@ function showBotResult(playerTotal, botTotal, totalCost) {
 
                         const sellBtn = document.getElementById('sellItemsBtn');
                         const stashBtn = document.getElementById('stashItemsBtn');
+                        // Применяем серое состояние при поражении или если уже было действие
+                        if (sellBtn && stashBtn) {
+                            const iLost = !!winner && winner !== userId;
+                            const iDone = !!myClaimed || !!mySaved;
+                            if (iLost || iDone) {
+                                sellBtn.disabled = true;
+                                stashBtn.disabled = true;
+                                sellBtn.style.background = '#6b7280';
+                                stashBtn.style.background = '#6b7280';
+                                sellBtn.style.cursor = 'not-allowed';
+                                stashBtn.style.cursor = 'not-allowed';
+                            }
+                        }
                         if (sellBtn) {
                             sellBtn.onclick = async () => {
                                 sellBtn.disabled = true;
@@ -999,6 +1149,33 @@ function showBotResult(playerTotal, botTotal, totalCost) {
                                 await updateDoc(snap.ref, { [savedFlagField]: true });
                                 statusDiv.innerHTML += `<div style="text-align:center; padding:12px; color:#a78bfa;">Отложено: ${newItems.length} предметов</div>`;
                             };
+                        }
+                        // Автовыдача победителю, если он офлайн (не сделал действие)
+                        if (winner && !data.player1Saved && !data.player1Claimed && !data.player2Saved && !data.player2Claimed) {
+                            const winnerId = winner;
+                            const winnerItems = winnerId === data.player1
+                                ? (data.player1Items || []).concat(data.player2Items || [])
+                                : (data.player2Items || []).concat(data.player1Items || []);
+                            const winnerFlagField = winnerId === data.player1 ? 'player1Saved' : 'player2Saved';
+                            try {
+                                const wSnap = await getDoc(doc(db, 'users', winnerId));
+                                const wData = wSnap.exists() ? wSnap.data() : {};
+                                const inv = Array.isArray(wData.inventory) ? wData.inventory : [];
+                                const newItems = winnerItems.filter(it => !inv.some(e =>
+                                    e.battleId === snap.id && e.name === it.name && e.value === it.value
+                                )).map(it => ({
+                                    id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(16).slice(2)),
+                                    emoji: it.emoji,
+                                    name: it.name,
+                                    value: it.value,
+                                    source: 'Баттл',
+                                    battleId: snap.id,
+                                    timestamp: Date.now()
+                                }));
+                                const updatedInv = inv.concat(newItems);
+                                await updateDoc(doc(db, 'users', winnerId), { inventory: updatedInv });
+                                await updateDoc(snap.ref, { [winnerFlagField]: true });
+                            } catch (e) {}
                         }
                     }
                 } catch (err) {

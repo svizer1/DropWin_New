@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <title>Rooster Run | DropWin</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: #e2e8f0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            touch-action: manipulation;
+            position: relative;
+        }
+
+        /* Animated Background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.3;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+            animation: bgPulse 8s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+        }
+
+        /* Floating Particles */
+        .particle {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: rgba(139, 92, 246, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1;
+            animation: float linear infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) translateX(0) rotate(0deg);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% {
+                transform: translateY(-100px) translateX(100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .header {
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .back-btn {
+            text-decoration: none;
+            color: white;
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .back-btn:hover {
+            background: rgba(139, 92, 246, 0.4);
+            transform: translateX(-4px);
+        }
+
+        .balance-box {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.2));
+            padding: 8px 16px;
+            border-radius: 14px;
+            border: 2px solid rgba(251, 191, 36, 0.4);
+            font-weight: 800;
+            color: #fbbf24;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 16px rgba(251, 191, 36, 0.2);
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 4px 16px rgba(251, 191, 36, 0.2); }
+            50% { box-shadow: 0 4px 24px rgba(251, 191, 36, 0.4); }
+        }
+
+        .main-container {
+            flex: 1;
+            padding: 20px 16px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .game-area {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(51, 65, 85, 0.6));
+            border-radius: 24px;
+            padding: 30px 0;
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            min-height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+
+        /* Track / Path */
+        .track-container {
+            display: flex;
+            gap: 12px;
+            padding: 20px 0;
+            overflow-x: auto;
+            width: 100%;
+            scroll-behavior: smooth;
+            scrollbar-width: none; 
+            -ms-overflow-style: none;
+            align-items: center;
+            padding-left: 50%;
+            margin-left: -35px;
+            position: relative;
+            z-index: 1;
+        }
+        .track-container::-webkit-scrollbar { display: none; }
+
+        .step-card {
+            min-width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border-radius: 18px;
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.3rem;
+            color: transparent;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            flex-shrink: 0;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Question mark for hidden cells */
+        .step-card::after {
+            content: '?';
+            color: rgba(255,255,255,0.4);
+            position: absolute;
+            font-size: 2rem;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.4; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+        }
+
+        .step-card.active {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.5), rgba(124, 58, 237, 0.4));
+            border-color: #a78bfa;
+            color: #fff;
+            transform: scale(1.2);
+            z-index: 5;
+            position: relative;
+        }
+        
+        .step-card.active::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 120%;
+            height: 120%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.6) 0%, rgba(139, 92, 246, 0.3) 40%, transparent 70%);
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            border-radius: 50%;
+            animation: glowPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes glowPulse {
+            0%, 100% { 
+                width: 120%;
+                height: 120%;
+                opacity: 0.8;
+            }
+            50% { 
+                width: 140%;
+                height: 140%;
+                opacity: 1;
+            }
+        }
+        
+        .step-card.active::after { content: ''; }
+
+        .step-card.passed {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.2));
+            border-color: #10b981;
+            color: #34d399;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+            animation: passedShine 0.6s ease-out;
+        }
+        
+        @keyframes passedShine {
+            0% { transform: scale(1.2); }
+            50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(16, 185, 129, 0.6); }
+            100% { transform: scale(1); }
+        }
+        
+        .step-card.passed::after { content: ''; }
+
+        .step-card.fail {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.4), rgba(220, 38, 38, 0.3));
+            border-color: #ef4444;
+            color: #fff;
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
+            animation: shake 0.5s ease-in-out, failPulse 0.3s ease-out;
+        }
+        
+        @keyframes failPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        
+        .step-card.fail::after { content: ''; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            20% { transform: translateX(-10px) rotate(-5deg); }
+            40% { transform: translateX(10px) rotate(5deg); }
+            60% { transform: translateX(-10px) rotate(-5deg); }
+            80% { transform: translateX(10px) rotate(5deg); }
+        }
+
+        /* Rooster Character */
+        .rooster {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            font-size: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -75%) scaleX(-1);
+            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6));
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Idle animation */
+        .rooster:not(.jump):not(.dead) {
+            animation: idle 1.8s infinite ease-in-out;
+        }
+        
+        @keyframes idle {
+            0%, 100% { 
+                transform: translate(-50%, -75%) scaleX(-1) scale(1) rotate(0deg); 
+            }
+            25% { 
+                transform: translate(-50%, -78%) scaleX(-1) scale(1.05) rotate(-2deg); 
+            }
+            75% { 
+                transform: translate(-50%, -72%) scaleX(-1) scale(1.05) rotate(2deg); 
+            }
+        }
+
+        .rooster.jump {
+            animation: jumpAnim 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+            will-change: transform;
+        }
+
+        @keyframes jumpAnim {
+            0% { transform: translate(-50%, -75%) scaleX(-1); }
+            5% { transform: translate(-48%, -80%) scaleX(-1); }
+            10% { transform: translate(-45%, -88%) scaleX(-1); }
+            15% { transform: translate(-40%, -98%) scaleX(-1); }
+            20% { transform: translate(-33%, -110%) scaleX(-1); }
+            25% { transform: translate(-25%, -122%) scaleX(-1); }
+            30% { transform: translate(-15%, -133%) scaleX(-1); }
+            35% { transform: translate(-5%, -142%) scaleX(-1); }
+            40% { transform: translate(8%, -148%) scaleX(-1); }
+            45% { transform: translate(20%, -152%) scaleX(-1); }
+            50% { transform: translate(33%, -152%) scaleX(-1); }
+            55% { transform: translate(45%, -148%) scaleX(-1); }
+            60% { transform: translate(58%, -142%) scaleX(-1); }
+            65% { transform: translate(68%, -133%) scaleX(-1); }
+            70% { transform: translate(78%, -122%) scaleX(-1); }
+            75% { transform: translate(86%, -110%) scaleX(-1); }
+            80% { transform: translate(93%, -98%) scaleX(-1); }
+            85% { transform: translate(97%, -88%) scaleX(-1); }
+            90% { transform: translate(99%, -80%) scaleX(-1); }
+            95% { transform: translate(100%, -76%) scaleX(-1); }
+            100% { transform: translate(100%, -75%) scaleX(-1); }
+        }
+
+        .rooster.dead {
+            animation: deathAnim 0.8s ease-out forwards;
+        }
+
+        @keyframes deathAnim {
+            0% { 
+                transform: translate(-50%, -75%) scaleX(-1) rotate(0deg) scale(1);
+                filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6));
+            }
+            50% { 
+                transform: translate(-50%, -100%) scaleX(-1) rotate(180deg) scale(1.2);
+                filter: drop-shadow(0 12px 24px rgba(239, 68, 68, 0.6));
+            }
+            100% { 
+                transform: translate(-50%, -50%) scaleX(-1) rotate(180deg) scale(0.7);
+                filter: grayscale(1) blur(2px) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8));
+            }
+        }
+
+
+
+
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 100%;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(51, 65, 85, 0.6));
+            padding: 20px;
+            border-radius: 24px;
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+        }
+
+        .bet-mode-tabs {
+            display: flex;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 6px;
+            border-radius: 14px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .bet-mode-tab {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: #94a3b8;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .bet-mode-tab.active {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+        }
+
+        .bet-container {
+            display: none;
+        }
+
+        .bet-container.active {
+            display: block;
+        }
+
+        .selected-items-preview {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            min-height: 60px;
+            padding: 10px;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 12px;
+            border: 1px dashed rgba(139, 92, 246, 0.3);
+        }
+
+        .preview-item {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(124, 58, 237, 0.2));
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            border-radius: 10px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: #e0e7ff;
+            font-weight: 600;
+        }
+
+        .preview-emoji {
+            font-size: 1.5rem;
+        }
+
+        .preview-remove {
+            cursor: pointer;
+            color: #f87171;
+            font-weight: 800;
+            margin-left: 4px;
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(51, 65, 85, 0.95));
+            border-radius: 24px;
+            border: 2px solid rgba(139, 92, 246, 0.4);
+            padding: 24px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #e0e7ff;
+        }
+
+        .modal-close {
+            background: rgba(239, 68, 68, 0.2);
+            border: none;
+            color: #f87171;
+            font-size: 1.5rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: rgba(239, 68, 68, 0.4);
+            transform: scale(1.1);
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+        }
+
+        .inventory-item {
+            background: linear-gradient(145deg, rgba(40, 40, 70, 0.9), rgba(25, 25, 45, 0.9));
+            border-radius: 16px;
+            padding: 12px;
+            text-align: center;
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .inventory-item:hover {
+            transform: translateY(-4px);
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.3);
+        }
+
+        .inventory-item.active {
+            background: linear-gradient(145deg, rgba(139, 92, 246, 0.4), rgba(124, 58, 237, 0.3));
+            border-color: #8b5cf6;
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
+        }
+
+        .inv-emoji {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+
+        .inv-name {
+            font-size: 0.85rem;
+            color: #e0e7ff;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .inv-value {
+            font-size: 0.9rem;
+            color: #fbbf24;
+            font-weight: 700;
+        }
+
+        .empty-inventory {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        @media (max-width: 380px) {
+            .inventory-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 8px;
+            }
+        }
+
+        .bet-input {
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            border-radius: 16px;
+            padding: 14px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            width: 100%;
+            outline: none;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .bet-input:focus {
+            border-color: #8b5cf6;
+            box-shadow: 
+                inset 0 2px 8px rgba(0, 0, 0, 0.3),
+                0 0 20px rgba(139, 92, 246, 0.3);
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 8px 24px rgba(124, 58, 237, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .action-btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 12px 32px rgba(124, 58, 237, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        
+        .action-btn:active { 
+            transform: translateY(0); 
+        }
+
+        .action-btn:disabled { 
+            opacity: 0.5; 
+            cursor: not-allowed; 
+            transform: none; 
+        }
+
+        .cashout-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 
+                0 8px 24px rgba(16, 185, 129, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            display: none;
+            margin-top: 8px;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .cashout-btn:hover {
+            box-shadow: 
+                0 12px 32px rgba(16, 185, 129, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .status-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 0 6px;
+        }
+        
+        .status-label { 
+            color: #94a3b8; 
+            font-size: 0.85rem; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        
+        .status-value { 
+            color: #fff; 
+            font-weight: 800; 
+            font-size: 1.2rem;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .win-val { 
+            color: #34d399;
+            animation: winPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes winPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Confetti Effect */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #fbbf24;
+            position: absolute;
+            z-index: 100;
+            animation: confettiFall 3s linear forwards;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .step-card { min-width: 70px; height: 70px; font-size: 1.1rem; }
+            .rooster { width: 50px; height: 50px; font-size: 2.5rem; }
+            .game-area { min-height: 200px; padding: 25px 0; }
+            .status-value { font-size: 1rem; }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+    <div id="particles"></div>
+
+    <div class="header">
+        <a href="../index.html" class="back-btn">←</a>
+        <div class="balance-box">
+            💰 <span id="balance">0</span> ₽
+        </div>
+    </div>
+
+    <div class="main-container">
+        
+        <div class="game-area">
+            <div class="rooster" id="rooster">🐓</div>
+            <div class="track-container" id="track">
+                <!-- Steps generated by JS -->
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="status-info">
+                <div>
+                    <div class="status-label">Множитель</div>
+                    <div class="status-value" id="currMult">x1.00</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="status-label">Выигрыш</div>
+                    <div class="status-value win-val" id="currWin">0 ₽</div>
+                </div>
+            </div>
+
+            <div class="bet-mode-tabs">
+                <button class="bet-mode-tab active" id="balanceTab" onclick="switchBetMode('balance')">💰 Баланс</button>
+                <button class="bet-mode-tab" id="itemsTab" onclick="switchBetMode('items')">🎁 Предметы</button>
+            </div>
+
+            <div class="bet-container active" id="balanceContainer">
+                <input type="number" id="betInput" class="bet-input" value="100" min="1" placeholder="Сумма ставки">
+            </div>
+
+            <div class="bet-container" id="itemsContainer">
+                <button class="bet-input" onclick="openItemSelector()" style="cursor: pointer; background: rgba(139, 92, 246, 0.2); border: 2px solid rgba(139, 92, 246, 0.4);">
+                    🎁 Выбрать предметы
+                </button>
+                <div class="selected-items-preview" id="selectedItemsPreview">
+                    <div style="color: #94a3b8; width: 100%; text-align: center; padding: 10px;">Предметы не выбраны</div>
+                </div>
+            </div>
+            
+            <button id="mainBtn" class="action-btn" onclick="handleMainAction()">🚀 ИГРАТЬ</button>
+            <button id="cashoutBtn" class="action-btn cashout-btn" onclick="cashout()">💰 ЗАБРАТЬ</button>
+        </div>
+    </div>
+
+    <!-- Modal for item selection -->
+    <div class="modal-overlay" id="itemModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Выберите предметы</div>
+                <button class="modal-close" onclick="closeItemModal()">×</button>
+            </div>
+            <div class="inventory-grid" id="modalInventoryGrid">
+                <!-- Items will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+            authDomain: "dropwin-8d94b.firebaseapp.com",
+            projectId: "dropwin-8d94b",
+            storageBucket: "dropwin-8d94b.firebasestorage.app",
+            messagingSenderId: "988974289403",
+            appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+            measurementId: "G-BK010MHN8N"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let userId = null;
+        let isGuest = false;
+
+        // Game State
+        let gameActive = false;
+        let currentStep = -1;
+        let currentBet = 0;
+        let betMode = 'balance'; // 'balance' or 'items'
+        let selectedItems = []; // Array of item indices from inventory
+        
+        // Multipliers config (Progressive)
+        const multipliers = [
+            1.3, 1.7, 2.2, 2.9, 3.8, 
+            5.0, 6.5, 8.5, 11.0, 14.5, 
+            20.0, 30.0, 50.0, 100.0, 200.0
+        ];
+
+        const failChance = 0.25;
+
+        // Bet mode switching
+        window.switchBetMode = function(mode) {
+            betMode = mode;
+            document.getElementById('balanceTab').classList.toggle('active', mode === 'balance');
+            document.getElementById('itemsTab').classList.toggle('active', mode === 'items');
+            document.getElementById('balanceContainer').classList.toggle('active', mode === 'balance');
+            document.getElementById('itemsContainer').classList.toggle('active', mode === 'items');
+        };
+
+        // Item selection functions
+        window.openItemSelector = function() {
+            renderModalInventory();
+            document.getElementById('itemModal').classList.add('active');
+        };
+
+        window.closeItemModal = function() {
+            document.getElementById('itemModal').classList.remove('active');
+            updateSelectedItemsPreview();
+        };
+
+        function renderModalInventory() {
+            const grid = document.getElementById('modalInventoryGrid');
+            grid.innerHTML = '';
+            
+            const inventory = currentUser?.inventory || [];
+            
+            if (inventory.length === 0) {
+                grid.innerHTML = '<div class="empty-inventory">Инвентарь пуст</div>';
+                return;
+            }
+
+            inventory.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = `inventory-item ${selectedItems.includes(idx) ? 'active' : ''}`;
+                div.innerHTML = `
+                    <div class="inv-emoji">${item.emoji || '❓'}</div>
+                    <div class="inv-name">${item.name || ''}</div>
+                    <div class="inv-value">${item.value || 0}₽</div>
+                `;
+                div.onclick = () => toggleItemSelection(idx);
+                grid.appendChild(div);
+            });
+        }
+
+        function toggleItemSelection(idx) {
+            if (selectedItems.includes(idx)) {
+                selectedItems = selectedItems.filter(i => i !== idx);
+            } else {
+                if (selectedItems.length >= 4) {
+                    alert('Максимум 4 предмета');
+                    return;
+                }
+                selectedItems.push(idx);
+            }
+            renderModalInventory();
+        }
+
+        function updateSelectedItemsPreview() {
+            const preview = document.getElementById('selectedItemsPreview');
+            preview.innerHTML = '';
+            
+            if (selectedItems.length === 0) {
+                preview.innerHTML = '<div style="color: #94a3b8; width: 100%; text-align: center; padding: 10px;">Предметы не выбраны</div>';
+                return;
+            }
+
+            const inventory = currentUser?.inventory || [];
+            selectedItems.forEach(idx => {
+                const item = inventory[idx];
+                if (!item) return;
+                
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                div.innerHTML = `
+                    <span class="preview-emoji">${item.emoji}</span>
+                    <span>${item.value}₽</span>
+                    <span class="preview-remove" onclick="removeSelectedItem(${idx})">×</span>
+                `;
+                preview.appendChild(div);
+            });
+        }
+
+        window.removeSelectedItem = function(idx) {
+            selectedItems = selectedItems.filter(i => i !== idx);
+            updateSelectedItemsPreview();
+        };
+
+        // Create floating particles
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                particle.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // Create confetti effect
+        function createConfetti() {
+            const colors = ['#fbbf24', '#34d399', '#8b5cf6', '#ec4899', '#3b82f6'];
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.top = '-10px';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        function initTrack() {
+            const track = document.getElementById('track');
+            track.innerHTML = '';
+            
+            const spacer = document.createElement('div');
+            spacer.style.minWidth = '50%';
+            track.appendChild(spacer);
+
+            multipliers.forEach((mult, idx) => {
+                const card = document.createElement('div');
+                card.className = 'step-card';
+                card.id = `step-${idx}`;
+                card.dataset.mult = 'x' + mult.toFixed(1);
+                track.appendChild(card);
+            });
+            
+            const endSpacer = document.createElement('div');
+            endSpacer.style.minWidth = '50%';
+            track.appendChild(endSpacer);
+            
+            const rooster = document.getElementById('rooster');
+            rooster.className = 'rooster';
+            rooster.style.left = '50%';
+            rooster.style.top = '50%';
+            rooster.style.transition = '';
+        }
+
+        function scrollToStep(idx) {
+            const track = document.getElementById('track');
+            const target = idx === -1 ? track.firstElementChild : document.getElementById(`step-${idx}`);
+            
+            const containerWidth = track.offsetWidth;
+            const targetLeft = target.offsetLeft;
+            const targetWidth = target.offsetWidth;
+            
+            const scrollPos = targetLeft - (containerWidth / 2) + (targetWidth / 2);
+            track.scrollTo({ left: scrollPos, behavior: 'smooth' });
+        }
+
+        window.handleMainAction = async () => {
+            if (!gameActive) {
+                startGame();
+            } else {
+                makeMove();
+            }
+        };
+
+        async function startGame() {
+            let bet = 0;
+            let itemsToRemove = [];
+
+            if (betMode === 'balance') {
+                const betInput = document.getElementById('betInput');
+                bet = parseInt(betInput.value);
+
+                if (!bet || bet < 1) {
+                    alert('Неверная ставка');
+                    return;
+                }
+                if (currentUser.balance < bet) {
+                    alert('Недостаточно средств');
+                    return;
+                }
+
+                // Deduct balance
+                currentUser.balance -= bet;
+            } else {
+                // Items mode
+                if (selectedItems.length === 0) {
+                    alert('Выберите хотя бы один предмет');
+                    return;
+                }
+
+                const inventory = currentUser?.inventory || [];
+                itemsToRemove = selectedItems.map(idx => inventory[idx]).filter(Boolean);
+                bet = itemsToRemove.reduce((sum, item) => sum + (item.value || 0), 0);
+
+                // Remove items from inventory
+                itemsToRemove.forEach(item => {
+                    const idx = currentUser.inventory.findIndex(
+                        it => it.emoji === item.emoji && it.name === item.name && it.value === item.value && it.timestamp === item.timestamp
+                    );
+                    if (idx !== -1) {
+                        currentUser.inventory.splice(idx, 1);
+                    }
+                });
+
+                selectedItems = [];
+                updateSelectedItemsPreview();
+            }
+
+            updateBalanceDisplay();
+            
+            // Save to database
+            if (!isGuest && userId) {
+                await updateDoc(doc(db, 'users', userId), { 
+                    balance: currentUser.balance,
+                    inventory: currentUser.inventory 
+                });
+            } else {
+                saveGuestUser();
+            }
+
+            gameActive = true;
+            currentBet = bet;
+            currentStep = -1;
+            
+            initTrack();
+            scrollToStep(0);
+            document.getElementById('betInput').disabled = true;
+            document.getElementById('balanceTab').disabled = true;
+            document.getElementById('itemsTab').disabled = true;
+            document.getElementById('mainBtn').textContent = '🐓 ПРЫГАТЬ!';
+            document.getElementById('cashoutBtn').style.display = 'none';
+            document.getElementById('currMult').textContent = 'x1.00';
+            document.getElementById('currWin').textContent = '0 ₽';
+        }
+
+        async function makeMove() {
+            const btn = document.getElementById('mainBtn');
+            const rooster = document.getElementById('rooster');
+            const gameArea = document.querySelector('.game-area');
+            btn.disabled = true;
+
+            rooster.classList.add('jump');
+            
+            setTimeout(async () => {
+                rooster.classList.remove('jump');
+                
+                const isFail = Math.random() < failChance;
+                
+                if (isFail) {
+                    handleFail();
+                } else {
+                    currentStep++;
+                    handleSuccess();
+                }
+                
+                btn.disabled = false;
+            }, 600);
+        }
+
+        function handleSuccess() {
+            const stepCard = document.getElementById(`step-${currentStep}`);
+            stepCard.classList.add('active');
+            stepCard.textContent = stepCard.dataset.mult;
+            
+            if (currentStep > 0) {
+                const prev = document.getElementById(`step-${currentStep-1}`);
+                prev.classList.remove('active');
+                prev.classList.add('passed');
+                prev.textContent = prev.dataset.mult;
+            }
+
+            scrollToStep(currentStep);
+
+            const mult = multipliers[currentStep];
+            const win = Math.floor(currentBet * mult);
+            
+            document.getElementById('currMult').textContent = 'x' + mult.toFixed(1);
+            document.getElementById('currWin').textContent = win + ' ₽';
+
+            const cashoutBtn = document.getElementById('cashoutBtn');
+            cashoutBtn.style.display = 'inline-block';
+            cashoutBtn.textContent = `💰 ЗАБРАТЬ ${win} ₽`;
+
+            if (currentStep === multipliers.length - 1) {
+                createConfetti();
+                cashout();
+            }
+        }
+
+        function handleFail() {
+            const rooster = document.getElementById('rooster');
+            rooster.classList.add('dead');
+            
+            const nextCardId = currentStep + 1;
+            if (nextCardId < multipliers.length) {
+                const nextCard = document.getElementById(`step-${nextCardId}`);
+                if (nextCard) {
+                    nextCard.classList.add('fail');
+                    nextCard.textContent = '💀';
+                }
+                scrollToStep(nextCardId);
+            }
+
+            gameActive = false;
+            document.getElementById('mainBtn').textContent = '🔄 ИГРАТЬ СНОВА';
+            document.getElementById('mainBtn').disabled = false;
+            document.getElementById('betInput').disabled = false;
+            document.getElementById('balanceTab').disabled = false;
+            document.getElementById('itemsTab').disabled = false;
+            document.getElementById('cashoutBtn').style.display = 'none';
+        }
+
+        window.cashout = async () => {
+            if (!gameActive) return;
+            
+            const mult = multipliers[currentStep];
+            const win = Math.floor(currentBet * mult);
+            
+            createConfetti();
+            
+            currentUser.balance += win;
+            updateBalanceDisplay();
+            if (!isGuest && userId) {
+                await updateDoc(doc(db, 'users', userId), { 
+                    balance: currentUser.balance,
+                    inventory: currentUser.inventory 
+                });
+            } else {
+                saveGuestUser();
+            }
+
+            gameActive = false;
+            document.getElementById('mainBtn').textContent = `🎉 ПОБЕДА: ${win} ₽`;
+            document.getElementById('cashoutBtn').style.display = 'none';
+            document.getElementById('betInput').disabled = false;
+            document.getElementById('balanceTab').disabled = false;
+            document.getElementById('itemsTab').disabled = false;
+            
+            setTimeout(() => {
+                 document.getElementById('mainBtn').textContent = '🚀 ИГРАТЬ СНОВА';
+            }, 2500);
+        };
+
+        function updateBalanceDisplay() {
+            document.getElementById('balance').textContent = Math.floor(currentUser?.balance || 0);
+        }
+
+        function saveGuestUser() {
+            let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+            const idx = users.findIndex(u => u.username === 'Гость');
+            if (idx !== -1) {
+                users[idx] = currentUser;
+                localStorage.setItem('dropwin_users', JSON.stringify(users));
+            }
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                userId = user.uid;
+                const snap = await getDoc(doc(db, 'users', userId));
+                if (snap.exists()) {
+                    currentUser = snap.data();
+                    if (!Array.isArray(currentUser.inventory)) {
+                        currentUser.inventory = [];
+                    }
+                    updateBalanceDisplay();
+                }
+            } else {
+                const username = localStorage.getItem('dropwin_current_username');
+                if (username === 'Гость') {
+                    isGuest = true;
+                    const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+                    currentUser = users.find(u => u.username === 'Гость') || { username: 'Гость', balance: 0, inventory: [] };
+                    if (!Array.isArray(currentUser.inventory)) {
+                        currentUser.inventory = [];
+                    }
+                    updateBalanceDisplay();
+                } else {
+                    window.location.href = '../register.html';
+                }
+            }
+        });
+
+        // Initialize
+        createParticles();
+        initTrack();
+    </script>
+</body>
+</html>

@@ -243,6 +243,14 @@
         Баланс обновится после обработки заявки.
       </div>
     </div>
+    
+    <div style="background: rgba(16,185,129,0.12); border: 2px solid #10b981; border-radius: 16px; padding: 14px; margin: 16px 0;">
+      <div style="font-weight: 800; color: #10b981; margin-bottom: 6px;">Условия доступности вывода</div>
+      <div style="color:#d1d5db; font-size: 0.95rem;">
+        • Сыграйте минимум 5 игр и сделайте ставок на сумму не менее 30% от текущего баланса<br>
+        • Если был дополнительный депозит после последнего вывода — сыграйте 5 игр и сделайте ставок на сумму не менее 30% от суммы последнего депозита
+      </div>
+    </div>
 
     <!-- Cooldown Warning Block -->
     <div id="cooldownWarning" style="display: none; background: rgba(239, 68, 68, 0.2); color: #fca5a5; padding: 12px; border-radius: 12px; margin: 16px 0; border: 1px solid #ef4444; text-align: center;">
@@ -355,7 +363,7 @@
           noGamesWarn.style.display = 'block';
           noGamesWarn.innerHTML = `
             ⛔ Вывод недоступен.<br>
-            Необходимо сыграть минимум ${minGames} игр и сделать ставок на сумму не менее 30% от баланса.<br>
+            Необходимо сыграть минимум ${minGames} игр и сделать ставок на сумму не менее 30% от текущего баланса.<br>
             <div style="margin-top:8px; font-size:0.9em; opacity:0.8;">
                Сыграно: ${gamesPlayed}/${minGames}<br>
                Ставок: ${Math.floor(totalBet)} / ${Math.floor(minTurnover)} ₽
@@ -371,28 +379,28 @@
         return;
       }
 
-      // Дополнительный депозит: требуем 5 игр и оборот 30% от суммы доп. депозита
+      // Суммарные требования после последнего вывода: 5 игр и 30% от общей суммы депозитов после вывода
       const lastWithdrawalAt = currentUser.lastWithdrawalAt || 0;
-      const lastDepositAt = currentUser.lastDepositAt || 0;
-      const lastDepositAmount = currentUser.lastDepositAmount || 0;
-      const isAdditionalDeposit = !!(lastDepositAt && lastWithdrawalAt && lastDepositAt > lastWithdrawalAt);
-      if (isAdditionalDeposit && lastDepositAmount > 0) {
-        const gamesAtDep = currentUser.gamesPlayedAtLastDeposit || 0;
-        const betAtDep = currentUser.totalBetAtLastDeposit || 0;
-        const gamesSinceDep = Math.max(0, (currentUser.gamesPlayed || 0) - gamesAtDep);
-        const betSinceDep = Math.max(0, (currentUser.totalBet || 0) - betAtDep);
+      if (lastWithdrawalAt) {
+        const tx = Array.isArray(currentUser.cryptoTransactions) ? currentUser.cryptoTransactions : [];
+        const depositsSinceW = tx.filter(t => t && t.type === 'deposit' && (t.timestamp || 0) > lastWithdrawalAt);
+        const sumDeposits = depositsSinceW.reduce((m, t) => m + (t.amount || 0), 0);
+        const gamesBaseW = currentUser.gamesPlayedAtLastWithdrawal || 0;
+        const betBaseW = currentUser.totalBetAtLastWithdrawal || 0;
+        const gamesSinceW = Math.max(0, (currentUser.gamesPlayed || 0) - gamesBaseW);
+        const betSinceW = Math.max(0, (currentUser.totalBet || 0) - betBaseW);
         const depMinGames = 5;
-        const depMinTurnover = Math.floor(lastDepositAmount * 0.30);
-        if (gamesSinceDep < depMinGames || betSinceDep < depMinTurnover) {
+        const depMinTurnover = Math.floor(sumDeposits * 0.30);
+        if (sumDeposits > 0 && (gamesSinceW < depMinGames || betSinceW < depMinTurnover)) {
           const noGamesWarn = document.getElementById('noGamesWarning');
           if (noGamesWarn) {
             noGamesWarn.style.display = 'block';
             noGamesWarn.innerHTML = `
               ⛔ Вывод недоступен.<br>
-              После дополнительного депозита требуется сыграть минимум ${depMinGames} игр и сделать ставок на сумму не менее 30% от суммы депозита.<br>
+              После последнего вывода требуется сыграть минимум ${depMinGames} игр и сделать ставок на сумму не менее 30% от общей суммы депозитов, внесённых после последнего вывода.<br>
               <div style="margin-top:8px; font-size:0.9em; opacity:0.8;">
-                 Сыграно после депозита: ${gamesSinceDep}/${depMinGames}<br>
-                 Ставок после депозита: ${Math.floor(betSinceDep)} / ${depMinTurnover} ₽
+                 Сыграно: ${gamesSinceW}/${depMinGames}<br>
+                 Ставок: ${Math.floor(betSinceW)} / ${depMinTurnover} ₽
               </div>
             `;
           }
@@ -429,7 +437,7 @@
         
         // Запуск таймера
         const updateTimer = () => {
-          const remaining = cooldownMs - (Date.now() - lastDepositAt);
+          const remaining = cooldownMs - (Date.now() - lastDepositAtCool);
           if (remaining <= 0) {
              warning.style.display = 'none';
              btn.disabled = false;
@@ -554,7 +562,9 @@
         
         transaction.update(userRef, { 
           balance: currentBalance - amount,
-          lastWithdrawalAt: Date.now()
+          lastWithdrawalAt: Date.now(),
+          totalBetAtLastWithdrawal: d.totalBet || 0,
+          gamesPlayedAtLastWithdrawal: d.gamesPlayed || 0
         });
         transaction.set(doc(db, 'payments', withdrawId), data);
       });

@@ -415,6 +415,23 @@
     if (float) float.style.display = 'none';
   }
 
+  function getTodayStr() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}${m}${day}`;
+  }
+
+  function generateDailyCode() {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let part = '';
+    for (let i = 0; i < 6; i++) {
+      part += alphabet[Math.floor(Math.random() * alphabet.length)];
+    }
+    return `DROPWIN-${part}`;
+  }
+
   window.copyPromoCode = function() {
     const el = document.getElementById('randomPromoCode');
     if (!el) return;
@@ -424,22 +441,49 @@
     });
   };
 
+  window.ensureDailyPromo = async function() {
+    if (!currentUser || !userId) return;
+    try {
+      const today = getTodayStr();
+      const needNew = !currentUser.dailyPromoDate || currentUser.dailyPromoDate !== today;
+      if (needNew) {
+        const newCode = generateDailyCode();
+        await updateDoc(doc(db, 'users', userId), {
+          dailyPromoDate: today,
+          dailyPromoCode: newCode,
+          dailyPromoUsed: false,
+          dailyPromoExpiresAt: Date.now() + 20 * 60 * 1000
+        });
+        currentUser.dailyPromoDate = today;
+        currentUser.dailyPromoCode = newCode;
+        currentUser.dailyPromoUsed = false;
+        currentUser.dailyPromoExpiresAt = Date.now() + 20 * 60 * 1000;
+      }
+    } catch (e) {
+      console.error('Ошибка генерации ежедневного промокода:', e);
+    }
+  };
+
   window.checkAndShowDailyPromo = function() {
     try {
       const float = document.getElementById('promoFloat');
       const codeEl = document.getElementById('randomPromoCode');
       if (!float || !codeEl) return;
-      const code = currentUser?.activePromoCode;
-      const type = currentUser?.activePromoType;
-      const used = currentUser?.activePromoUsed;
-      if (code && type && type.startsWith('dep') && !used) {
+      const today = getTodayStr();
+      const code = currentUser?.dailyPromoCode;
+      const date = currentUser?.dailyPromoDate;
+      const used = !!currentUser?.dailyPromoUsed;
+      const expiresAt = currentUser?.dailyPromoExpiresAt || 0;
+      const now = Date.now();
+      if (code && date === today && !used && expiresAt > now) {
         codeEl.textContent = code;
         float.style.display = 'block';
         float.classList.remove('fade-out');
+        const remain = Math.max(0, expiresAt - now);
         setTimeout(() => {
           float.classList.add('fade-out');
           setTimeout(() => float.style.display = 'none', 1000);
-        }, 20000);
+        }, remain);
       } else {
         float.style.display = 'none';
       }
@@ -491,17 +535,30 @@
         console.error('Не удалось отметить промокод использованным:', e);
       }
     }
-    // Проверяем стандартные промокоды формата DROPWIN-
-    else if (code.startsWith('DROPWIN-')) {
-      calculatedBonus = Math.round(amount * 0.20); // базовый пример
-
+    // Ежедневный промокод DROPWIN-XXXXXX, единоразово в день
+    else if (currentUser?.dailyPromoCode && code === currentUser.dailyPromoCode) {
+      const today = getTodayStr();
+      if (currentUser.dailyPromoDate !== today) {
+        return alert('Этот промокод недоступен сегодня');
+      }
+      if (currentUser.dailyPromoUsed) {
+        return alert('Ежедневный промокод уже использован');
+      }
+      calculatedBonus = Math.round(amount * 0.20);
       activePromoCode = {
         code: code,
         type: 'dep20',
         value: 20
       };
-
       document.getElementById('totalWithBonus').textContent = `= ${amount + calculatedBonus}₽`;
+      try {
+        await updateDoc(doc(db, 'users', userId), { dailyPromoUsed: true });
+        currentUser.dailyPromoUsed = true;
+        const float = document.getElementById('promoFloat');
+        if (float) float.style.display = 'none';
+      } catch (e) {
+        console.error('Не удалось отметить ежедневный промокод использованным:', e);
+      }
     }
     else {
       document.getElementById('totalWithBonus').textContent = '';
@@ -665,16 +722,21 @@
 
     // Записываем в историю
     if (!currentUser.cryptoTransactions) currentUser.cryptoTransactions = [];
-    currentUser.cryptoTransactions.push({
+    const txEntry = {
       type: 'deposit',
       amount: total,
       originalAmount: amount,
-      bonus: bonus > 0 ? bonus : undefined,
-      promoCode: payment.promoCode || null,
       method: 'Telegram Bot',
       paymentId: payment.paymentId,
       timestamp: Date.now()
-    });
+    };
+    if (bonus && bonus > 0) {
+      txEntry.bonus = bonus;
+    }
+    if (payment.promoCode) {
+      txEntry.promoCode = payment.promoCode;
+    }
+    currentUser.cryptoTransactions.push(txEntry);
 
     // Обновляем баланс
     currentUser.balance = (currentUser.balance || 0) + total;
@@ -748,6 +810,7 @@
         if (snap.exists()) {
           currentUser = snap.data();
           document.getElementById('balance').textContent = currentUser.balance || 0;
+          await ensureDailyPromo();
           checkAndShowDailyPromo();
         }
       } catch (e) {

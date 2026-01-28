@@ -9,9 +9,7 @@
 
 html {
     height: 100%;
-    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-    background-attachment: fixed;
-    background-size: cover;
+    background: #0f0c29; /* Fallback color */
     overflow-y: auto;
 }
 
@@ -23,15 +21,17 @@ body {
     overflow-x: hidden;
 }
 
+/* Fixed background to replace background-attachment: fixed which causes issues on mobile */
 html::before {
     content: "";
     position: fixed;
     inset: 0;
     background:
         radial-gradient(circle at 20% 30%, rgba(99,102,241,0.12) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(217,70,239,0.10) 0%, transparent 60%);
+        radial-gradient(circle at 80% 70%, rgba(217,70,239,0.10) 0%, transparent 60%),
+        linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
     pointer-events: none;
-    z-index: -1;
+    z-index: -2;
 }
 
 .particles {

@@ -257,8 +257,6 @@
       container.appendChild(p);
     }
   }
-  createParticles();
-
   let currentUser = null;
 
   function loadCurrentUser() {
@@ -297,7 +295,10 @@
     });
   }
 
-  document.addEventListener('DOMContentLoaded', loadCurrentUser);
+  document.addEventListener('DOMContentLoaded', () => {
+    loadCurrentUser();
+    createParticles();
+  });
 </script>
 </body>
 </html>

@@ -27,6 +27,7 @@
         justify-content: center;
         font-size: 2.5rem;
         border: 2px solid var(--primary);
+        position: relative;
     }
     .profile-info {
         flex: 1;
@@ -135,6 +136,7 @@
     .ref-actions {
         margin-top: 14px;
     }
+
   </style>
 </head>
 <body>
@@ -153,10 +155,9 @@
     
     <!-- Profile Header -->
     <div class="profile-header">
-      <div class="profile-avatar" onclick="changeAvatar()" style="cursor: pointer; position: relative; overflow: hidden;">
+      <div class="profile-avatar" id="profileAvatar" style="cursor: pointer; overflow: hidden;">
         <img id="avatarImg" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; display: none;">
         <span id="avatarPlaceholder">👤</span>
-        <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.6); color: white; font-size: 0.6rem; text-align: center; padding: 2px;">ИЗМЕНИТЬ</div>
       </div>
       <div class="profile-info">
         <div class="profile-name" id="usernameDisplay">Загрузка...</div>
@@ -254,7 +255,7 @@
     apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
     authDomain: "dropwin-8d94b.firebaseapp.com",
     projectId: "dropwin-8d94b",
-    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    storageBucket: "dropwin-8d94b.appspot.com",
     messagingSenderId: "988974289403",
     appId: "1:988974289403:web:886d34e6f65920a105fb5e",
     measurementId: "G-BK010MHN8N"
@@ -266,22 +267,37 @@
 
   let currentUser = null;
   let userId = null;
-
-  window.changeAvatar = async function() {
-      if (!currentUser) return;
-      const url = prompt("Введите ссылку на картинку аватара:", currentUser.avatarUrl || "");
-      if (url !== null) {
-          await updateDoc(doc(db, 'users', userId), { avatarUrl: url });
-          currentUser.avatarUrl = url;
-          updateAvatarDisplay();
+  let viewUid = null;
+  let canEdit = false;
+  function promptSetAvatarUrl() {
+      if (!canEdit) return;
+      const url = prompt('Вставьте ссылку на изображение (http/https):', currentUser && currentUser.avatarUrl ? currentUser.avatarUrl : '');
+      if (!url) return;
+      const trimmed = url.trim();
+      if (!/^https?:\/\//i.test(trimmed)) {
+        alert('Некорректная ссылка. Должна начинаться с http(s)://');
+        return;
       }
+      (async () => {
+        try {
+          const ts = Date.now();
+          await updateDoc(doc(db, 'users', userId), { avatarUrl: trimmed, avatarUpdatedAt: ts });
+          if (!currentUser) currentUser = {};
+          currentUser.avatarUrl = trimmed;
+          currentUser.avatarUpdatedAt = ts;
+          updateAvatarDisplay();
+        } catch (e) {
+          alert('Не удалось сохранить ссылку аватара');
+        }
+      })();
   }
 
   function updateAvatarDisplay() {
       const img = document.getElementById('avatarImg');
       const placeholder = document.getElementById('avatarPlaceholder');
       if (currentUser && currentUser.avatarUrl) {
-          img.src = currentUser.avatarUrl;
+          const src = getCachedAvatarSrc(userId, currentUser.avatarUrl, currentUser.avatarUpdatedAt);
+          img.src = src;
           img.style.display = 'block';
           placeholder.style.display = 'none';
       } else {
@@ -350,11 +366,14 @@
       location.href = 'register.html';
       return;
     }
-    userId = user.uid;
+    const params = new URLSearchParams(location.search);
+    viewUid = params.get('uid');
+    userId = viewUid && viewUid !== user.uid ? viewUid : user.uid;
+    canEdit = user.uid === userId;
     try {
       const ref = doc(db, 'users', userId);
       let snap = await getDoc(ref);
-      if (!snap.exists()) {
+      if (!snap.exists() && canEdit) {
         const def = {
           username: user.displayName || 'User',
           balance: 0,
@@ -369,7 +388,7 @@
         snap = await getDoc(ref);
       }
       currentUser = snap.data();
-      if ((!currentUser.username || currentUser.username === 'User') && user.displayName) {
+      if (currentUser && canEdit && (!currentUser.username || currentUser.username === 'User') && user.displayName) {
         await updateDoc(doc(db, 'users', userId), { username: user.displayName });
         currentUser.username = user.displayName;
       }
@@ -426,8 +445,48 @@
       } else {
         transList.innerHTML = '<div style="color:var(--text-sec); font-size:0.8rem;">Нет транзакций</div>';
       }
+      const avatarContainer = document.getElementById('profileAvatar');
+      if (avatarContainer) {
+        if (canEdit) {
+          avatarContainer.style.cursor = 'pointer';
+          avatarContainer.onclick = promptSetAvatarUrl;
+        } else {
+          avatarContainer.style.cursor = 'default';
+          avatarContainer.onclick = null;
+        }
+      }
     } catch (e) {}
   });
+
+
+  function cacheAvatarLocal(uid, url, ts) {
+    try {
+      fetch(url, { cache: 'force-cache' }).then(r => r.blob()).then(b => {
+        const fr = new FileReader();
+        fr.onload = () => {
+          const dataUrl = fr.result;
+          const entry = { dataUrl, ts };
+          localStorage.setItem(`avatar_cache_${uid}`, JSON.stringify(entry));
+        };
+        fr.readAsDataURL(b);
+      });
+    } catch {}
+  }
+  function getCachedAvatarSrc(uid, url, ts) {
+    try {
+      const key = `avatar_cache_${uid}`;
+      const cached = localStorage.getItem(key);
+      if (cached) {
+        const entry = JSON.parse(cached);
+        if (entry && entry.ts && ts && entry.ts === ts && entry.dataUrl) {
+          return entry.dataUrl;
+        }
+      }
+      return url;
+    } catch {
+      return url;
+    }
+  }
 </script>
 </body>
 </html>

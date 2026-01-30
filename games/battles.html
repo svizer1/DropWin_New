@@ -305,7 +305,7 @@
     <div class="particles" id="particles"></div>
 
     <div class="header">
-        <div class="logo">💎 DROPWIN</div>
+        <div class="logo" onclick="location.href='../index.html'" style="cursor: pointer;">💎 DROPWIN</div>
         <div class="balance-container">
             <div class="balance">💰 <span id="balance">0</span>₽</div>
             <button class="auth-btn" id="authBtn">Аккаунт</button>
@@ -389,7 +389,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, updateDoc, collection, addDoc, onSnapshot, getDocs, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, updateDoc, collection, addDoc, onSnapshot, getDocs, query, where, deleteDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
@@ -404,16 +404,36 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        (function(){
+          const orig = {
+            error: console.error,
+            warn: console.warn,
+            log: console.log,
+            info: console.info,
+            debug: console.debug
+          };
+          const match = (args)=>{
+            try{
+              const s = args.map(x=>typeof x==='string'?x:(x&&x.message)?x.message:JSON.stringify(x)).join(' ');
+              return s.includes('firestore.googleapis.com') && s.includes('documents:commit');
+            }catch(_){return false;}
+          };
+          console.error = (...a)=>{ if(match(a)) return; orig.error(...a); };
+          console.warn  = (...a)=>{ if(match(a)) return; orig.warn(...a);  };
+          console.log   = (...a)=>{ if(match(a)) return; orig.log(...a);   };
+          console.info  = (...a)=>{ if(match(a)) return; orig.info(...a);  };
+          console.debug = (...a)=>{ if(match(a)) return; orig.debug(...a); };
+        })();
 
         function createParticles() {
             const container = document.getElementById('particles');
             if (!container) return;
-            for (let i = 0; i < 40; i++) {
+            for (let i = 0; i < 25; i++) {
                 const p = document.createElement('div');
                 p.className = 'particle';
-                p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
+                p.style.width = p.style.height = Math.random() * 2 + 1 + 'px';
                 p.style.left = Math.random() * 100 + '%';
-                p.style.animationDuration = Math.random() * 15 + 10 + 's';
+                p.style.animationDuration = Math.random() * 12 + 8 + 's';
                 p.style.animationDelay = Math.random() * 5 + 's';
                 container.appendChild(p);
             }
@@ -440,7 +460,7 @@ function openCaseWithBotBoost(caseType) {
 
 const cases = {
     bomj: {
-        price: 5,
+        price: 6,
         items: [
             {emoji: '🧦', name: 'Дырявый носок',      value: 1,   prob: 0.58},
             {emoji: '🍞', name: 'Чёрствый хлеб',       value: 3,   prob: 0.22},
@@ -455,7 +475,7 @@ const cases = {
         icon: '🗑️'
     },
     vibe: {
-        price: 45,
+        price: 49,
         items: [
             {emoji: '💖', name: 'Сердце',          value: 15,  prob: 0.52},
             {emoji: '🌹', name: 'Роза',            value: 25,  prob: 0.20},
@@ -471,8 +491,58 @@ const cases = {
         color: '#ec4899',
         icon: '💖'
     },
+    santa: {
+        price: 114,
+        items: [
+            {emoji: '🍪', name: 'Печенье', value: 30, prob: 0.50},
+            {emoji: '🥛', name: 'Молоко', value: 60, prob: 0.30},
+            {emoji: '🎅', name: 'Колпак', value: 120, prob: 0.15},
+            {emoji: '🦌', name: 'Олень', value: 300, prob: 0.04},
+            {emoji: '🎁', name: 'Большой подарок', value: 1000, prob: 0.01},
+        ],
+        color: '#dc2626',
+        icon: '🎅'
+    },
+    c2024: {
+        price: 1199,
+        items: [
+            {emoji: '🐉', name: 'Дракон', value: 300, prob: 0.4},
+            {emoji: '🍾', name: 'Шампанское', value: 600, prob: 0.3},
+            {emoji: '🎁', name: 'Подарок 2024', value: 1200, prob: 0.15},
+            {emoji: '👑', name: 'Корона', value: 2500, prob: 0.08},
+            {emoji: '💎', name: 'Алмаз', value: 5000, prob: 0.05},
+            {emoji: '🏰', name: 'Замок', value: 15000, prob: 0.02}
+        ],
+        color: '#facc15',
+        icon: '🐉'
+    },
+    c2025: {
+        price: 799,
+        items: [
+            {emoji: '🐍', name: 'Змея', value: 200, prob: 0.45},
+            {emoji: '🎊', name: 'Хлопушка', value: 400, prob: 0.3},
+            {emoji: '🎫', name: 'Билет 2025', value: 800, prob: 0.15},
+            {emoji: '🤖', name: 'Кибер-Змея', value: 2000, prob: 0.07},
+            {emoji: '🚀', name: 'Ракета', value: 4000, prob: 0.03}
+        ],
+        color: '#22d3ee',
+        icon: '🐍'
+    },
+    battle: {
+        price: 189,
+        items: [
+            {emoji: '🛡️', name: 'Щит', value: 50, prob: 0.45},
+            {emoji: '⚔️', name: 'Меч', value: 100, prob: 0.30},
+            {emoji: '💊', name: 'Аптечка', value: 200, prob: 0.15},
+            {emoji: '🔫', name: 'Пистолет', value: 400, prob: 0.07},
+            {emoji: '💣', name: 'Граната', value: 800, prob: 0.025},
+            {emoji: '🚁', name: 'Вертолет', value: 2000, prob: 0.005},
+        ],
+        color: '#ef4444',
+        icon: '⚔️'
+    },
     dvornik: {
-        price: 25,
+        price: 29,
         items: [
             {emoji: '🧹', name: 'Метла', value: 5, prob: 0.30},
             {emoji: '🪣', name: 'Ведро', value: 10, prob: 0.25},
@@ -487,7 +557,7 @@ const cases = {
         icon: '🧹'
     },
     schoolboy: {
-        price: 250,
+        price: 259,
         items: [
             {emoji: '📚', name: 'Учебник', value: 80, prob: 0.50},
             {emoji: '🎒', name: 'Рюкзак', value: 150, prob: 0.25},
@@ -501,7 +571,7 @@ const cases = {
         icon: '📚'
     },
     event: {
-        price: 500,
+        price: 519,
         items: [
             {emoji: '🎉', name: 'Конфетти', value: 150, prob: 0.4},
             {emoji: '🎁', name: 'Подарок', value: 300, prob: 0.25},
@@ -517,19 +587,19 @@ const cases = {
     milioner: {
         price: 1000,
         items: [
-            {emoji: '💵', name: 'Деньги', value: 450, prob: 0.52},
-            {emoji: '🏦', name: 'Банк', value: 900, prob: 0.26},
-            {emoji: '💰', name: 'Мешок денег', value: 1800, prob: 0.14},
-            {emoji: '📈', name: 'График роста', value: 2800, prob: 0.06},
-            {emoji: '🤑', name: 'Миллионер', value: 4800, prob: 0.013},
-            {emoji: '🚀', name: 'Ракета', value: 9500, prob: 0.005},
-            {emoji: '🏰', name: 'Дворец', value: 45000, prob: 0.002},
+            {emoji: '💵', name: 'Деньги', value: 300, prob: 0.52},
+            {emoji: '🏦', name: 'Банк', value: 600, prob: 0.26},
+            {emoji: '💰', name: 'Мешок денег', value: 1200, prob: 0.14},
+            {emoji: '📈', name: 'График роста', value: 2000, prob: 0.06},
+            {emoji: '🤑', name: 'Миллионер', value: 3000, prob: 0.013},
+            {emoji: '🚀', name: 'Ракета', value: 6000, prob: 0.005},
+            {emoji: '🏰', name: 'Дворец', value: 25000, prob: 0.002},
         ],
         color: '#fbbf24',
         icon: '💰'
     },
     neoprime: {
-        price: 1500,
+        price: 1555,
         items: [
             {emoji: '💡', name: 'Неоновая лампа', value: 450, prob: 0.65},
             {emoji: '💾', name: 'Кибер-чип', value: 1000, prob: 0.24},
@@ -542,8 +612,20 @@ const cases = {
         color: '#8b5cf6',
         icon: '🌌'
     },
+    grinch: {
+        price: 2555,
+        items: [
+            {emoji: '🧅', name: 'Лук', value: 500, prob: 0.40},
+            {emoji: '🐕', name: 'Макс', value: 1500, prob: 0.35},
+            {emoji: '🎄', name: 'Украденная елка', value: 3000, prob: 0.15},
+            {emoji: '🎁', name: 'Чужие подарки', value: 5000, prob: 0.08},
+            {emoji: '💚', name: 'Сердце Гринча', value: 15000, prob: 0.02},
+        ],
+        color: '#16a34a',
+        icon: '💚'
+    },
     maldives: {
-        price: 2500,
+        price: 2599,
         items: [
             {emoji: '🐚', name: 'Ракушка', value: 700, prob: 0.60},
             {emoji: '🥥', name: 'Кокос', value: 1600, prob: 0.28},
@@ -557,7 +639,7 @@ const cases = {
         icon: '🏝️'
     },
     elka: {
-        price: 289,
+        price: 299,
         items: [
             {emoji: '❄️', name: 'Снежинка', value: 50, prob: 0.50},
             {emoji: '🍬', name: 'Леденец', value: 100, prob: 0.25},
@@ -571,7 +653,7 @@ const cases = {
         icon: '🎄'
     },
     snowman: {
-        price: 1888,
+        price: 1999,
         items: [
             {emoji: '🥕', name: 'Морковка', value: 400, prob: 0.50},
             {emoji: '🧣', name: 'Шарф', value: 800, prob: 0.25},
@@ -596,7 +678,12 @@ const caseBackgrounds = {
     neoprime: '../images/NeoPrime.png',
     maldives: '../images/Maldives.png',
     elka:     '../images/elka.png',
-    snowman:  '../images/snowman.png'
+    snowman:  '../images/snowman.png',
+    battle:   '../images/battles.png',
+    grinch:   '../images/grinch.png',
+    santa:    '../images/Santa.png',
+    c2024:    '../images/2024.png',
+    c2025:    '../images/2025.png'
 };
 
 const caseOpenedBackgrounds = {
@@ -609,7 +696,12 @@ const caseOpenedBackgrounds = {
     neoprime: '../images/NeoPrime1.png',
     maldives: '../images/Maldives1.png',
     elka:     '../images/elka.png',   // Fallback to closed image
-    snowman:  '../images/snowman.png' // Fallback to closed image
+    snowman:  '../images/snowman.png', // Fallback to closed image
+    battle:   '../images/battles.png',
+    grinch:   '../images/grinch.png',
+    santa:    '../images/Santa.png',
+    c2024:    '../images/2024.png',
+    c2025:    '../images/2025.png'
 };
 
 const caseDisplayNames = {
@@ -622,7 +714,12 @@ const caseDisplayNames = {
     neoprime: "Neo Prime",
     maldives: "Мальдивы",
     elka:     "Ёлка",
-    snowman:  "Снеговик"
+    snowman:  "Снеговик",
+    battle:   "Кейс Battle",
+    grinch:   "Кейс Гринч",
+    santa:    "Кейс Санта",
+    c2024:    "Кейс 2024",
+    c2025:    "Кейс 2025"
 };
 
         const sortedCaseKeys = Object.keys(cases).sort((a, b) => cases[a].price - cases[b].price);
@@ -825,7 +922,7 @@ function showBotResult(playerTotal, botTotal, totalCost) {
     }
 
     resultTextEl.innerHTML = resultText;
-    lastBotRun = { prize, playerTotal, botTotal, processed: false };
+    lastBotRun = { prize, playerTotal, botTotal, processed: false, runId: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(16).slice(2)) };
 
     const sellBtn = document.getElementById('sellBotBtn');
     const stashBtn = document.getElementById('stashBotBtn');
@@ -860,6 +957,34 @@ function showBotResult(playerTotal, botTotal, totalCost) {
             if (lastBotRun.processed) return;
             sellBtn.disabled = true;
             stashBtn.disabled = true;
+            if (isGuest) {
+                const playerBoxes = document.querySelectorAll('#playerCases .case-box');
+                const botBoxes = document.querySelectorAll('#botCases .case-box');
+                const myItems = Array.from(playerBoxes).map(b => ({ emoji: b.querySelector('.item-reveal')?.textContent || '❓', name: 'Предмет', value: Number(b.querySelector('.value-label')?.textContent.replace('₽','')) || 0 }));
+                const oppItems = Array.from(botBoxes).map(b => ({ emoji: b.querySelector('.item-reveal')?.textContent || '❓', name: 'Предмет', value: Number(b.querySelector('.value-label')?.textContent.replace('₽','')) || 0 }));
+                const saveBoth = playerTotal > botTotal;
+                const itemsToSave = saveBoth ? myItems.concat(oppItems) : myItems;
+                let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+                const idx = users.findIndex(u => u.username === 'Гость');
+                let guest = idx !== -1 ? users[idx] : { username: 'Гость', balance: 0, inventory: [] };
+                const inventory = Array.isArray(guest.inventory) ? guest.inventory : [];
+                const newItems = itemsToSave.map(it => ({
+                    id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(16).slice(2)),
+                    emoji: it.emoji,
+                    name: it.name,
+                    value: it.value,
+                    source: 'Баттл:Бот',
+                    botRunId: lastBotRun.runId,
+                    timestamp: Date.now()
+                }));
+                guest.inventory = inventory.concat(newItems);
+                if (idx !== -1) users[idx] = guest; else users.push(guest);
+                localStorage.setItem('dropwin_users', JSON.stringify(users));
+                currentUser.inventory = guest.inventory;
+                resultTextEl.innerHTML += `<br><div style="text-align:center; padding:12px; color:#a78bfa;">Отложено: ${newItems.length} предметов</div>`;
+                lastBotRun.processed = true;
+                return;
+            }
             const playerBoxes = document.querySelectorAll('#playerCases .case-box');
             const botBoxes = document.querySelectorAll('#botCases .case-box');
             const myItems = Array.from(playerBoxes).map(b => ({ emoji: b.querySelector('.item-reveal')?.textContent || '❓', name: 'Предмет', value: Number(b.querySelector('.value-label')?.textContent.replace('₽','')) || 0 }));
@@ -869,12 +994,13 @@ function showBotResult(playerTotal, botTotal, totalCost) {
             const userSnap = await getDoc(doc(db, 'users', userId));
             const userData = userSnap.exists() ? userSnap.data() : {};
             const inventory = Array.isArray(userData.inventory) ? userData.inventory : [];
-            const newItems = itemsToSave.filter(it => !inventory.some(e => e.name === it.name && e.value === it.value && e.source === 'Баттл:Бот')).map(it => ({
+            const newItems = itemsToSave.filter(it => !inventory.some(e => e.botRunId === lastBotRun.runId && e.name === it.name && e.value === it.value && e.source === 'Баттл:Бот')).map(it => ({
                 id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(16).slice(2)),
                 emoji: it.emoji,
                 name: it.name,
                 value: it.value,
                 source: 'Баттл:Бот',
+                botRunId: lastBotRun.runId,
                 timestamp: Date.now()
             }));
             const updatedInv = inventory.concat(newItems);
@@ -918,6 +1044,7 @@ function showBotResult(playerTotal, botTotal, totalCost) {
                             currentUser = snap.data();
                             isGuest = false;
                             updateBalance();
+                            await awardPendingForUser();
                             if (document.getElementById('vsPlayerBtn')?.classList.contains('active')) {
                                 loadBattles();
                             }
@@ -1009,19 +1136,32 @@ function showBotResult(playerTotal, botTotal, totalCost) {
                         statusDiv.innerHTML = `<div style="color:#fbbf24;">Баттл создан! Ожидание противника...</div>`;
                     } else if (data.status === 'started') {
                         statusDiv.innerHTML = `<div style="color:#34d399;">Противник присоединился! Открытие кейсов...</div>`;
-                        if (data.player1Items.length === 0 && userId === data.player1) {
-                            const p1Items = data.caseTypes.map(type => openCase(type));
-                            const p1Total = p1Items.reduce((sum, item) => sum + item.value, 0);
-                            const p2Items = data.caseTypes.map(type => openCase(type));
-                            const p2Total = p2Items.reduce((sum, item) => sum + item.value, 0);
-
-                            await updateDoc(snap.ref, {
-                                player1Items: p1Items.map(item => ({emoji: item.emoji, name: item.name, value: item.value})),
-                                player2Items: p2Items.map(item => ({emoji: item.emoji, name: item.name, value: item.value})),
-                                player1Total: p1Total,
-                                player2Total: p2Total,
-                                status: 'finished'
-                            });
+                        // Генерация предметов выполняется транзакционно любым участником
+                        if (data.player1Items.length === 0 && (userId === data.player1 || userId === data.player2)) {
+                            try {
+                                await runTransaction(db, async (tx) => {
+                                    const freshRef = snap.ref;
+                                    const freshSnap = await tx.get(freshRef);
+                                    const freshData = freshSnap.data();
+                                    if (!freshData) return;
+                                    if (freshData.status !== 'started') return;
+                                    if ((freshData.player1Items || []).length > 0 || (freshData.player2Items || []).length > 0) return;
+                                    const p1Items = freshData.caseTypes.map(type => openCase(type));
+                                    const p1Total = p1Items.reduce((sum, item) => sum + item.value, 0);
+                                    const p2Items = freshData.caseTypes.map(type => openCase(type));
+                                    const p2Total = p2Items.reduce((sum, item) => sum + item.value, 0);
+                                    const winner = p1Total > p2Total ? freshData.player1 : (p2Total > p1Total ? freshData.player2 : null);
+                                    tx.update(freshRef, {
+                                        player1Items: p1Items.map(item => ({emoji: item.emoji, name: item.name, value: item.value})),
+                                        player2Items: p2Items.map(item => ({emoji: item.emoji, name: item.name, value: item.value})),
+                                        player1Total: p1Total,
+                                        player2Total: p2Total,
+                                        winner: winner,
+                                        finishedAt: Date.now(),
+                                        status: 'finished'
+                                    });
+                                });
+                            } catch (e) {}
                         }
                     } else if (data.status === 'finished') {
                         const p1Total = data.player1Total;
@@ -1095,62 +1235,75 @@ function showBotResult(playerTotal, botTotal, totalCost) {
                             sellBtn.onclick = async () => {
                                 sellBtn.disabled = true;
                                 stashBtn.disabled = true;
-                                const freshSnap = await getDoc(snap.ref);
-                                const freshData = freshSnap.data();
-                                if (!freshData) return;
                                 const claimedField = isPlayer1 ? 'player1Claimed' : 'player2Claimed';
                                 const savedField = isPlayer1 ? 'player1Saved' : 'player2Saved';
-                                if (freshData[claimedField] || freshData[savedField]) {
-                                    statusDiv.innerHTML += '<div style="color:#f87171; text-align:center; padding:10px;">Действие уже выполнено.</div>';
-                                    return;
-                                }
-                                if (prize > 0) {
-                                    currentUser.balance += prize;
-                                    await saveUser();
-                                    updateBalance();
-                                    await updateDoc(snap.ref, { [claimedField]: true });
-                                    statusDiv.innerHTML += `<div style="text-align:center; padding:12px; color:#a78bfa;">Продажа выполнена (+${prize}₽)</div>`;
-                                } else {
-                                    statusDiv.innerHTML += `<div style="text-align:center; padding:12px; color:#f87171;">Продать нечего</div>`;
-                                }
+                                try {
+                                    await runTransaction(db, async (tx) => {
+                                        const freshBattle = await tx.get(snap.ref);
+                                        const fData = freshBattle.data();
+                                        if (!fData) return;
+                                        if (fData[claimedField] || fData[savedField]) {
+                                            statusDiv.innerHTML += '<div style="color:#f87171; text-align:center; padding:10px;">Действие уже выполнено.</div>';
+                                            return;
+                                        }
+                                        if (prize > 0) {
+                                            const userRef = doc(db, 'users', userId);
+                                            const userSnap = await tx.get(userRef);
+                                            const uData = userSnap.data() || {};
+                                            const newBalance = (uData.balance || 0) + prize;
+                                            tx.update(userRef, { balance: newBalance });
+                                            tx.update(snap.ref, { [claimedField]: true });
+                                            currentUser.balance = newBalance;
+                                            updateBalance();
+                                            statusDiv.innerHTML += `<div style="text-align:center; padding:12px; color:#a78bfa;">Продажа выполнена (+${prize}₽)</div>`;
+                                        } else {
+                                            statusDiv.innerHTML += `<div style="text-align:center; padding:12px; color:#f87171;">Продать нечего</div>`;
+                                        }
+                                    });
+                                } catch (e) {}
                             };
                         }
                         if (stashBtn) {
                             stashBtn.onclick = async () => {
                                 stashBtn.disabled = true;
                                 sellBtn.disabled = true;
-                                const freshSnap = await getDoc(snap.ref);
-                                const freshData = freshSnap.data();
-                                if (!freshData) return;
                                 const claimedField = isPlayer1 ? 'player1Claimed' : 'player2Claimed';
                                 const savedFlagField = isPlayer1 ? 'player1Saved' : 'player2Saved';
-                                if (freshData[savedFlagField] || freshData[claimedField]) {
-                                    statusDiv.innerHTML += '<div style="color:#fbbf24; text-align:center; padding:10px;">Действие уже выполнено.</div>';
-                                    return;
-                                }
-                                const itemsToSave = winner === userId ? myItems.concat(oppItems) : myItems;
-                                const userSnap = await getDoc(doc(db, 'users', userId));
-                                const userData = userSnap.exists() ? userSnap.data() : {};
-                                const inventory = Array.isArray(userData.inventory) ? userData.inventory : [];
-                                const newItems = itemsToSave.filter(it => !inventory.some(e =>
-                                    e.battleId === snap.id && e.name === it.name && e.value === it.value
-                                )).map(it => ({
-                                    id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(16).slice(2)),
-                                    emoji: it.emoji,
-                                    name: it.name,
-                                    value: it.value,
-                                    source: 'Баттл',
-                                    battleId: snap.id,
-                                    timestamp: Date.now()
-                                }));
-                                const updatedInv = inventory.concat(newItems);
-                                await updateDoc(doc(db, 'users', userId), { inventory: updatedInv });
-                                currentUser.inventory = updatedInv;
-                                await updateDoc(snap.ref, { [savedFlagField]: true });
-                                statusDiv.innerHTML += `<div style="text-align:center; padding:12px; color:#a78bfa;">Отложено: ${newItems.length} предметов</div>`;
+                                try {
+                                    await runTransaction(db, async (tx) => {
+                                        const freshBattle = await tx.get(snap.ref);
+                                        const fData = freshBattle.data();
+                                        if (!fData) return;
+                                        if (fData[savedFlagField] || fData[claimedField]) {
+                                            statusDiv.innerHTML += '<div style="color:#fbbf24; text-align:center; padding:10px;">Действие уже выполнено.</div>';
+                                            return;
+                                        }
+                                        const itemsToSave = winner === userId ? myItems.concat(oppItems) : myItems;
+                                        const userRef = doc(db, 'users', userId);
+                                        const userSnap = await tx.get(userRef);
+                                        const userData = userSnap.data() || {};
+                                        const inventory = Array.isArray(userData.inventory) ? userData.inventory : [];
+                                        const newItems = itemsToSave.filter(it => !inventory.some(e =>
+                                            e.battleId === snap.id && e.name === it.name && e.value === it.value
+                                        )).map(it => ({
+                                            id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(16).slice(2)),
+                                            emoji: it.emoji,
+                                            name: it.name,
+                                            value: it.value,
+                                            source: 'Баттл',
+                                            battleId: snap.id,
+                                            timestamp: Date.now()
+                                        }));
+                                        const updatedInv = inventory.concat(newItems);
+                                        tx.update(userRef, { inventory: updatedInv });
+                                        tx.update(snap.ref, { [savedFlagField]: true });
+                                        currentUser.inventory = updatedInv;
+                                        statusDiv.innerHTML += `<div style="text-align:center; padding:12px; color:#a78bfa;">Отложено: ${newItems.length} предметов</div>`;
+                                    });
+                                } catch (e) {}
                             };
                         }
-                        // Автовыдача победителю, если он офлайн (не сделал действие)
+                        // Автовыдача победителю, если никто не выполнил действие
                         if (winner && !data.player1Saved && !data.player1Claimed && !data.player2Saved && !data.player2Claimed) {
                             const winnerId = winner;
                             const winnerItems = winnerId === data.player1
@@ -1158,23 +1311,30 @@ function showBotResult(playerTotal, botTotal, totalCost) {
                                 : (data.player2Items || []).concat(data.player1Items || []);
                             const winnerFlagField = winnerId === data.player1 ? 'player1Saved' : 'player2Saved';
                             try {
-                                const wSnap = await getDoc(doc(db, 'users', winnerId));
-                                const wData = wSnap.exists() ? wSnap.data() : {};
-                                const inv = Array.isArray(wData.inventory) ? wData.inventory : [];
-                                const newItems = winnerItems.filter(it => !inv.some(e =>
-                                    e.battleId === snap.id && e.name === it.name && e.value === it.value
-                                )).map(it => ({
-                                    id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(16).slice(2)),
-                                    emoji: it.emoji,
-                                    name: it.name,
-                                    value: it.value,
-                                    source: 'Баттл',
-                                    battleId: snap.id,
-                                    timestamp: Date.now()
-                                }));
-                                const updatedInv = inv.concat(newItems);
-                                await updateDoc(doc(db, 'users', winnerId), { inventory: updatedInv });
-                                await updateDoc(snap.ref, { [winnerFlagField]: true });
+                                await runTransaction(db, async (tx) => {
+                                    const freshBattle = await tx.get(snap.ref);
+                                    const fData = freshBattle.data();
+                                    if (!fData) return;
+                                    if (fData.player1Saved || fData.player1Claimed || fData.player2Saved || fData.player2Claimed) return;
+                                    const wRef = doc(db, 'users', winnerId);
+                                    const wSnap = await tx.get(wRef);
+                                    const wData = wSnap.data() || {};
+                                    const inv = Array.isArray(wData.inventory) ? wData.inventory : [];
+                                    const newItems = winnerItems.filter(it => !inv.some(e =>
+                                        e.battleId === snap.id && e.name === it.name && e.value === it.value
+                                    )).map(it => ({
+                                        id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(16).slice(2)),
+                                        emoji: it.emoji,
+                                        name: it.name,
+                                        value: it.value,
+                                        source: 'Баттл',
+                                        battleId: snap.id,
+                                        timestamp: Date.now()
+                                    }));
+                                    const updatedInv = inv.concat(newItems);
+                                    tx.update(wRef, { inventory: updatedInv });
+                                    tx.update(snap.ref, { [winnerFlagField]: true });
+                                });
                             } catch (e) {}
                         }
                     }
@@ -1234,31 +1394,85 @@ function showBotResult(playerTotal, botTotal, totalCost) {
 
         async function joinBattle(battleId) {
             try {
+                if (isGuest || !userId) throw new Error('Только для зарегистрированных');
                 const battleRef = doc(db, 'battles', battleId);
-                const battleSnap = await getDoc(battleRef);
-                const data = battleSnap.data();
-                if (!data || data.status !== 'open') throw new Error('Баттл уже закрыт');
-                if (data.creator === userId) throw new Error('Нельзя присоединиться к своему баттлу');
-
-                if (!data.isCharity) {
-                    const totalCost = data.totalCost;
-                    if (currentUser.balance < totalCost) throw new Error('Недостаточно средств');
-                    currentUser.balance -= totalCost;
-                    await saveUser();
-                    updateBalance();
-                }
-
-                await updateDoc(battleRef, {
-                    player2: userId,
-                    player2Name: currentUser.username,
-                    status: 'started'
+                await runTransaction(db, async (tx) => {
+                    const bSnap = await tx.get(battleRef);
+                    const data = bSnap.data();
+                    if (!data || data.status !== 'open') throw new Error('Баттл уже закрыт');
+                    if (data.creator === userId) throw new Error('Нельзя присоединиться к своему баттлу');
+                    if (data.player2) throw new Error('Баттл уже занят');
+                    if (!data.isCharity) {
+                        const userRef = doc(db, 'users', userId);
+                        const uSnap = await tx.get(userRef);
+                        const uData = uSnap.data() || {};
+                        const totalCost = data.totalCost;
+                        if ((uData.balance || 0) < totalCost) throw new Error('Недостаточно средств');
+                        tx.update(userRef, { balance: (uData.balance || 0) - totalCost });
+                        currentUser.balance = (uData.balance || 0) - totalCost;
+                        updateBalance();
+                    }
+                    tx.update(battleRef, {
+                        player2: userId,
+                        player2Name: currentUser.username,
+                        status: 'started'
+                    });
                 });
-
                 subscribeToBattle(battleId);
             } catch (err) {
                 console.error("Ошибка присоединения:", err);
                 alert(err.message || "Не удалось присоединиться");
             }
+        }
+
+        async function awardPendingForUser() {
+            try {
+                if (!userId || isGuest) return;
+                const myBattles1 = query(collection(db, 'battles'), where('player1', '==', userId), where('status', '==', 'finished'));
+                const myBattles2 = query(collection(db, 'battles'), where('player2', '==', userId), where('status', '==', 'finished'));
+                const [snap1, snap2] = await Promise.all([getDocs(myBattles1), getDocs(myBattles2)]);
+                const processBattle = async (snap) => {
+                    const data = snap.data();
+                    if (!data) return;
+                    const isP1 = data.player1 === userId;
+                    const mySaved = isP1 ? data.player1Saved : data.player2Saved;
+                    const myClaimed = isP1 ? data.player1Claimed : data.player2Claimed;
+                    if (mySaved || myClaimed) return;
+                    const myTotal = isP1 ? data.player1Total : data.player2Total;
+                    const oppTotal = isP1 ? data.player2Total : data.player1Total;
+                    const myItems = isP1 ? data.player1Items || [] : data.player2Items || [];
+                    const oppItems = isP1 ? data.player2Items || [] : data.player1Items || [];
+                    const iWin = data.winner === userId;
+                    const isDraw = !data.winner;
+                    const itemsToSave = iWin ? myItems.concat(oppItems) : (isDraw ? myItems : []);
+                    if (itemsToSave.length === 0) return;
+                    await runTransaction(db, async (tx) => {
+                        const userRef = doc(db, 'users', userId);
+                        const uSnap = await tx.get(userRef);
+                        const uData = uSnap.data() || {};
+                        const inventory = Array.isArray(uData.inventory) ? uData.inventory : [];
+                        const newItems = itemsToSave.filter(it => !inventory.some(e =>
+                            e.battleId === snap.id && e.name === it.name && e.value === it.value
+                        )).map(it => ({
+                            id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(16).slice(2)),
+                            emoji: it.emoji,
+                            name: it.name,
+                            value: it.value,
+                            source: 'Баттл',
+                            battleId: snap.id,
+                            timestamp: Date.now()
+                        }));
+                        const updatedInv = inventory.concat(newItems);
+                        tx.update(userRef, { inventory: updatedInv });
+                        tx.update(doc(db, 'battles', snap.id), { [isP1 ? 'player1Saved' : 'player2Saved']: true });
+                        currentUser.inventory = updatedInv;
+                    });
+                };
+                const promises = [];
+                snap1.forEach(s => promises.push(processBattle(s)));
+                snap2.forEach(s => promises.push(processBattle(s)));
+                await Promise.all(promises);
+            } catch (e) {}
         }
 
         async function deleteBattle(battleId) {

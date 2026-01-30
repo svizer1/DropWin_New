@@ -44,7 +44,7 @@
 <div class="particles" id="particles"></div>
 
 <div class="header">
-  <div class="logo">💎 DROPWIN</div>
+  <div class="logo" onclick="location.href='../index.html'" style="cursor: pointer;">💎 DROPWIN</div>
   <div class="balance-container">
     <div class="balance">💰 <span id="balance">0</span>₽</div>
     <button class="auth-btn" id="authBtn">Аккаунт</button>
@@ -69,12 +69,54 @@
     </div>
     <div class="input-group">
       <label>Бомбы</label>
-      <select id="bombsSelect">
-        <option value="3">3 бомбы (12 клеток)</option>
-        <option value="4">4 бомбы (16 клеток)</option>
-        <option value="5" selected>5 бомб (20 клеток)</option>
-      </select>
+      <div class="bombs-switch">
+          <button class="bomb-btn" data-value="3">3</button>
+          <button class="bomb-btn" data-value="4">4</button>
+          <button class="bomb-btn active" data-value="5">5</button>
+      </div>
+      <input type="hidden" id="bombsSelect" value="5">
     </div>
+
+    <style>
+        .bombs-switch {
+            display: flex;
+            gap: 8px;
+            background: rgba(30, 27, 41, 0.5);
+            padding: 4px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        .bomb-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+        .bomb-btn.active {
+            background: #ef4444;
+            color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+        .bomb-btn:hover:not(.active) {
+            background: rgba(255,255,255,0.05);
+            color: white;
+        }
+    </style>
+
+    <script>
+        document.querySelectorAll('.bomb-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.bomb-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('bombsSelect').value = btn.dataset.value;
+            });
+        });
+    </script>
 
     <button class="btn" id="startBtn">Начать</button>
     <button class="btn" id="cashoutBtn" style="display:none; background:#8b5cf6;">Забрать</button>

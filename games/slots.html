@@ -10,18 +10,19 @@
 <div class="particles" id="particles"></div>
 
 <div class="header">
-  <div class="logo">💎 DROPWIN</div>
+  <div class="logo" onclick="location.href='../index.html'" style="cursor: pointer;">💎 DROPWIN</div>
   <div class="balance-container">
     <div class="balance">💰 <span id="balance">0</span>₽</div>
     <button class="auth-btn" id="authBtn">Аккаунт</button>
   </div>
 </div>
 
-<div class="content">
-  <button class="back-btn" onclick="location.href='../index.html'">← Назад</button>
+<div class="content" style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 80px;">
+  
+  <button class="back-btn" onclick="location.href='../index.html'" style="align-self: flex-start; margin-left: 20px;">← Назад</button>
 
-  <div class="game-card">
-    <div class="game-title">🎰 Слоты</div>
+  <div class="game-card" style="max-width: 500px; width: 90%; background: rgba(30, 27, 41, 0.9); border: 2px solid #7c3aed; box-shadow: 0 0 40px rgba(124, 58, 237, 0.3);">
+    <div class="game-title" style="text-shadow: 0 0 10px #7c3aed;">🎰 Слоты</div>
 
     <div class="slot-machine">
       <div class="reel" id="reel1">

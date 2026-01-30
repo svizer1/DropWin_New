@@ -3,236 +3,215 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-  <title>DropWin Casino</title>
+  <title>DropWin - Лучшие кейсы и игры</title>
   <link rel="stylesheet" href="style.css">
-  <style>
-    .inventory-cta {
-      display: flex;
-      justify-content: center;
-      margin: 8px 0 12px;
-    }
-    .inventory-icon {
-      width: 72px;
-      height: 72px;
-      border-radius: 12px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.35);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .inventory-icon:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 24px rgba(0,0,0,0.45);
-    }
-    .games-list {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 18px 14px;
-      padding: 20px 16px;
-      max-width: 560px;
-      margin: 0 auto;
-    }
-
-    .game-icon {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 16px 12px 20px;
-      border-radius: 20px;
-      background: rgba(30, 27, 71, 0.75);
-      border: 2px solid rgba(52, 211, 153, 0.25);
-      transition: all 0.28s ease;
-      cursor: pointer;
-      color: white;
-      text-decoration: none;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.45);
-      overflow: hidden;
-    }
-
-    .game-icon:hover {
-      transform: translateY(-8px);
-      border-color: #34d399;
-      box-shadow: 0 16px 36px rgba(16, 185, 129, 0.5);
-    }
-
-    .game-icon .image-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      min-height: 140px;
-    }
-
-    .game-icon img {
-      max-width: 100%;
-      max-height: 160px;
-      width: auto;
-      height: auto;
-      object-fit: contain;
-      filter: drop-shadow(0 8px 18px rgba(0,0,0,0.65));
-    }
-
-    /* Кости — крупнее */
-    .game-icon.dice img {
-      max-height: 190px;
-    }
-
-    /* Баттлы — тоже крупнее */
-    .game-icon.battles img {
-      max-height: 185px;
-    }
-
-    .game-icon-name {
-      font-size: 1.15rem;
-      font-weight: 700;
-      text-align: center;
-      margin-top: 12px;
-      width: 100%;
-    }
-
-    @media (max-width: 420px) {
-      .games-list {
-        gap: 16px 12px;
-        padding: 18px 14px;
-      }
-      .game-icon img {
-        max-height: 145px;
-      }
-      .game-icon.dice img {
-        max-height: 170px;
-      }
-      .game-icon.battles img {
-        max-height: 165px;
-      }
-      .game-icon-name {
-        font-size: 1.05rem;
-      }
-    }
-
-    @media (max-width: 360px) {
-      .game-icon img {
-        max-height: 130px;
-      }
-      .game-icon.dice img {
-        max-height: 155px;
-      }
-      .game-icon.battles img {
-        max-height: 150px;
-      }
-    }
-  </style>
 </head>
 <body>
-<div class="particles" id="particles"></div>
 
-<div class="header">
-  <div class="logo">💎 DROPWIN</div>
-  <div class="balance-container">
-    <div class="balance">💰 <span id="balance">0</span>₽</div>
-    <button class="auth-btn" id="authBtn">Войти</button>
-      <button class="auth-btn" onclick="window.open('https://t.me/DropWinHelp_bot','_blank')">Поддержка</button>
+<!-- Live Feed Strip -->
+<div class="live-feed">
+  <div class="live-feed-track">
+    <!-- Set 1 -->
+    <div class="live-item gold"><img src="images/index/inventory.png" alt="Item"></div>
+    <div class="live-item purple"><img src="images/index/battles.png" alt="Item"></div>
+    <div class="live-item red"><img src="images/index/crash.png" alt="Item"></div>
+    <div class="live-item gold"><img src="images/index/dice.png" alt="Item"></div>
+    <div class="live-item purple"><img src="images/index/miner.png" alt="Item"></div>
+    <div class="live-item red"><img src="images/index/roulette.png" alt="Item"></div>
+    <div class="live-item gold"><img src="images/index/slots.png" alt="Item"></div>
+    <div class="live-item purple"><img src="images/index/inventory.png" alt="Item"></div>
+    <div class="live-item red"><img src="images/index/battles.png" alt="Item"></div>
+    <div class="live-item gold"><img src="images/index/crash.png" alt="Item"></div>
+    <div class="live-item purple"><img src="images/index/dice.png" alt="Item"></div>
+    <div class="live-item red"><img src="images/index/miner.png" alt="Item"></div>
+    
+    <!-- Set 2 -->
+    <div class="live-item gold"><img src="images/index/inventory.png" alt="Item"></div>
+    <div class="live-item purple"><img src="images/index/battles.png" alt="Item"></div>
+    <div class="live-item red"><img src="images/index/crash.png" alt="Item"></div>
+    <div class="live-item gold"><img src="images/index/dice.png" alt="Item"></div>
+    <div class="live-item purple"><img src="images/index/miner.png" alt="Item"></div>
+    <div class="live-item red"><img src="images/index/roulette.png" alt="Item"></div>
+    <div class="live-item gold"><img src="images/index/slots.png" alt="Item"></div>
+    <div class="live-item purple"><img src="images/index/inventory.png" alt="Item"></div>
+    <div class="live-item red"><img src="images/index/battles.png" alt="Item"></div>
+    <div class="live-item gold"><img src="images/index/crash.png" alt="Item"></div>
+    <div class="live-item purple"><img src="images/index/dice.png" alt="Item"></div>
+    <div class="live-item red"><img src="images/index/miner.png" alt="Item"></div>
+
+    <!-- Set 3 -->
+    <div class="live-item gold"><img src="images/index/inventory.png" alt="Item"></div>
+    <div class="live-item purple"><img src="images/index/battles.png" alt="Item"></div>
+    <div class="live-item red"><img src="images/index/crash.png" alt="Item"></div>
+    <div class="live-item gold"><img src="images/index/dice.png" alt="Item"></div>
+    <div class="live-item purple"><img src="images/index/miner.png" alt="Item"></div>
+    <div class="live-item red"><img src="images/index/roulette.png" alt="Item"></div>
+    <div class="live-item gold"><img src="images/index/slots.png" alt="Item"></div>
+    <div class="live-item purple"><img src="images/index/inventory.png" alt="Item"></div>
+    <div class="live-item red"><img src="images/index/battles.png" alt="Item"></div>
+    <div class="live-item gold"><img src="images/index/crash.png" alt="Item"></div>
+    <div class="live-item purple"><img src="images/index/dice.png" alt="Item"></div>
+    <div class="live-item red"><img src="images/index/miner.png" alt="Item"></div>
+
+    <!-- Set 4 -->
+    <div class="live-item gold"><img src="images/index/inventory.png" alt="Item"></div>
+    <div class="live-item purple"><img src="images/index/battles.png" alt="Item"></div>
+    <div class="live-item red"><img src="images/index/crash.png" alt="Item"></div>
+    <div class="live-item gold"><img src="images/index/dice.png" alt="Item"></div>
+    <div class="live-item purple"><img src="images/index/miner.png" alt="Item"></div>
+    <div class="live-item red"><img src="images/index/roulette.png" alt="Item"></div>
+    <div class="live-item gold"><img src="images/index/slots.png" alt="Item"></div>
+    <div class="live-item purple"><img src="images/index/inventory.png" alt="Item"></div>
+    <div class="live-item red"><img src="images/index/battles.png" alt="Item"></div>
+    <div class="live-item gold"><img src="images/index/crash.png" alt="Item"></div>
+    <div class="live-item purple"><img src="images/index/dice.png" alt="Item"></div>
+    <div class="live-item red"><img src="images/index/miner.png" alt="Item"></div>
   </div>
 </div>
 
-<div class="content">
-  <div class="inventory-cta">
-    <a href="inventory.html" aria-label="Инвентарь">
-      <img class="inventory-icon" src="images/index/inventory.png" alt="Инвентарь">
-    </a>
+<!-- Header -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo" onclick="location.href='index.html'" style="cursor: pointer;">💎 DROP<span>WIN</span></div>
+    <nav class="main-nav">
+      <a href="inventory.html">Инвентарь</a>
+      <a href="leaderboard.html">Топ Игроков</a>
+      <a href="freebet.html">Бонусы</a>
+      <a href="https://t.me/DropWinHelp_bot" target="_blank">Поддержка</a>
+    </nav>
   </div>
+  
+  <div class="header-right">
+    <div class="balance-box">
+      <span id="balance">0</span> ₽
+      <button class="add-funds-btn" onclick="location.href='dep.html'">+</button>
+    </div>
+    <!-- Auth Button / Profile -->
+    <button class="btn" id="authBtn" style="width: auto; padding: 8px 16px; font-size: 0.9rem;">Войти</button>
+  </div>
+</header>
+
+<!-- Hero Section -->
+<div class="hero">
+  <div class="hero-banner" style="position: relative; overflow: hidden; padding: 24px; min-height: 200px; border-radius: 16px;">
+    <!-- Background Image Layer -->
+    <div style="position: absolute; inset: 0; z-index: 0;">
+       <img src="images/calendar.png" onerror="this.src='images/case-bg.jpg'" alt="Calendar" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.6;">
+       <div style="position: absolute; inset: 0; background: linear-gradient(to right, rgba(19, 17, 26, 0.9), rgba(19, 17, 26, 0.4));"></div>
+    </div>
+    
+    <div style="position: relative; z-index: 1;">
+        <div class="hero-title">Призовой календарь</div>
+        <div class="hero-subtitle">Заходи каждый день и получай бесплатные бонусы!</div>
+        <button class="hero-btn" onclick="location.href='calendar.html'">Перейти</button>
+    </div>
+  </div>
+  
+  <div class="promo-grid">
+    <div class="promo-card purple" onclick="location.href='games/battles.html'" style="background: radial-gradient(circle at top right, rgba(168,85,247,0.4), #2e1065);">
+      <div class="promo-label" style="font-size: 1.1rem; color: #fff;">Баттлы</div>
+      <div class="promo-icon" style="opacity: 0.8; filter: drop-shadow(0 0 10px rgba(168,85,247,0.5));">⚔️</div>
+      <div class="arrow-btn" style="background: #a855f7;">➜</div>
+    </div>
+    <div class="promo-card orange" onclick="location.href='games/roulette.html'" style="background: radial-gradient(circle at top right, rgba(251,191,36,0.4), #451a03);">
+      <div class="promo-label" style="font-size: 1.1rem; color: #fff;">Колесо удачи</div>
+      <div class="promo-icon" style="opacity: 0.8; filter: drop-shadow(0 0 10px rgba(251,191,36,0.5));">🎡</div>
+      <div class="arrow-btn" style="background: #fbbf24; color: black;">➜</div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="content">
+  <div class="section-header">
+    <span class="section-icon">🎮</span>
+    <div class="section-title">Все режимы</div>
+  </div>
+
   <div class="games-list">
+    
+    <div class="game-icon featured" onclick="location.href='games/battles.html'">
+      <div class="game-icon-name">Баттлы Кейсов</div>
+      <div class="image-container">
+        <img src="images/index/battles.png" alt="Баттлы">
+      </div>
+    </div>
 
     <div class="game-icon" onclick="location.href='games/slots.html'">
-      <div class="image-container">
-        <img src="images/index/slots.png" alt="Слоты">
-      </div>
-      <div class="game-icon-name">Слоты</div>
+      <div class="image-container"><img src="images/index/slots.png" alt="Slots"></div>
+      <div class="game-icon-name">Slots</div>
     </div>
 
     <div class="game-icon" onclick="location.href='games/miner.html'">
-      <div class="image-container">
-        <img src="images/index/miner.png" alt="Минёр">
-      </div>
-      <div class="game-icon-name">Минёр</div>
+      <div class="image-container"><img src="images/index/miner.png" alt="Miner"></div>
+      <div class="game-icon-name">Miner</div>
     </div>
 
     <div class="game-icon" onclick="location.href='games/roulette.html'">
-      <div class="image-container">
-        <img src="images/index/roulette.png" alt="Рулетка">
-      </div>
-      <div class="game-icon-name">Рулетка</div>
+      <div class="image-container"><img src="images/index/roulette.png" alt="Roulette"></div>
+      <div class="game-icon-name">Roulette</div>
     </div>
 
     <div class="game-icon" onclick="location.href='games/cards.html'">
-      <div class="image-container">
-        <img src="images/index/cards.png" alt="Карты">
-      </div>
-      <div class="game-icon-name">Карты</div>
+      <div class="image-container"><img src="images/index/cards.png" alt="Cards"></div>
+      <div class="game-icon-name">Cards</div>
     </div>
 
-    <div class="game-icon dice" onclick="location.href='games/dice.html'">
-      <div class="image-container">
-        <img src="images/index/dice.png" alt="Кости">
-      </div>
-      <div class="game-icon-name">Кости</div>
+    <div class="game-icon" onclick="location.href='games/dice.html'">
+      <div class="image-container"><img src="images/index/dice.png" alt="Dice"></div>
+      <div class="game-icon-name">Dice</div>
     </div>
 
     <div class="game-icon" onclick="location.href='games/crash.html'">
-      <div class="image-container">
-        <img src="images/index/crash.png" alt="Краш">
-      </div>
-      <div class="game-icon-name">Краш</div>
+      <div class="image-container"><img src="images/index/crash.png" alt="Crash"></div>
+      <div class="game-icon-name">Crash</div>
     </div>
 
     <div class="game-icon" onclick="location.href='games/plinko.html'">
-      <div class="image-container">
-        <img src="images/index/plinko.png" alt="Plinko">
-      </div>
+      <div class="image-container"><img src="images/index/plinko.png" alt="Plinko"></div>
       <div class="game-icon-name">Plinko</div>
     </div>
 
-    <div class="game-icon" onclick="location.href='games/dino-throw.html'">
-      <div class="image-container">
-        <img src="images/index/dino-throw.png" alt="Dino Throw">
-      </div>
-      <div class="game-icon-name">Dino Throw</div>
-    </div>
-
-    <div class="game-icon" onclick="location.href='games/rooster-run.html'">
-      <div class="image-container">
-        <img src="images/index/rooster-run.png" alt="Rooster Run">
-      </div>
-      <div class="game-icon-name">Rooster Run</div>
+    <div class="game-icon" onclick="location.href='games/mines.html'">
+      <div class="image-container"><img src="images/index/mines.png" alt="Mines"></div>
+      <div class="game-icon-name">Mines</div>
     </div>
 
     <div class="game-icon" onclick="location.href='crypto.html'">
-      <div class="image-container">
-        <img src="images/index/crypto.png" alt="Акции Крипта">
-      </div>
-      <div class="game-icon-name">Акции: Крипта</div>
+      <div class="image-container"><img src="images/index/crypto.png" alt="Crypto"></div>
+      <div class="game-icon-name">Crypto</div>
     </div>
 
-    <div class="game-icon battles" onclick="location.href='games/battles.html'">
-      <div class="image-container">
-        <img src="images/index/battles.png" alt="Баттлы Кейсов">
-      </div>
-      <div class="game-icon-name">Баттлы Кейсов</div>
-    </div>
-
-    <div class="game-icon" onclick="location.href='games/mines.html'">
-      <div class="image-container">
-        <img src="images/index/mines.png" alt="Долина Мин">
-      </div>
-      <div class="game-icon-name">Долина Мин</div>
+    <div class="game-icon" onclick="location.href='games/rooster-run.html'">
+      <div class="image-container"><img src="images/index/rooster-run.png" alt="Rooster Run"></div>
+      <div class="game-icon-name">Rooster Run</div>
     </div>
 
   </div>
 </div>
 
-<div class="nav">
-  <button class="nav-btn active"><span>🏠</span><span class="nav-label">Главная</span></button>
-  <button class="nav-btn" onclick="location.href='leaderboard.html'"><span>🏆</span><span class="nav-label">Топ</span></button>
-  <button class="nav-btn" onclick="location.href='profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
-  <button class="nav-btn" onclick="location.href='register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
-</div>
+<!-- Bottom Nav (Mobile) -->
+<nav class="nav">
+  <button class="nav-btn active">
+    <span>🏠</span>
+    Главная
+  </button>
+  <button class="nav-btn" onclick="location.href='leaderboard.html'">
+    <span>🏆</span>
+    Топ
+  </button>
+  <button class="nav-btn" onclick="location.href='inventory.html'">
+    <span>🎒</span>
+    Инвентарь
+  </button>
+  <button class="nav-btn" onclick="location.href='profile.html'">
+    <span>👤</span>
+    Профиль
+  </button>
+</nav>
+
+<!-- Particles Background -->
+<div class="particles" id="particles"></div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
@@ -255,7 +234,7 @@
 
   function createParticles() {
     const container = document.getElementById('particles');
-    for (let i = 0; i < 40; i++) {
+    for (let i = 0; i < 30; i++) {
       const p = document.createElement('div');
       p.className = 'particle';
       p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
@@ -265,6 +244,7 @@
       container.appendChild(p);
     }
   }
+
   let currentUser = null;
 
   function loadCurrentUser() {
@@ -274,33 +254,46 @@
           if (docSnap.exists()) {
             currentUser = docSnap.data();
             document.getElementById('balance').textContent = currentUser.balance || 0;
-            document.getElementById('authBtn').textContent = currentUser.isGuest ? 'Гость' : currentUser.username;
-            document.getElementById('authBtn').onclick = () => location.href = 'profile.html';
+            // Update Auth Button to show name or profile icon
+            const authBtn = document.getElementById('authBtn');
+            authBtn.textContent = currentUser.username || 'Профиль';
+            authBtn.style.background = '#2a2a35'; // Darker for profile
+            authBtn.onclick = () => location.href = 'profile.html';
           } else {
-            document.getElementById('balance').textContent = '0';
-            document.getElementById('authBtn').textContent = 'Войти';
-            document.getElementById('authBtn').onclick = () => location.href = 'register.html';
+            // No user doc
+            resetAuthUI();
           }
         }).catch((error) => {
           console.error('Error loading user:', error);
+          resetAuthUI();
         });
       } else {
+        // Check local storage guest
         const username = localStorage.getItem('dropwin_current_username');
         if (username === 'Гость') {
-          const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
-          currentUser = users.find(u => u.username === username);
-          if (currentUser) {
-            document.getElementById('balance').textContent = currentUser.balance || 0;
-            document.getElementById('authBtn').textContent = 'Гость';
-            document.getElementById('authBtn').onclick = () => location.href = 'profile.html';
-          }
+            const users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+            currentUser = users.find(u => u.username === username);
+            if (currentUser) {
+                document.getElementById('balance').textContent = currentUser.balance || 0;
+                const authBtn = document.getElementById('authBtn');
+                authBtn.textContent = 'Гость';
+                authBtn.onclick = () => location.href = 'profile.html';
+            } else {
+                resetAuthUI();
+            }
         } else {
-          document.getElementById('balance').textContent = '0';
-          document.getElementById('authBtn').textContent = 'Войти';
-          document.getElementById('authBtn').onclick = () => location.href = 'register.html';
+            resetAuthUI();
         }
       }
     });
+  }
+
+  function resetAuthUI() {
+    document.getElementById('balance').textContent = '0';
+    const authBtn = document.getElementById('authBtn');
+    authBtn.textContent = 'Войти';
+    authBtn.style.background = ''; // Reset to gradient
+    authBtn.onclick = () => location.href = 'register.html';
   }
 
   document.addEventListener('DOMContentLoaded', () => {

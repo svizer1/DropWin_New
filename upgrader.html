@@ -59,6 +59,18 @@
       font-weight: 900;
       font-size: 1.05rem;
     }
+    .slot-breakdown {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      margin-top: 4px;
+      font-weight: 600;
+    }
+    .slot-breakdown span {
+      color: #fbbf24;
+    }
+    .slot-breakdown .balance-part {
+      color: #34d399;
+    }
     .select-btn {
       padding: 7px 12px;
       border: none;
@@ -116,39 +128,64 @@
       will-change: transform;
       backface-visibility: hidden;
     }
-    .ring-pointer-dot {
-      position: absolute;
-      top: 6px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #ffffff;
-      box-shadow: 0 0 10px rgba(255,255,255,0.9);
-    }
     .ring-pointer-arrow {
       position: absolute;
-      top: 2px;
+      top: -2px;
       left: 50%;
-      transform: translateX(-50%);
-      width: 0;
-      height: 0;
-      border-left: 7px solid transparent;
-      border-right: 7px solid transparent;
-      border-bottom: 14px solid #ffffff;
-      filter: drop-shadow(0 0 8px rgba(255,255,255,0.9));
+      transform: translateX(-50%) rotate(-45deg);
+      width: 18px;
+      height: 18px;
+      background: #ffffff;
+      border-radius: 50% 50% 50% 0;
+      filter: drop-shadow(0 0 14px rgba(255,255,255,0.95))
+              drop-shadow(0 0 8px rgba(255,255,255,0.8))
+              drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+      z-index: 10;
+      animation: arrowPulse 2s ease-in-out infinite;
     }
-    .ring-pointer-arrow::after {
+    .ring-pointer-arrow::before {
       content: '';
       position: absolute;
-      top: 2px;
-      left: -5px;
-      width: 0;
-      height: 0;
-      border-left: 5px solid transparent;
-      border-right: 5px solid transparent;
-      border-bottom: 10px solid rgba(15,23,42,0.9);
+      top: 3px;
+      left: 3px;
+      width: 12px;
+      height: 12px;
+      background: rgba(251,191,36,0.3);
+      border-radius: 50% 50% 50% 0;
+    }
+    @media (max-width: 520px) {
+      .ring-pointer-arrow {
+        width: 16px;
+        height: 16px;
+      }
+      .ring-pointer-arrow::before {
+        width: 10px;
+        height: 10px;
+      }
+    }
+    @media (max-width: 380px) {
+      .ring-pointer-arrow {
+        width: 14px;
+        height: 14px;
+      }
+      .ring-pointer-arrow::before {
+        width: 9px;
+        height: 9px;
+        top: 2px;
+        left: 2px;
+      }
+    }
+    @keyframes arrowPulse {
+      0%, 100% {
+        filter: drop-shadow(0 0 14px rgba(255,255,255,0.95))
+                drop-shadow(0 0 8px rgba(255,255,255,0.8))
+                drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+      }
+      50% {
+        filter: drop-shadow(0 0 22px rgba(255,255,255,1))
+                drop-shadow(0 0 14px rgba(255,255,255,0.95))
+                drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+      }
     }
     .fast-toggle {
       display: inline-flex;
@@ -226,56 +263,186 @@
         gap: 12px;
       }
       .ring-wrap {
-        width: 150px;
-        height: 150px;
-      }
-      .chance-percent {
-        font-size: 1.8rem;
-      }
-    }
-    @media (max-width: 520px) {
-      .upgrade-container {
-        grid-template-columns: 1fr;
-        gap: 12px;
-      }
-      .item-slot {
-        min-height: 180px;
-      }
-      .slot-emoji {
-        font-size: 3.2rem;
-      }
-      .ring-wrap {
         width: 140px;
         height: 140px;
+      }
+      .ring-svg {
+        width: 140px;
+        height: 140px;
+      }
+      .ring-bg, .ring-progress {
+        cx: 70;
+        cy: 70;
+        r: 56;
+      }
+      .ring-progress {
+        stroke-width: 10;
+      }
+      .ring-bg {
+        stroke-width: 10;
       }
       .chance-percent {
         font-size: 1.6rem;
       }
       .mult-row {
         grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
       }
-      .select-btn {
-        padding: 12px 16px;
-        font-size: 1rem;
+      .mult-btn {
+        font-size: 0.95rem;
+        padding: 10px 0;
+      }
+      .chance-circle {
+        padding: 12px;
+      }
+    }
+    @media (max-width: 520px) {
+      .upgrade-container {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .item-slot {
+        min-height: 160px;
+        padding: 10px;
+      }
+      .slot-emoji {
+        font-size: 2.8rem;
+      }
+      .slot-header {
+        font-size: 0.9rem;
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+      }
+      .ring-wrap {
+        width: 130px;
+        height: 130px;
+      }
+      .ring-svg {
+        width: 130px;
+        height: 130px;
+      }
+      .ring-bg, .ring-progress {
+        cx: 65;
+        cy: 65;
+        r: 52;
+      }
+      .ring-progress {
+        stroke-width: 9;
+      }
+      .ring-bg {
+        stroke-width: 9;
+      }
+      .chance-percent {
+        font-size: 1.4rem;
+      }
+      .mult-row {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+      }
+      .mult-btn {
+        font-size: 0.9rem;
+        padding: 10px 4px;
         min-height: 48px;
       }
+      .select-btn {
+        padding: 10px 14px;
+        font-size: 0.95rem;
+        min-height: 44px;
+        width: 100%;
+      }
+      .fast-toggle {
+        font-size: 0.95rem;
+      }
       .fast-toggle input {
-        width: 56px;
-        height: 30px;
+        width: 52px;
+        height: 28px;
       }
       .inventory-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
       }
       .selected-list {
         grid-template-columns: repeat(2, 1fr);
       }
+      .upgrade-btn {
+        font-size: 1.05rem;
+        padding: 12px 16px;
+        min-height: 50px;
+      }
+      .balance-use {
+        font-size: 0.9rem;
+      }
+      .modal-actions {
+        flex-direction: column;
+        gap: 10px;
+      }
+      .modal-actions > div:last-child {
+        width: 100%;
+        flex-direction: column;
+        display: flex;
+      }
+      .modal-search-wrapper {
+        margin-left: 0;
+        width: 100%;
+      }
+      .modal-actions .btn {
+        width: 100%;
+        min-height: 48px;
+        font-size: 1rem;
+      }
+      .section-title {
+        font-size: 1.1rem;
+      }
     }
     @media (max-width: 380px) {
-      .ring-wrap { width: 128px; height: 128px; }
-      .chance-percent { font-size: 1.5rem; }
-      .slot-emoji { font-size: 2.8rem; }
-      .select-btn { font-size: 0.95rem; padding: 12px 14px; }
-      .mult-row { grid-template-columns: repeat(2, 1fr); }
+      .ring-wrap {
+        width: 120px;
+        height: 120px;
+      }
+      .ring-svg {
+        width: 120px;
+        height: 120px;
+      }
+      .ring-bg, .ring-progress {
+        cx: 60;
+        cy: 60;
+        r: 48;
+      }
+      .ring-progress {
+        stroke-width: 8;
+      }
+      .ring-bg {
+        stroke-width: 8;
+      }
+      .chance-percent {
+        font-size: 1.3rem;
+      }
+      .slot-emoji {
+        font-size: 2.5rem;
+      }
+      .select-btn {
+        font-size: 0.9rem;
+        padding: 10px 12px;
+      }
+      .mult-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+      }
+      .mult-btn {
+        font-size: 0.85rem;
+        min-height: 46px;
+      }
+      .upgrade-btn {
+        font-size: 1rem;
+        min-height: 48px;
+      }
+      .inv-emoji {
+        font-size: 2rem;
+      }
+      .inv-name {
+        font-size: 0.85rem;
+      }
     }
     button, .select-btn, .mult-btn, .upgrade-btn, .result-btn, .modal-actions .btn {
       touch-action: manipulation;
@@ -443,13 +610,46 @@
     .modal-actions input {
       flex: 1;
       margin-left: 8px;
-      padding: 8px 10px;
+      padding: 10px 14px;
       border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: rgba(255,255,255,0.06);
-      color: #e5e7eb;
+      border: 2px solid rgba(139, 92, 246, 0.3);
+      background: rgba(15,23,42,0.9);
+      color: #ffffff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
     }
-    
+    .modal-actions input::placeholder {
+      color: rgba(255,255,255,0.4);
+    }
+    .modal-actions input:focus {
+      outline: none;
+      border-color: #8b5cf6;
+      background: rgba(15,23,42,1);
+      box-shadow: 0 0 0 4px rgba(139,92,246,0.2), 0 0 20px rgba(139,92,246,0.3);
+      transform: translateY(-1px);
+    }
+    .search-indicator {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #8b5cf6;
+      font-weight: 700;
+      font-size: 0.85rem;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
+    }
+    .search-indicator.active {
+      opacity: 1;
+    }
+    .modal-search-wrapper {
+      position: relative;
+      flex: 1;
+      margin-left: 8px;
+    }
+
     @keyframes modalPop { from { transform: translateY(6px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   </style>
   </head>
@@ -457,7 +657,7 @@
   <div class="particles" id="particles"></div>
 
   <div class="header">
-    <div class="logo">💎 DROPWIN</div>
+    <div class="logo" onclick="location.href='index.html'" style="cursor: pointer;">💎 DROPWIN</div>
     <div class="balance-container">
       <div class="balance">💰 <span id="balance">0</span>₽</div>
       <button class="auth-btn" id="authBtn">Аккаунт</button>
@@ -481,6 +681,7 @@
             <div class="slot-emoji" id="leftEmoji">❓</div>
             <div class="slot-name" id="leftName">Не выбран</div>
             <div class="slot-value" id="leftValue">0₽</div>
+            <div class="slot-breakdown" id="leftBreakdown"></div>
             <div class="selected-list" id="leftSelectedList"></div>
           </div>
         </div>
@@ -491,7 +692,7 @@
               <circle class="ring-progress" id="ringProgress" cx="80" cy="80" r="64" stroke-dasharray="402" stroke-dashoffset="402"></circle>
             </svg>
             <div class="ring-pointer" id="ringPointer">
-              <div class="ring-pointer-dot"></div>
+              <div class="ring-pointer-arrow"></div>
             </div>
             <div class="chance-percent" id="chancePercent" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);">0%</div>
           </div>
@@ -522,6 +723,7 @@
             <div class="slot-emoji" id="rightEmoji">❓</div>
             <div class="slot-name" id="rightName">Не выбран</div>
             <div class="slot-value" id="rightValue">0₽</div>
+            <div class="slot-breakdown" id="rightBreakdown"></div>
           </div>
         </div>
       </div>
@@ -543,7 +745,10 @@
           <div class="section-title" id="modalTitle">Выберите предмет</div>
           <div style="display:flex; gap:8px; align-items:center; width: 60%;">
             <button class="btn" id="sortPriceBtn">Цена ↑</button>
-            <input type="text" id="searchInput" placeholder="Поиск по названию">
+            <div class="modal-search-wrapper">
+              <input type="text" id="searchInput" placeholder="Поиск по названию или цене">
+              <span class="search-indicator" id="searchIndicator">🔍</span>
+            </div>
             <button class="btn" id="closeModalBtn">Закрыть</button>
           </div>
         </div>
@@ -634,7 +839,7 @@
     }
 
     const cases = {
-      bomj: { price: 5, items: [
+      bomj: { price: 6, items: [
         {emoji:'🧦',name:'Дырявый носок',value:1},
         {emoji:'🍞',name:'Чёрствый хлеб',value:3},
         {emoji:'🗑️',name:'Мусорный пакет',value:7},
@@ -644,7 +849,7 @@
         {emoji:'📱',name:'Сломанный Nokia',value:100},
         {emoji:'💸',name:'Заначка под матрасом',value:180},
       ]},
-      vibe: { price: 45, items: [
+      vibe: { price: 49, items: [
         {emoji:'💖',name:'Сердце',value:15},
         {emoji:'🌹',name:'Роза',value:25},
         {emoji:'🚀',name:'Ракета',value:50},
@@ -656,7 +861,22 @@
         {emoji:'🤡',name:'Шапка шута',value:500},
         {emoji:'⭐',name:'Звезда',value:200},
       ]},
-      dvornik:{ price:25, items:[
+      santa: { price: 114, items: [
+        {emoji:'🍪',name:'Печенье',value:30},
+        {emoji:'🥛',name:'Молоко',value:60},
+        {emoji:'🎅',name:'Колпак',value:120},
+        {emoji:'🦌',name:'Олень',value:300},
+        {emoji:'🎁',name:'Большой подарок',value:1000},
+      ]},
+      battle: { price: 189, items: [
+        {emoji:'🛡️',name:'Щит',value:50},
+        {emoji:'⚔️',name:'Меч',value:100},
+        {emoji:'💊',name:'Аптечка',value:200},
+        {emoji:'🔫',name:'Пистолет',value:400},
+        {emoji:'💣',name:'Граната',value:800},
+        {emoji:'🚁',name:'Вертолет',value:2000},
+      ]},
+      dvornik:{ price:29, items:[
         {emoji:'🧹',name:'Метла',value:5},
         {emoji:'🪣',name:'Ведро',value:10},
         {emoji:'🧼',name:'Мыло',value:15},
@@ -666,7 +886,7 @@
         {emoji:'🛠️',name:'Набор инструментов',value:150},
         {emoji:'🚲',name:'Велосипед б/у',value:400},
       ]},
-      schoolboy:{ price:250, items:[
+      schoolboy:{ price:259, items:[
         {emoji:'📚',name:'Учебник',value:80},
         {emoji:'🎒',name:'Рюкзак',value:150},
         {emoji:'📱',name:'Смартфон',value:400},
@@ -675,7 +895,7 @@
         {emoji:'🚗',name:'Машинка',value:1300},
         {emoji:'🏠',name:'Квартира',value:4000},
       ]},
-      event:{ price:500, items:[
+      event:{ price:519, items:[
         {emoji:'🎉',name:'Конфетти',value:150},
         {emoji:'🎁',name:'Подарок',value:300},
         {emoji:'🎈',name:'Воздушный шар',value:400},
@@ -685,15 +905,15 @@
         {emoji:'✈️',name:'Путешествие',value:3000},
       ]},
       milioner: { price: 1000, items: [
-        {emoji: '💵', name: 'Деньги', value: 450},
-        {emoji: '🏦', name: 'Банк', value: 900},
-        {emoji: '💰', name: 'Мешок денег', value: 1800},
-        {emoji: '📈', name: 'График роста', value: 2800},
-        {emoji: '🤑', name: 'Миллионер', value: 4800},
-        {emoji: '🚀', name: 'Ракета', value: 9500},
-        {emoji: '🏰', name: 'Дворец', value: 45000},
+        {emoji: '💵', name: 'Деньги', value: 300},
+        {emoji: '🏦', name: 'Банк', value: 600},
+        {emoji: '💰', name: 'Мешок денег', value: 1200},
+        {emoji: '📈', name: 'График роста', value: 2000},
+        {emoji: '🤑', name: 'Миллионер', value: 3000},
+        {emoji: '🚀', name: 'Ракета', value: 6000},
+        {emoji: '🏰', name: 'Дворец', value: 25000},
       ]},
-      neoprime: { price: 1500, items: [
+      neoprime: { price: 1555, items: [
         {emoji: '💡', name: 'Неоновая лампа', value: 450},
         {emoji: '💾', name: 'Кибер-чип', value: 1000},
         {emoji: '🥽', name: 'VR-очки', value: 1600},
@@ -702,7 +922,14 @@
         {emoji: '🚚', name: 'Кибер-трак', value: 7000},
         {emoji: '🌌', name: 'Neo Prime', value: 30000},
       ]},
-      maldives: { price: 2500, items: [
+      grinch: { price: 2555, items: [
+        {emoji: '🧅', name: 'Лук', value: 500},
+        {emoji: '🐕', name: 'Макс', value: 1500},
+        {emoji: '🎄', name: 'Украденная елка', value: 3000},
+        {emoji: '🎁', name: 'Чужие подарки', value: 5000},
+        {emoji: '💚', name: 'Сердце Гринча', value: 15000},
+      ]},
+      maldives: { price: 2599, items: [
         {emoji: '🐚', name: 'Ракушка', value: 700},
         {emoji: '🥥', name: 'Кокос', value: 1600},
         {emoji: '🍹', name: 'Коктейль', value: 2500},
@@ -711,7 +938,7 @@
         {emoji: '🏠', name: 'Бунгало', value: 18000},
         {emoji: '🏝️', name: 'Личный остров', value: 65000},
       ]},
-      elka: { price: 289, items: [
+      elka: { price: 299, items: [
         {emoji: '❄️', name: 'Снежинка', value: 50},
         {emoji: '🍬', name: 'Леденец', value: 100},
         {emoji: '🎄', name: 'Гирлянда', value: 200},
@@ -720,7 +947,7 @@
         {emoji: '🍾', name: 'Шампанское', value: 1500},
         {emoji: '🎆', name: 'Фейерверк', value: 5000},
       ]},
-      snowman: { price: 1888, items: [
+      snowman: { price: 1999, items: [
         {emoji: '🥕', name: 'Морковка', value: 400},
         {emoji: '🧣', name: 'Шарф', value: 800},
         {emoji: '🛷', name: 'Санки', value: 1500},
@@ -800,7 +1027,19 @@
       const first = selected[0] || null;
       document.getElementById('leftEmoji').textContent = first ? (first.emoji || '❓') : '❓';
       document.getElementById('leftName').textContent = selected.length > 0 ? `Выбрано ${selected.length}` : 'Не выбран';
-      document.getElementById('leftValue').textContent = `${total}₽`;
+      document.getElementById('leftValue').textContent = `${total + balanceUse}₽`;
+
+      // Показываем breakdown
+      const breakdownEl = document.getElementById('leftBreakdown');
+      if (balanceUse > 0 && total > 0) {
+        breakdownEl.innerHTML = `Предметы: <span>${total}₽</span> + Баланс: <span class="balance-part">${balanceUse}₽</span>`;
+      } else if (balanceUse > 0) {
+        breakdownEl.innerHTML = `Баланс: <span class="balance-part">${balanceUse}₽</span>`;
+      } else if (total > 0) {
+        breakdownEl.innerHTML = `Предметы: <span>${total}₽</span>`;
+      } else {
+        breakdownEl.innerHTML = '';
+      }
       const list = document.getElementById('leftSelectedList');
       if (list) {
         list.innerHTML = '';
@@ -817,10 +1056,42 @@
       document.getElementById('rightEmoji').textContent = right ? (right.emoji || '❓') : '❓';
       document.getElementById('rightName').textContent = right ? (right.name || 'Предмет') : 'Не выбран';
       document.getElementById('rightValue').textContent = (right && right.value) ? `${right.value}₽` : '0₽';
+
+      // Показываем breakdown для правого слота
+      const rightBreakdownEl = document.getElementById('rightBreakdown');
+      if (right && right.value) {
+        const diff = (right.value || 0) - (total + balanceUse);
+        if (diff > 0) {
+          rightBreakdownEl.innerHTML = `Разница: <span>+${diff.toLocaleString()}₽</span>`;
+        } else {
+          rightBreakdownEl.innerHTML = '';
+        }
+      } else {
+        rightBreakdownEl.innerHTML = '';
+      }
       const effectiveBase = total + balanceUse;
       const valid = selected.length >= 1 && selected.length <= 4 && right && right.value > effectiveBase;
-      const chance = valid ? Math.max(1, Math.min(95, (effectiveBase / right.value) * 100)) : 0;
-      document.getElementById('chancePercent').textContent = `${chance.toFixed(2)}%`;
+      const chanceRaw = valid ? (effectiveBase / right.value) * 100 : 0;
+      const chance = valid ? Math.min(95, chanceRaw) : 0;
+
+      // Форматируем шанс: если меньше 1% - показываем больше знаков после запятой
+      let chanceText;
+      if (chance >= 10) {
+        chanceText = `${chance.toFixed(1)}%`;
+      } else if (chance >= 1) {
+        chanceText = `${chance.toFixed(2)}%`;
+      } else if (chance >= 0.1) {
+        chanceText = `${chance.toFixed(3)}%`;
+      } else if (chance > 0.01) {
+        chanceText = `${chance.toFixed(4)}%`;
+      } else if (chance > 0.001) {
+        chanceText = `${chance.toFixed(5)}%`;
+      } else if (chance > 0) {
+        chanceText = `${chanceRaw.toExponential(2)}`;
+      } else {
+        chanceText = '0%';
+      }
+      document.getElementById('chancePercent').textContent = chanceText;
       const circumference = 2 * Math.PI * 64;
       const offset = circumference * (1 - Math.min(0.95, chance / 100));
       document.getElementById('ringProgress').setAttribute('stroke-dasharray', `${circumference}`);
@@ -863,11 +1134,34 @@
 
     function renderModalItems() {
       const grid = document.getElementById('modalItemsGrid');
-      const search = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
-      let items = modalItems.slice();
-      if (search) {
-        items = items.filter(it => (it.name || '').toLowerCase().includes(search));
+      const search = (document.getElementById('searchInput')?.value || '').trim();
+      const indicator = document.getElementById('searchIndicator');
+
+      // Показываем индикатор поиска
+      if (indicator) {
+        if (search) {
+          indicator.classList.add('active');
+        } else {
+          indicator.classList.remove('active');
+        }
       }
+
+      let items = modalItems.slice();
+
+      if (search) {
+          const searchNum = parseFloat(search);
+          if (!isNaN(searchNum) && searchNum > 0) {
+              // Ищем по цене: от -30% до +40% от введенной суммы
+              const minP = searchNum * 0.7;
+              const maxP = searchNum * 1.4;
+              items = items.filter(it => it.value >= minP && it.value <= maxP);
+          } else {
+              // Ищем по названию
+              const searchLower = search.toLowerCase();
+              items = items.filter(it => (it.name || '').toLowerCase().includes(searchLower));
+          }
+      }
+
       items.sort((a,b) => modalSortAsc ? a.value - b.value : b.value - a.value);
       grid.innerHTML = '';
       items.forEach(it => {
@@ -948,7 +1242,8 @@
         document.getElementById('upgradeResult').innerHTML = '<span style="color:#f87171">Целевой должен быть дороже базового</span>';
         return;
       }
-      const chance = Math.max(1, Math.min(95, (effectiveBase / target.value) * 100));
+      const chanceRaw = (effectiveBase / target.value) * 100;
+      const chance = Math.min(95, chanceRaw);
       const proceed = true;
       let success = false;
       const arc = Math.max(1, Math.min(95, chance)) * 3.6;

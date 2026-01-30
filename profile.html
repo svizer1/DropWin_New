@@ -6,358 +6,249 @@
   <title>Профиль | DropWin</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    .inventory-cta {
-      display: flex;
-      justify-content: center;
-      margin: 8px 0 12px;
+    /* Profile specific styles */
+    .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        background: var(--bg-card);
+        padding: 24px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        margin-bottom: 20px;
     }
-    .inventory-icon {
-      width: 80px;
-      height: 80px;
-      border-radius: 12px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.35);
-      transition: transform 0.2s, box-shadow 0.2s;
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: var(--bg-hover);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        border: 2px solid var(--primary);
     }
-    .inventory-icon:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 24px rgba(0,0,0,0.45);
+    .profile-info {
+        flex: 1;
     }
-    .streak-bar {
-      display: flex;
-      gap: 5px;
-      height: 38px;
-      padding: 6px;
-      background: rgba(30, 30, 50, 0.5);
-      border-radius: 12px;
-      overflow: hidden;
-      margin: 16px 0;
+    .profile-name {
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin-bottom: 5px;
     }
-    .streak-item {
-      flex: 1;
-      border-radius: 8px;
-      position: relative;
-      transition: transform 0.15s;
+    .profile-id {
+        color: var(--text-sec);
+        font-size: 0.9rem;
     }
-    .streak-item:hover {
-      transform: scale(1.08);
-      z-index: 2;
+    
+    .balance-section {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        border-radius: var(--radius);
+        padding: 24px;
+        text-align: center;
+        margin-bottom: 20px;
     }
-    .streak-item.win {
-      background: linear-gradient(135deg, #34d399, #10b981);
-      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+    .balance-amount {
+        font-size: 2.5rem;
+        font-weight: 900;
+        color: #34d399;
+        margin: 10px 0;
+        text-shadow: 0 0 20px rgba(52, 211, 153, 0.3);
     }
-    .streak-item.loss {
-      background: linear-gradient(135deg, #f87171, #ef4444);
-      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+    .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 20px;
     }
-    .streak-tooltip {
-      position: absolute;
-      bottom: 110%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #111827;
-      color: white;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 0.78rem;
-      white-space: nowrap;
-      pointer-events: none;
-      opacity: 0;
-      transition: all 0.18s ease;
-      z-index: 10;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.5);
-      border: 1px solid rgba(255,255,255,0.08);
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
     }
-    .streak-item:hover .streak-tooltip {
-      opacity: 1;
-      bottom: 120%;
+    .stat-card {
+        background: var(--bg-card);
+        padding: 16px;
+        border-radius: 12px;
+        text-align: center;
+        border: 1px solid var(--border);
     }
-    .streak-empty {
-      color: #6b7280;
-      font-size: 0.9rem;
-      text-align: center;
-      padding: 10px;
-      opacity: 0.7;
+    .stat-value {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: var(--text-main);
     }
-    .max-streak {
-      background: rgba(30, 30, 50, 0.4);
-      border-radius: 10px;
-      padding: 12px 16px;
-      margin: 16px 0;
-      display: flex;
-      justify-content: space-around;
-      text-align: center;
-    }
-    .max-streak-item {
-      flex: 1;
-    }
-    .max-streak-value {
-      font-size: 1.6rem;
-      font-weight: 800;
-      margin: 4px 0;
-    }
-    .max-streak-win  { color: #34d399; }
-    .max-streak-loss { color: #f87171; }
-    .time-direction {
-      text-align: center;
-      font-size: 0.8rem;
-      color: #9ca3af;
-      margin-top: 6px;
-      opacity: 0.8;
-    }
-    .crypto-transactions {
-      margin-top: 24px;
-    }
-    .transaction-item {
-      background: rgba(255,255,255,0.03);
-      padding: 12px;
-      border-radius: 12px;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.95rem;
-    }
-    .transaction-buy  { border-left: 4px solid #10b981; }
-    .transaction-sell { border-left: 4px solid #ef4444; }
-    .transaction-fee { border-left: 4px solid #fbbf24; }
-    .profile-balance-block {
-      text-align: center;
-      margin: 24px 0 32px;
-      padding: 20px;
-      background: rgba(16, 185, 129, 0.08);
-      border-radius: 16px;
-      border: 1px solid rgba(52, 211, 153, 0.25);
-    }
-    .profile-balance-big {
-      font-size: 2.8rem;
-      font-weight: 800;
-      color: #34d399;
-      margin: 8px 0;
+    .stat-label {
+        font-size: 0.8rem;
+        color: var(--text-sec);
+        margin-top: 4px;
     }
 
-    .referral-card {
-      background: rgba(30,30,50,0.48);
-      border: 1px solid rgba(139,92,246,0.22);
-      border-radius: 18px;
-      padding: 28px 18px;
-      margin: 32px 0;
-      backdrop-filter: blur(8px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.32);
+    .menu-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 30px;
     }
-    .referral-title {
-      font-size: 1.15rem;
-      color: #c4b5fd;
-      margin-bottom: 12px;
-      font-weight: 500;
-      letter-spacing: 0.6px;
+    .menu-item {
+        background: var(--bg-card);
+        padding: 16px;
+        border-radius: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        transition: 0.2s;
+        border: 1px solid var(--border);
     }
-    .referral-code-display {
-      font-size: 2.6rem;
-      font-weight: 900;
-      color: #fcd34d;
-      letter-spacing: 3px;
-      margin: 14px 0;
-      word-break: break-all;
-      text-shadow: 0 3px 14px rgba(251,191,36,0.4);
+    .menu-item:hover {
+        border-color: var(--primary);
+        background: var(--bg-hover);
     }
-    .referral-buttons {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin: 24px 0;
+
+    .referral-box {
+        background: radial-gradient(circle at 80% 0%, rgba(124,58,237,0.18), rgba(124,58,237,0.08));
+        border: 1px solid rgba(124, 58, 237, 0.35);
+        padding: 24px;
+        border-radius: var(--radius);
+        margin-bottom: 24px;
+        text-align: center;
+        box-shadow: 0 0 24px rgba(124,58,237,0.22);
     }
-    .btn-copy-referral {
-      padding: 14px 36px;
-      font-size: 1.05rem;
-      font-weight: 600;
-      background: linear-gradient(135deg, #fbbf24, #f59e0b);
-      color: #111827;
-      border: none;
-      border-radius: 14px;
-      box-shadow: 0 6px 18px rgba(251,191,36,0.55);
-      transition: all 0.22s ease;
-      min-width: 150px;
-      cursor: pointer;
+    .referral-code {
+        font-size: 2rem;
+        font-weight: 900;
+        color: var(--accent);
+        letter-spacing: 2px;
+        margin: 10px 0;
     }
-    .btn-refresh-referral {
-      width: 56px;
-      height: 56px;
-      padding: 0;
-      font-size: 1.7rem;
-      background: linear-gradient(145deg, #a78bfa, #7c3aed);
-      color: white;
-      border: none;
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 6px 18px rgba(139,92,246,0.5);
-      transition: all 0.22s ease;
-      cursor: pointer;
+    .ref-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: center;
+        margin-top: 8px;
     }
-    .btn-copy-referral:hover,
-    .btn-refresh-referral:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 24px rgba(0,0,0,0.4) !important;
+    .ref-actions {
+        margin-top: 14px;
     }
   </style>
 </head>
 <body>
-  <!-- Loader -->
-  <div id="pageLoader" style="position: fixed; inset: 0; background: #0f0c29; z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.5s;">
-    <div style="width: 50px; height: 50px; border: 4px solid rgba(99,102,241,0.3); border-top-color: #6366f1; border-radius: 50%; animation: spinLoader 0.8s linear infinite;"></div>
-  </div>
-  <style>
-    @keyframes spinLoader { to { transform: rotate(360deg); } }
-  </style>
 
-  <div class="particles" id="particles"></div>
-
-  <div class="header">
-    <div class="logo">💎 DROPWIN</div>
-    <div class="balance-container" id="gotoDeposit" style="cursor: pointer; transition: all 0.2s;">
-      <div class="balance">💰 <span id="balance">—</span>₽</div>
-      <div style="font-size:0.78rem; color:#34d399; margin-top:3px; text-align:center; opacity:0.9;">
-        Пополнить →
-      </div>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo" onclick="location.href='index.html'" style="cursor: pointer;">💎 DROP<span>WIN</span></div>
     </div>
-  </div>
-
-  <div class="content">
-    <div class="inventory-cta">
-      <a href="inventory.html" aria-label="Инвентарь">
-        <img class="inventory-icon" src="images/index/inventory.png" alt="Инвентарь">
-      </a>
+    <div class="header-right">
+      <button class="back-btn" onclick="location.href='index.html'" style="font-size: 1.2rem;">✖</button>
     </div>
-    <button class="back-btn" onclick="location.href='index.html'">← Назад</button>
+  </header>
 
-    <div class="game-card">
-      <div class="game-title">👤 Профиль</div>
-      <div id="usernameDisplay" style="font-size:1.6rem; font-weight:800; margin:20px 0; text-align:center;">—</div>
-
-      <div class="profile-balance-block">
-        <div style="font-size:1.1rem; color:#9ca3af; margin-bottom:4px;">Текущий баланс</div>
-        <div class="profile-balance-big"><span id="balanceBig">—</span> ₽</div>
-        <button class="btn" onclick="location.href='dep.html'"
-                style="margin-top:16px; background: linear-gradient(135deg, #10b981, #059669); font-size:1.15rem; padding:14px 40px;">
-          Пополнить баланс
-        </button>
-      <button class="btn" onclick="location.href='вывод.html'"
-              style="margin-top:12px; background: linear-gradient(135deg, #f97316, #ea580c); font-size:1.15rem; padding:14px 40px;">
-        Вывести средства
-      </button>
+  <div class="content" style="max-width: 600px; margin: 0 auto;">
+    
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <div class="profile-avatar" onclick="changeAvatar()" style="cursor: pointer; position: relative; overflow: hidden;">
+        <img id="avatarImg" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+        <span id="avatarPlaceholder">👤</span>
+        <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.6); color: white; font-size: 0.6rem; text-align: center; padding: 2px;">ИЗМЕНИТЬ</div>
       </div>
-
-
-
-      <div class="referral-card">
-        <div class="referral-title">Ваш реферальный код</div>
-        <div class="referral-code-display" id="myReferralCode">——</div>
-        <div class="referral-buttons">
-          <button class="btn-copy-referral" onclick="copyReferralCode()">
-            Скопировать
-          </button>
-          <button class="btn-refresh-referral" id="refreshReferralCodeBtn">
-            🔄
-          </button>
-        </div>
-        <div id="referralChangeInfo"
-             style="margin-top:16px; font-size:0.88rem; color:#fca5a5; font-weight:500; display:none;
-                    background:rgba(239,68,68,0.15); padding:10px 16px; border-radius:12px;
-                    border:1px solid rgba(239,68,68,0.3);">
-          Новый код можно сгенерировать только один раз в сутки
-        </div>
-        <div style="margin-top:20px; font-size:0.96rem; color:#9ca3af; line-height:1.5;">
-          Приглашайте друзей и получайте <span style="color:#fcd34d; font-weight:700;">+10 ₽</span> за каждого зарегистрированного по вашей ссылке
-        </div>
+      <div class="profile-info">
+        <div class="profile-name" id="usernameDisplay">Загрузка...</div>
+        <div class="profile-id">ID: <span id="userIdDisplay">...</span></div>
       </div>
-
-      <div style="margin: 28px 0; text-align: center; background: rgba(30,30,50,0.4); padding: 20px; border-radius: 12px;">
-        <div style="font-size: 1.1rem; color: #9ca3af; margin-bottom: 12px;">Ваши рефералы</div>
-        <div style="display: flex; justify-content: space-around; margin: 16px 0;">
-          <div>
-            <div style="font-size: 2.2rem; font-weight: 800; color: #60a5fa;" id="refCount">0</div>
-            <div style="color: #9ca3af;">приглашено</div>
-          </div>
-          <div>
-            <div style="font-size: 2.2rem; font-weight: 800; color: #34d399;" id="refEarnings">0 ₽</div>
-            <div style="color: #9ca3af;">заработано</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="input-group" style="margin: 32px 0 16px;">
-        <label class="input-label">Промокод</label>
-        <input type="text" id="promoCode" placeholder="Kavexs / Kavexs2026">
-        <button class="btn" id="promoBtn"
-          style="margin: 16px auto; display: block; width: 90%; max-width: 360px;
-                 background: linear-gradient(135deg, #facc15, #ca8a04);
-                 font-size: 1.25rem; padding: 16px; font-weight: 700;
-                 box-shadow: 0 4px 15px rgba(250, 204, 21, 0.4);">
-          🎁 АКТИВИРОВАТЬ
-        </button>
-      </div>
-
-      <button class="btn" onclick="openDailyCaseFromProfile()"
-        style="margin: 16px auto; display:block; width:90%; max-width:400px; background:linear-gradient(135deg,#eab308,#ca8a04);">
-        📦 Ежедневный кейс
-      </button>
-
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-value" id="gamesPlayed">0</div><div class="stat-label">Игр</div></div>
-        <div class="stat-card"><div class="stat-value" id="winRate">0%</div><div class="stat-label">% побед</div></div>
-        <div class="stat-card"><div class="stat-value" id="totalBet">0₽</div><div class="stat-label">Ставки</div></div>
-        <div class="stat-card"><div class="stat-value" id="totalWin">0₽</div><div class="stat-label">Выигрыш</div></div>
-      </div>
-
-      <div class="max-streak">
-        <div class="max-streak-item">
-          <div>Макс. выигрышей подряд</div>
-          <div class="max-streak-value max-streak-win" id="maxWinStreak">0</div>
-        </div>
-        <div class="max-streak-item">
-          <div>Макс. проигрышей подряд</div>
-          <div class="max-streak-value max-streak-loss" id="maxLossStreak">0</div>
-        </div>
-      </div>
-
-      <div class="recent-streak">
-        <div class="game-title" style="margin: 20px 0 8px;">Последние игры</div>
-        <div id="streakBar" class="streak-bar"></div>
-        <div class="time-direction">← старые   •   новые →</div>
-      </div>
-
-      <div class="history-list">
-        <div class="game-title" style="margin-top:28px; margin-bottom:12px;">История игр</div>
-        <div id="historyList"></div>
-      </div>
-
-      <div class="crypto-transactions">
-        <div class="game-title" style="margin-top:28px; margin-bottom:12px;">История транзакций</div>
-        <div id="cryptoTransactionList"></div>
-      </div>
-
+      <button onclick="logout()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">🚪</button>
     </div>
 
-    <button class="btn logout-btn" id="logoutBtn" style="margin: 40px auto 80px; display:block; width:90%; max-width:400px;">
-      Выйти
-    </button>
+    <!-- Balance -->
+    <div class="balance-section">
+      <div style="color: var(--text-sec);">Ваш баланс</div>
+      <div class="balance-amount"><span id="balanceBig">0</span> ₽</div>
+      <div class="action-buttons">
+        <button class="btn" style="background: #10b981;" onclick="location.href='dep.html'">Пополнить</button>
+        <button class="btn" style="background: #374151;" onclick="location.href='вывод.html'">Вывести</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="gamesPlayed">0</div>
+        <div class="stat-label">Игр сыграно</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="winRate">0%</div>
+        <div class="stat-label">Винрейт</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="totalWin">0</div>
+        <div class="stat-label">Выигрыш</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="maxWinStreak">0</div>
+        <div class="stat-label">Стрик побед</div>
+      </div>
+    </div>
+
+    <!-- Referral -->
+    <div class="referral-box">
+      <div class="stat-label">Ваш реферальный код</div>
+      <div class="referral-code" id="myReferralCode">LOADING</div>
+      <div class="ref-actions">
+        <button class="btn" style="background:#7c3aed; width:100%;" onclick="copyReferralCode()">Скопировать код</button>
+      </div>
+      <div style="margin-top: 10px; font-size: 0.9rem;">Приглашено: <span id="refCount" style="color:white; font-weight:bold;">0</span></div>
+    </div>
+
+    <!-- Menu -->
+    <div class="menu-list">
+      <div class="menu-item" onclick="openDailyCaseFromProfile()">
+        <span>📦 Ежедневный кейс</span>
+        <span>➜</span>
+      </div>
+      <div class="menu-item" onclick="location.href='inventory.html'">
+        <span>🎒 Инвентарь</span>
+        <span>➜</span>
+      </div>
+      <div class="menu-item" onclick="activatePromoPrompt()">
+        <span>🎁 Активировать промокод</span>
+        <span>➜</span>
+      </div>
+      <div class="menu-item" onclick="toggleHistory()">
+        <span>📜 История игр и транзакций</span>
+        <span id="historyArrow">▼</span>
+      </div>
+      <div id="historySection" style="display: none; padding-top: 10px;">
+          <div class="stat-label" style="margin-bottom: 8px;">Последние игры</div>
+          <div id="historyList"></div>
+          <div class="stat-label" style="margin: 16px 0 8px;">Транзакции</div>
+          <div id="transactionList"></div>
+      </div>
+      <div class="menu-item" onclick="location.href='https://t.me/DropWinHelp_bot'">
+        <span>💬 Поддержка</span>
+        <span>➜</span>
+      </div>
+    </div>
+
   </div>
 
-  <div class="nav">
+  <!-- Bottom Nav -->
+  <nav class="nav">
     <button class="nav-btn" onclick="location.href='index.html'"><span>🏠</span><span class="nav-label">Главная</span></button>
     <button class="nav-btn" onclick="location.href='leaderboard.html'"><span>🏆</span><span class="nav-label">Топ</span></button>
+    <button class="nav-btn" onclick="location.href='inventory.html'"><span>🎒</span><span class="nav-label">Инвентарь</span></button>
     <button class="nav-btn active"><span>👤</span><span class="nav-label">Профиль</span></button>
-    <button class="nav-btn" onclick="location.href='register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
-  </div>
+  </nav>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
@@ -376,400 +267,167 @@
   let currentUser = null;
   let userId = null;
 
-
-  // ─── ВСЕ ФУНКЦИИ ВЫШЕ addEventListener ───
-
-  function logout() {
-    signOut(auth).then(() => {
-      location.href = 'index.html';
-    }).catch((error) => {
-      alert('Ошибка выхода: ' + error.message);
-    });
+  window.changeAvatar = async function() {
+      if (!currentUser) return;
+      const url = prompt("Введите ссылку на картинку аватара:", currentUser.avatarUrl || "");
+      if (url !== null) {
+          await updateDoc(doc(db, 'users', userId), { avatarUrl: url });
+          currentUser.avatarUrl = url;
+          updateAvatarDisplay();
+      }
   }
 
-  function createParticles() {
-    const container = document.getElementById('particles');
-    for (let i = 0; i < 40; i++) {
-      const p = document.createElement('div');
-      p.className = 'particle';
-      p.style.width = p.style.height = Math.random() * 3 + 1 + 'px';
-      p.style.left = Math.random() * 100 + '%';
-      p.style.animationDuration = Math.random() * 15 + 10 + 's';
-      p.style.animationDelay = Math.random() * 5 + 's';
-      container.appendChild(p);
-    }
+  function updateAvatarDisplay() {
+      const img = document.getElementById('avatarImg');
+      const placeholder = document.getElementById('avatarPlaceholder');
+      if (currentUser && currentUser.avatarUrl) {
+          img.src = currentUser.avatarUrl;
+          img.style.display = 'block';
+          placeholder.style.display = 'none';
+      } else {
+          img.style.display = 'none';
+          placeholder.style.display = 'block';
+      }
   }
 
-  window.openDailyCaseFromProfile = async function() {
-    if (!currentUser) return alert('Войдите в аккаунт');
-    const today = new Date().toDateString();
-    if (currentUser.lastDailyCase === today) {
-      return alert('Сегодня вы уже открывали ежедневный кейс');
-    }
-    location.href = 'freebet.html';
-  };
+  window.logout = function() {
+    signOut(auth).then(() => location.href = 'index.html');
+  }
 
   window.copyReferralCode = function() {
-    const code = document.getElementById('myReferralCode').textContent.trim();
-    if (!code || code === '—' || !code.includes('DROPWIN-')) {  // Изменено: проверка на верхний регистр
-      alert('Нет реферального кода');
-      return;
-    }
-    navigator.clipboard.writeText(code)
-      .then(() => alert(`Скопировано!\n${code}`))
-      .catch(() => alert('Не удалось скопировать'));
-  };
-
-  function generateNewReferralCode() {
-    if (!currentUser || !userId) {
-      alert('Сначала войдите в аккаунт');
-      return;
-    }
-
-    const today = new Date().toDateString();
-
-    if (currentUser.lastReferralChange === today) {
-      const info = document.getElementById('referralChangeInfo');
-      info.style.display = 'block';
-      setTimeout(() => info.style.display = 'none', 7000);
-      return;
-    }
-
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let codePart = '';
-    for (let i = 0; i < 5; i++) {
-      codePart += chars[Math.floor(Math.random() * chars.length)];
-    }
-
-    const newCode = `DROPWIN-${codePart}`;  // Изменено: полностью в верхнем регистре
-
-    currentUser.referralCode = newCode;
-    currentUser.lastReferralChange = today;
-
-    updateDoc(doc(db, 'users', userId), {
-      referralCode: newCode,
-      lastReferralChange: today
-    }).then(() => {
-      document.getElementById('myReferralCode').textContent = newCode;
-      alert(`Новый код создан!\n\n${newCode}\n\nСкопируйте его сейчас`);
-    }).catch(err => {
-      console.error('Ошибка при смене реферального кода:', err);
-      alert('Не удалось обновить код. Проверьте соединение.');
-    });
+    const code = document.getElementById('myReferralCode').textContent;
+    navigator.clipboard.writeText(code).then(() => alert('Код скопирован!'));
   }
 
-  async function activatePromo() {
-    if (!currentUser) return alert('Войдите в аккаунт');
-    const code = document.getElementById('promoCode').value.trim().toUpperCase();
-    if (!code) return alert('Введите промокод');
-
+  window.openDailyCaseFromProfile = function() {
+    if (!currentUser) return;
     const today = new Date().toDateString();
-    if (currentUser.lastPromoDate === today && code.startsWith('FB-')) {
-      return alert('Сегодня вы уже активировали промокод');
+    if (currentUser.lastDailyCase === today) {
+        alert('Сегодня вы уже открывали кейс');
+    } else {
+        location.href = 'freebet.html';
     }
-
-    let sum = 0;
-    let isBonusPromo = false;
-
-    if (code === 'KAVEXS' || code === 'KAVEXS2026') {
-      sum = 100;
-    }
-    else if (currentUser.activePromoCode === code && currentUser.activePromoValue != null) {
-      sum = currentUser.activePromoValue;
-      isBonusPromo = true;
-
-      // Удаляем промокод сразу
-      currentUser.activePromoCode = null;
-      currentUser.activePromoType = null;
-      currentUser.activePromoValue = null;
-    }
-    else {
-      return alert('Неверный или уже использованный промокод');
-    }
-
-    if (sum <= 0) return;
-
-    currentUser.balance = (currentUser.balance || 0) + sum;
-    currentUser.lastPromoDate = today;
-
-    const updateData = {
-      balance: currentUser.balance,
-      lastPromoDate: today,
-      activePromoCode: null,
-      activePromoType: null,
-      activePromoValue: null
-    };
-
-    await updateDoc(doc(db, 'users', userId), updateData);
-
-    // Добавляем в историю транзакций
-    if (!currentUser.cryptoTransactions) currentUser.cryptoTransactions = [];
-    currentUser.cryptoTransactions.push({
-      type: 'promo',
-      amount: sum,
-      code: code,
-      timestamp: Date.now()
-    });
-
-    await updateDoc(doc(db, 'users', userId), {
-      cryptoTransactions: currentUser.cryptoTransactions
-    });
-
-    document.getElementById('balance').textContent = currentUser.balance;
-    document.getElementById('balanceBig').textContent = currentUser.balance;
-    alert(`+${sum}₽ успешно добавлено!`);
-    document.getElementById('promoCode').value = '';
   }
 
-  function calculateMaxStreaks(history) {
-    if (!history || history.length === 0) return { maxWin: 0, maxLoss: 0 };
-    let currentWin = 0, currentLoss = 0;
-    let maxWin = 0, maxLoss = 0;
-    for (const item of history) {
-      if (item.result === 'win') {
-        currentWin++;
-        currentLoss = 0;
-        maxWin = Math.max(maxWin, currentWin);
+  window.toggleHistory = function() {
+      const sec = document.getElementById('historySection');
+      const arrow = document.getElementById('historyArrow');
+      if (sec.style.display === 'none') {
+          sec.style.display = 'block';
+          arrow.textContent = '▲';
       } else {
-        currentLoss++;
-        currentWin = 0;
-        maxLoss = Math.max(maxLoss, currentLoss);
+          sec.style.display = 'none';
+          arrow.textContent = '▼';
       }
-    }
-    return { maxWin, maxLoss };
   }
 
-  function loadCurrentUser() {
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        location.href = 'register.html';
-        return;
+  window.activatePromoPrompt = async function() {
+    const code = prompt("Введите промокод:");
+    if (!code) return;
+    
+    if (!currentUser) return;
+    
+    // Simple promo logic reuse
+    const upperCode = code.toUpperCase().trim();
+    if (upperCode === 'KAVEXS' || upperCode === 'KAVEXS2026') {
+        const today = new Date().toDateString();
+        if (currentUser.lastPromoDate === today) return alert('Уже активирован сегодня');
+        
+        const bonus = 100;
+        await updateDoc(doc(db, 'users', userId), {
+            balance: (currentUser.balance || 0) + bonus,
+            lastPromoDate: today
+        });
+        alert(`Промокод активирован! +${bonus}₽`);
+        location.reload();
+    } else {
+        alert('Неверный промокод');
+    }
+  }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      location.href = 'register.html';
+      return;
+    }
+    userId = user.uid;
+    try {
+      const ref = doc(db, 'users', userId);
+      let snap = await getDoc(ref);
+      if (!snap.exists()) {
+        const def = {
+          username: user.displayName || 'User',
+          balance: 0,
+          gamesPlayed: 0,
+          wins: 0,
+          totalWin: 0,
+          history: [],
+          referralCode: 'DROPWIN-' + Math.random().toString(36).substring(2,7).toUpperCase(),
+          referralCount: 0
+        };
+        await setDoc(ref, def);
+        snap = await getDoc(ref);
       }
-
-      userId = user.uid;
-      // Не удаляем лоадер здесь, ждем загрузки данных из БД
-
-      getDoc(doc(db, 'users', user.uid))
-        .then((docSnap) => {
-          if (docSnap.exists()) {
-            currentUser = docSnap.data();
-
-            // Защита от битых данных
-            if (!currentUser.activePromoCode) {
-              currentUser.activePromoCode = null;
-              currentUser.activePromoType = null;
-              currentUser.activePromoValue = null;
-            }
-
-            document.getElementById('usernameDisplay').textContent = currentUser.username || 'Пользователь';
-            const bal = currentUser.balance || 0;
-            document.getElementById('balance').textContent = bal;
-            document.getElementById('balanceBig').textContent = bal;
-
-            document.getElementById('myReferralCode').textContent = (currentUser.referralCode || '—').toUpperCase();  // Изменено: отображение в верхнем регистре
-
-            document.getElementById('gamesPlayed').textContent = currentUser.gamesPlayed || 0;
-            document.getElementById('totalBet').textContent = (currentUser.totalBet || 0) + '₽';
-            document.getElementById('totalWin').textContent = (currentUser.totalWin || 0) + '₽';
-
-            const wins = currentUser.wins || 0;
-            const games = currentUser.gamesPlayed || 0;
-            const winRate = games > 0 ? Math.round((wins / games) * 100) : 0;
-            document.getElementById('winRate').textContent = winRate + '%';
-
-            const { maxWin, maxLoss } = calculateMaxStreaks(currentUser.history || []);
-            document.getElementById('maxWinStreak').textContent = maxWin;
-            document.getElementById('maxLossStreak').textContent = maxLoss;
-
-            document.getElementById('refCount').textContent = currentUser.referralCount || 0;
-            document.getElementById('refEarnings').textContent = (currentUser.referralEarnings || 0) + ' ₽';
-
-            // Показ ежедневного депоз. промокода (если активен и не истёк)
-            const now = Date.now();
-            const promoBox = document.getElementById('dailyDepPromoBox');
-            
-            if (promoBox) {
-                if (currentUser.activePromoCode && currentUser.activePromoType && currentUser.activePromoType.startsWith('dep') && currentUser.activePromoExpiresAt && currentUser.activePromoExpiresAt > now) {
-                  const codeEl = document.getElementById('dailyDepPromoCode');
-                  const timerEl = document.getElementById('dailyDepPromoTimer');
-                  if (codeEl) codeEl.textContent = currentUser.activePromoCode;
-                  promoBox.style.display = 'block';
-                  if (timerEl) startDailyPromoTimer(currentUser.activePromoExpiresAt, timerEl, promoBox);
-                } else {
-                  promoBox.style.display = 'none';
-                }
-            }
-
-            // История игр
-            const historyList = document.getElementById('historyList');
-            historyList.innerHTML = '';
-            if (!currentUser.history || currentUser.history.length === 0) {
-              historyList.innerHTML = '<div class="empty-state">История пуста</div>';
-            } else {
-              currentUser.history.forEach(item => {
-                const div = document.createElement('div');
-                div.className = `history-item ${item.result || 'loss'}`;
-                div.innerHTML = `
-                  <div>
-                    <div class="history-game">${item.game || 'Игра'}</div>
-                    <div class="history-time">${item.time || ''}</div>
-                  </div>
-                  <div class="history-amount ${item.result}">
-                    ${item.win > 0 ? '+' : ''}${item.win || 0}₽
-                  </div>
-                `;
-                historyList.appendChild(div);
-              });
-            }
-
-            // Стрик
-            const streakBar = document.getElementById('streakBar');
-            streakBar.innerHTML = '';
-            if (!currentUser.history || currentUser.history.length === 0) {
-              streakBar.innerHTML = '<div class="streak-empty">Нет сыгранных игр</div>';
-            } else {
-              const recent = currentUser.history.slice(-12);
-              recent.forEach(item => {
-                const el = document.createElement('div');
-                el.className = `streak-item ${item.result || 'loss'}`;
-                el.innerHTML = `<div class="streak-tooltip">${item.game || 'Игра'} • ${item.result === 'win' ? 'Выигрыш' : 'Проигрыш'}</div>`;
-                streakBar.appendChild(el);
-              });
-            }
-
-            // История транзакций (безопасная версия)
-            const transactionList = document.getElementById('cryptoTransactionList');
-            transactionList.innerHTML = '';
-            const transactions = currentUser.cryptoTransactions || [];
-
-            if (transactions.length === 0) {
-              transactionList.innerHTML = '<div class="empty-state">Нет транзакций</div>';
-            } else {
-              transactions.slice(-12).reverse().forEach(tr => {
-                const div = document.createElement('div');
-                let title = '';
-                let extra = '';
-                let amountText = `+${Math.round(tr.amount || 0)} ₽`;
-                let classType = 'transaction-fee';
-
-                if (tr.type === 'deposit') {
-                  title = 'ПОПОЛНЕНИЕ';
-                  classType = 'transaction-buy';
-                  if (tr.bonus) extra += ` +${tr.bonus}₽ бонус`;
-                  if (tr.promoCode) extra += ` [${tr.promoCode}]`;
-                } else if (tr.type === 'promo') {
-                  title = 'ПРОМОКОД';
-                  extra = tr.code || '';
-                } else {
-                  title = `${(tr.coin || 'RUB').toUpperCase()} - ${tr.type.toUpperCase()}`;
-                  classType = `transaction-${tr.type}`;
-                  if (tr.type === 'fee_in') title += ` от ${tr.from || ''}`;
-                }
-
-                div.className = `transaction-item ${classType}`;
-                div.innerHTML = `
-                  <div>
-                    <div>${title}${extra ? ' ' + extra : ''}</div>
-                    <div class="history-time">${new Date(tr.timestamp).toLocaleString('ru-RU')}</div>
-                  </div>
-                  <div class="history-amount profit">${amountText}</div>
-                `;
-                transactionList.appendChild(div);
-              });
-            }
+      currentUser = snap.data();
+      if ((!currentUser.username || currentUser.username === 'User') && user.displayName) {
+        await updateDoc(doc(db, 'users', userId), { username: user.displayName });
+        currentUser.username = user.displayName;
+      }
+      document.getElementById('usernameDisplay').textContent = currentUser.username || 'User';
+      document.getElementById('userIdDisplay').textContent = userId.substring(0,6);
+      updateAvatarDisplay();
+      document.getElementById('balanceBig').textContent = currentUser.balance || 0;
+      document.getElementById('gamesPlayed').textContent = currentUser.gamesPlayed || 0;
+      const wins = currentUser.wins || 0;
+      const games = currentUser.gamesPlayed || 0;
+      document.getElementById('winRate').textContent = games ? Math.round((wins/games)*100) + '%' : '0%';
+      document.getElementById('totalWin').textContent = currentUser.totalWin || 0;
+      let maxWin = 0;
+      let currentWin = 0;
+      if (currentUser.history) {
+        currentUser.history.forEach(h => {
+          if (h.result === 'win') {
+            currentWin++;
+            if (currentWin > maxWin) maxWin = currentWin;
           } else {
-            console.warn("Нет документа пользователя в Firestore");
-            alert("Профиль не найден в базе. Попробуйте выйти и войти заново.");
-          }
-        })
-        .catch(err => {
-          console.error("Ошибка загрузки профиля:", err);
-          document.getElementById('usernameDisplay').textContent = "Ошибка загрузки профиля";
-        })
-        .finally(() => {
-          const loader = document.getElementById('pageLoader');
-          if (loader) {
-            loader.style.opacity = '0';
-            setTimeout(() => loader.style.display = 'none', 50);
+            currentWin = 0;
           }
         });
-    });
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    createParticles();
-    loadCurrentUser();
-
-    document.getElementById('promoBtn')?.addEventListener('click', activatePromo);
-    document.getElementById('logoutBtn')?.addEventListener('click', logout);
-    document.getElementById('refreshReferralCodeBtn')?.addEventListener('click', generateNewReferralCode);
-    document.getElementById('gotoDeposit')?.addEventListener('click', () => {
-      location.href = 'dep.html';
-    });
-
+      }
+      document.getElementById('maxWinStreak').textContent = maxWin;
+      let refCode = currentUser.referralCode;
+      if (!refCode) {
+        refCode = 'DROPWIN-' + Math.random().toString(36).substring(2,7).toUpperCase();
+        await updateDoc(ref, { referralCode: refCode });
+      }
+      document.getElementById('myReferralCode').textContent = refCode;
+      document.getElementById('refCount').textContent = currentUser.referralCount || 0;
+      const histList = document.getElementById('historyList');
+      histList.innerHTML = '';
+      if (currentUser.history && currentUser.history.length > 0) {
+        currentUser.history.slice(-5).reverse().forEach(h => {
+          const div = document.createElement('div');
+          div.style.cssText = 'display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid var(--border); font-size:0.9rem;';
+          div.innerHTML = `<span>${h.game}</span><span style="color:${h.result==='win'?'#34d399':'#ef4444'}">${h.result==='win'?'+':''}${h.win}₽</span>`;
+          histList.appendChild(div);
+        });
+      } else {
+        histList.innerHTML = '<div style="color:var(--text-sec); font-size:0.8rem;">Нет игр</div>';
+      }
+      const transList = document.getElementById('transactionList');
+      transList.innerHTML = '';
+      if (currentUser.cryptoTransactions && currentUser.cryptoTransactions.length > 0) {
+        currentUser.cryptoTransactions.slice(-5).reverse().forEach(t => {
+          const div = document.createElement('div');
+          div.style.cssText = 'display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid var(--border); font-size:0.9rem;';
+          div.innerHTML = `<span>${t.type}</span><span style="color:#fbbf24">${t.amount}₽</span>`;
+          transList.appendChild(div);
+        });
+      } else {
+        transList.innerHTML = '<div style="color:var(--text-sec); font-size:0.8rem;">Нет транзакций</div>';
+      }
+    } catch (e) {}
   });
-
-  async function getDailyDepositPromo() {
-    if (!currentUser || !userId) return alert('Войдите в аккаунт');
-    
-    try {
-      const today = new Date().toDateString();
-      if (currentUser.lastDailyDepPromoDate === today) {
-        alert('Промокод на депозит можно получать только один раз в сутки');
-        return;
-      }
-      const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
-      const code = `DEP-${randomPart}`;
-      const expiresAt = Date.now() + 20 * 60 * 1000;
-      
-      currentUser.activePromoCode = code;
-      currentUser.activePromoType = 'dep20';
-      currentUser.activePromoValue = 20;
-      currentUser.activePromoExpiresAt = expiresAt;
-      currentUser.lastDailyDepPromoDate = today;
-      currentUser.activePromoUsed = false;
-      
-      await updateDoc(doc(db, 'users', userId), {
-        activePromoCode: code,
-        activePromoType: 'dep20',
-        activePromoValue: 20,
-        activePromoExpiresAt: expiresAt,
-        lastDailyDepPromoDate: today,
-        activePromoUsed: false
-      });
-      
-      const box = document.getElementById('dailyDepPromoBox');
-      const codeEl = document.getElementById('dailyDepPromoCode');
-      const timerEl = document.getElementById('dailyDepPromoTimer');
-      
-      // Проверка DOM элементов
-      if (box && codeEl) {
-        codeEl.textContent = code;
-        box.style.display = 'block';
-        if (timerEl) startDailyPromoTimer(expiresAt, timerEl, box);
-      }
-      
-      alert('Промокод создан. Введите его на странице депозита!');
-    } catch (e) {
-      console.error("Ошибка в getDailyDepositPromo:", e);
-    }
-  }
-
-  function startDailyPromoTimer(expiresAt, timerEl, boxEl) {
-    if (dailyPromoInterval) clearInterval(dailyPromoInterval);
-    function update() {
-      const remaining = Math.max(0, expiresAt - Date.now());
-      const m = Math.floor(remaining / 60000);
-      const s = Math.floor((remaining % 60000) / 1000);
-      timerEl.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-      if (remaining <= 0) {
-        clearInterval(dailyPromoInterval);
-        boxEl.style.display = 'none';
-      }
-    }
-    update();
-    dailyPromoInterval = setInterval(update, 1000);
-  }
 </script>
 </body>
 </html>

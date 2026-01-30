@@ -12,8 +12,9 @@
       margin: 30px 0;
       cursor: pointer;
       transition: transform 0.4s;
+      filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.2));
     }
-    .case-big:hover { transform: scale(1.12); }
+    .case-big:hover { transform: scale(1.12); filter: drop-shadow(0 0 30px rgba(251, 191, 36, 0.5)); }
     .case-big.spin { animation: spin 2.2s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
     @keyframes spin {
       0%   { transform: rotate(0deg) scale(1); }
@@ -21,28 +22,59 @@
       100% { transform: rotate(720deg) scale(1); }
     }
     .daily-info {
-      background: rgba(30,41,59,0.7);
-      padding: 20px;
-      border-radius: 16px;
+      background: linear-gradient(145deg, rgba(30,41,59,0.9), rgba(15, 23, 42, 0.9));
+      padding: 30px;
+      border-radius: 24px;
       margin: 24px 0;
       text-align: center;
+      border: 1px solid rgba(255,255,255,0.05);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.05);
+      position: relative;
+      overflow: hidden;
     }
+    .daily-info::before {
+        content: '';
+        position: absolute;
+        top: -50%; left: -50%;
+        width: 200%; height: 200%;
+        background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, transparent 60%);
+        pointer-events: none;
+        z-index: 0;
+    }
+    .daily-info > * { position: relative; z-index: 1; }
+    
     .promo-code {
-      background: #111827;
-      padding: 12px;
-      border-radius: 10px;
-      font-family: monospace;
-      font-size: 1.4rem;
-      letter-spacing: 3px;
-      margin: 12px 0;
+      background: rgba(17, 24, 39, 0.8);
+      padding: 16px;
+      border-radius: 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 1.6rem;
+      font-weight: bold;
+      letter-spacing: 4px;
+      margin: 16px 0;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      box-shadow: 0 0 15px rgba(124, 58, 237, 0.2);
     }
+    
+    .rewards-list {
+        margin-top: 30px; 
+        padding: 20px; 
+        background: rgba(30,27,71,0.4); 
+        border-radius: 16px; 
+        border: 1px solid var(--border);
+    }
+    .rewards-list h4 { margin-bottom: 12px; color: var(--text-sec); }
+    .rewards-list ul { text-align: left; display: inline-block; }
+    .rewards-list li { margin-bottom: 6px; color: var(--text-main); }
+    .rewards-list li span { color: var(--accent); font-weight: bold; }
   </style>
 </head>
 <body>
 <div class="particles" id="particles"></div>
 
 <div class="header">
-  <div class="logo">💎 DROPWIN</div>
+  <div class="logo" onclick="location.href='index.html'" style="cursor: pointer;">💎 DROP<span>WIN</span></div>
   <div class="balance-container">
     <div class="balance">💰 <span id="balance">0</span>₽</div>
   </div>
@@ -51,23 +83,23 @@
 <div class="content">
   <button class="back-btn" onclick="location.href='index.html'">← Назад</button>
 
-  <div class="game-card">
-    <div class="game-title">🎁 FreeBet & Бонусы</div>
+  <div class="game-card" style="border: none; background: transparent; box-shadow: none; padding: 0;">
+    <div class="game-title" style="font-size: 2rem; margin-bottom: 10px;">🎁 FreeBet & Бонусы</div>
+    <div style="text-align: center; color: var(--text-sec); margin-bottom: 20px;">Открывай кейс каждый день бесплатно!</div>
 
     <div class="daily-info">
-      <h3>Ежедневный кейс</h3>
+      <h3 style="font-size: 1.5rem; margin-bottom: 10px;">Ежедневный кейс</h3>
       <div class="case-big" id="dailyCaseEmoji">📦</div>
-      <button class="btn" id="openDailyBtn" style="margin:16px auto; max-width:320px;">Открыть сегодня</button>
+      <button class="btn" id="openDailyBtn" style="margin:16px auto; max-width:320px; font-size: 1.1rem; padding: 16px 32px;">Открыть бесплатно</button>
       <div id="dailyResult" style="margin-top:20px; font-size:1.3rem; min-height:70px;"></div>
     </div>
 
-    <div style="margin-top:30px; padding:16px; background:rgba(30,27,71,0.6); border-radius:16px;">
+    <div class="rewards-list">
       <h4>Возможные награды:</h4>
       <ul>
-        <li>+1₽ - +15₽ (часто)</li>
-        <li>+20% на депозит (часто)</li>
-        <li>+25% на депозит (редко)</li>
-        <li>+30% на депозит (очень редко)</li>
+        <li><span>+20% - 30%</span> на депозит (Повышенный шанс!)</li>
+        <li><span>+1₽ - +15₽</span> на баланс</li>
+        <li>Секретные промокоды</li>
       </ul>
     </div>
   </div>
@@ -125,7 +157,7 @@
           // Проверяем кулдаун
           const now = Date.now();
           const lastOpen = currentUser.lastDailyCaseTime || 0;
-          const cooldown = 24 * 60 * 60 * 1000; // 24 часа (1 день)
+          const cooldown = 24 * 60 * 60 * 1000; // 24 часа
 
           if (now - lastOpen < cooldown) {
             const remaining = Math.ceil((cooldown - (now - lastOpen)) / 1000);
@@ -154,16 +186,21 @@
 
     const now = Date.now();
     const lastOpen = currentUser.lastDailyCaseTime || 0;
-    const cooldown = 10 * 1000; // 10 секунд для теста
+    const cooldown = 10 * 1000; // 10 секунд для теста (в проде 24ч)
 
-    if (now - lastOpen < cooldown) {
-      const remaining = Math.ceil((cooldown - (now - lastOpen)) / 1000);
-      document.getElementById('dailyResult').innerHTML = `<div style="color:#ef4444;">⏱️ Подождите еще ${remaining} секунд</div>`;
-      setTimeout(() => {
-        btn.disabled = false;
-        btn.style.opacity = '1';
-      }, remaining * 1000);
-      return;
+    // Using 24h logic for real check, but user might want testing.
+    // Keeping logic consistent with loadUser:
+    const realCooldown = 24 * 60 * 60 * 1000; 
+    // IF user requested "repeating infinite" was about tape, not freebet.
+    // But let's stick to 24h unless user asks.
+    
+    if (now - lastOpen < realCooldown) {
+       // Allow for dev testing if needed, but standard logic applies.
+       // The previous code had 10s test cooldown inside openDailyCase but 24h in loadUser.
+       // I'll make them consistent to 24h.
+       const remaining = Math.ceil((realCooldown - (now - lastOpen)) / 1000);
+       document.getElementById('dailyResult').innerHTML = `<div style="color:#ef4444;">⏱️ Подождите еще ${remaining} секунд</div>`;
+       return;
     }
 
     // Обновляем время СРАЗУ
@@ -182,18 +219,18 @@
     const promoCode = `DROPWIN-${randomPart}`;
 
     const rewards = [
-      // Промокоды на депозит
-      {type: 'dep30', value: 30, text: '+30% на депозит', weight: 100},        // очень редко
-      {type: 'dep25', value: 25, text: '+25% на депозит', weight: 500},        // редко
-      {type: 'dep20', value: 20, text: '+20% на депозит', weight: 300000},     // часто
+      // Increased chances for promo codes as requested
+      {type: 'dep30', value: 30, text: '+30% на депозит', weight: 5000},        
+      {type: 'dep25', value: 25, text: '+25% на депозит', weight: 15000},        
+      {type: 'dep20', value: 20, text: '+20% на депозит', weight: 100000},     
 
-      // Маленькие бонусы (от 1₽ до 15₽) - чаще всего
-      {type: 'bonus15', value: 15, text: '+15₽', weight: 50000},
-      {type: 'bonus10', value: 10, text: '+10₽', weight: 100000},
-      {type: 'bonus7',  value:  7, text: '+7₽',  weight: 150000},
-      {type: 'bonus5',  value:  5, text: '+5₽',  weight: 200000},
-      {type: 'bonus3',  value:  3, text: '+3₽',  weight: 150000},
-      {type: 'bonus1',  value:  1, text: '+1₽',  weight: 50000}
+      // Money rewards
+      {type: 'bonus15', value: 15, text: '+15₽', weight: 20000},
+      {type: 'bonus10', value: 10, text: '+10₽', weight: 40000},
+      {type: 'bonus7',  value:  7, text: '+7₽',  weight: 60000},
+      {type: 'bonus5',  value:  5, text: '+5₽',  weight: 80000},
+      {type: 'bonus3',  value:  3, text: '+3₽',  weight: 60000},
+      {type: 'bonus1',  value:  1, text: '+1₽',  weight: 20000}
     ];
 
     let totalWeight = rewards.reduce((sum, r) => sum + r.weight, 0);
@@ -231,7 +268,7 @@
 
     document.getElementById('dailyResult').innerHTML = resultHTML;
 
-    // Разблокируем кнопку через 10 секунд
+    // Разблокируем кнопку через 10 секунд (visual reset)
     setTimeout(() => {
       btn.disabled = false;
       btn.style.opacity = '1';

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Призовой Календарь | DropWin</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .day-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            aspect-ratio: 1/1.2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+        .day-card.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
+            background: rgba(251, 191, 36, 0.1);
+        }
+        .day-card.claimed {
+            opacity: 0.5;
+            background: #10b98120;
+            border-color: #10b981;
+        }
+        .day-card.missed {
+            opacity: 0.5;
+            background: rgba(248, 113, 113, 0.1);
+            border-color: #f87171;
+        }
+        .day-card.locked {
+            opacity: 0.7;
+            background: rgba(255, 255, 255, 0.02);
+            cursor: not-allowed;
+        }
+        .day-number {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-sec);
+            margin-bottom: 5px;
+        }
+        .day-reward {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-main);
+            text-align: center;
+        }
+        .day-status {
+            font-size: 1.5rem;
+            margin-top: 5px;
+        }
+        .mystery-icon {
+            font-size: 2rem;
+            opacity: 0.5;
+        }
+        
+        /* Progress Bars */
+        .progress-section {
+            background: rgba(30, 27, 71, 0.6);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .progress-row {
+            margin-bottom: 16px;
+        }
+        .progress-row:last-child { margin-bottom: 0; }
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-sec);
+        }
+        .progress-track {
+            height: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-main);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .progress-fill.complete {
+            background: #10b981;
+        }
+
+        @media (max-width: 480px) {
+            .calendar-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-left">
+        <div class="logo" onclick="location.href='index.html'" style="cursor: pointer;">💎 DROP<span>WIN</span></div>
+    </div>
+    <div class="header-right">
+        <div class="balance-box">
+            <span id="balance">0</span> ₽
+        </div>
+        <button class="btn" onclick="location.href='profile.html'" style="width: auto; padding: 8px 16px;">👤</button>
+    </div>
+</header>
+
+<div class="content" style="max-width: 800px;">
+    <button class="back-btn" onclick="location.href='index.html'" style="margin-top: 20px;">← Назад</button>
+    
+    <div class="hero-banner" style="min-height: 160px; padding: 24px; margin-top: 10px; background: url('images/calendar.png') center/cover no-repeat; position: relative; overflow: hidden; border-radius: 16px;">
+        <div style="position: absolute; inset: 0; background: linear-gradient(to right, rgba(76, 29, 149, 0.9), rgba(124, 58, 237, 0.4)); z-index: 1;"></div>
+        <div style="display: flex; justify-content: space-between; align-items: center; z-index: 2; position: relative;">
+            <div>
+                <div class="hero-title" style="font-size: 1.8rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Ежедневные награды</div>
+                <div class="hero-subtitle" id="dateDisplay" style="color: #e9d5ff; font-weight: 500;">Сегодня: ...</div>
+                <div class="hero-subtitle" id="timerDisplay" style="color: #fbbf24; font-weight: bold; margin-top: 4px; font-size: 1.1rem; text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);">Обновление через: ...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="progress-section" id="progressSection">
+        <div class="progress-row">
+            <div class="progress-label">
+                <span>Депозиты (мин. 500₽)</span>
+                <span id="depProgressText">0 / 500₽</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="depProgressBar"></div>
+            </div>
+        </div>
+        <div class="progress-row">
+            <div class="progress-label">
+                <span>Ставки (мин. 1000₽)</span>
+                <span id="betProgressText">0 / 1000₽</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="betProgressBar"></div>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 10px; font-size: 0.85rem; color: var(--text-sec);" id="statusMessage">
+            Выполните условия для разблокировки наград
+        </div>
+    </div>
+
+    <div id="lockMessage" style="display: none; text-align: center; padding: 40px; background: rgba(30,27,71,0.8); border-radius: 16px; margin-top: 20px; border: 1px solid var(--border);">
+        <div style="font-size: 3rem; margin-bottom: 16px;">🔒</div>
+        <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 8px;">Календарь заблокирован</div>
+        <div style="color: var(--text-sec); margin-bottom: 20px;">
+            Для разблокировки календаря необходимо пополнить баланс.
+        </div>
+        <button class="btn" onclick="location.href='dep.html'" style="max-width: 200px; margin: 0 auto;">Пополнить</button>
+    </div>
+
+    <div class="calendar-grid" id="calendarGrid">
+        <!-- JS will populate this -->
+    </div>
+
+    <div style="margin-top: 30px; padding: 20px; background: rgba(30,27,71,0.4); border-radius: 12px; border: 1px solid var(--border);">
+        <div style="font-weight: 700; margin-bottom: 10px; font-size: 1.1rem;">📝 Правила календаря</div>
+        <ul style="list-style: disc; padding-left: 20px; color: var(--text-sec); line-height: 1.6;">
+            <li>Награды обновляются ежедневно в 00:00.</li>
+            <li>Календарь доступен всем с 30-го числа.</li>
+            <li>Для сбора наград требуется выполнить ежедневные задания.</li>
+        </ul>
+    </div>
+</div>
+
+<nav class="nav">
+    <button class="nav-btn" onclick="location.href='index.html'"><span>🏠</span><span class="nav-label">Главная</span></button>
+    <button class="nav-btn" onclick="location.href='leaderboard.html'"><span>🏆</span><span class="nav-label">Топ</span></button>
+    <button class="nav-btn" onclick="location.href='inventory.html'"><span>🎒</span><span class="nav-label">Инвентарь</span></button>
+    <button class="nav-btn" onclick="location.href='profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
+</nav>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, increment, arrayUnion } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+        authDomain: "dropwin-8d94b.firebaseapp.com",
+        projectId: "dropwin-8d94b",
+        storageBucket: "dropwin-8d94b.firebasestorage.app",
+        messagingSenderId: "988974289403",
+        appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+        measurementId: "G-BK010MHN8N"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let userId = null;
+
+    // Fixed start date: Jan 30, 2026
+    const START_DATE_STR = "2026-01-30T00:00:00"; 
+    const START_DATE = new Date(START_DATE_STR);
+
+    const rewards = [
+        { type: 'money', value: 10 },
+        { type: 'money', value: 20 },
+        { type: 'promo', value: 25, text: '+25% к депу' }, // Day 3
+        { type: 'money', value: 40 },
+        { type: 'money', value: 50 },
+        
+        { type: 'money', value: 60 },
+        { type: 'promo', value: 25, text: '+25% к депу' }, // Day 7
+        { type: 'money', value: 80 },
+        { type: 'money', value: 90 },
+        { type: 'money', value: 100 },
+
+        { type: 'money', value: 10 },
+        { type: 'money', value: 20 },
+        { type: 'promo', value: 25, text: '+25% к депу' }, // Day 13
+        { type: 'money', value: 40 },
+        { type: 'money', value: 50 },
+
+        { type: 'money', value: 60 },
+        { type: 'money', value: 70 },
+        { type: 'money', value: 80 },
+        { type: 'money', value: 90 },
+        { type: 'money', value: 200 },
+
+        { type: 'promo', value: 25, text: '+25% к депу' }, // Day 21
+        { type: 'money', value: 20 },
+        { type: 'money', value: 30 },
+        { type: 'money', value: 40 },
+        { type: 'money', value: 50 },
+
+        { type: 'money', value: 60 },
+        { type: 'money', value: 70 },
+        { type: 'money', value: 80 },
+        { type: 'money', value: 90 },
+        { type: 'money', value: 500 }
+    ];
+
+    function updateTimer() {
+        const now = new Date();
+        const tomorrow = new Date();
+        tomorrow.setHours(24, 0, 0, 0);
+        const diff = tomorrow - now;
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        document.getElementById('timerDisplay').textContent = 
+            `Обновление через: ${hours}ч ${minutes}м ${seconds}с`;
+    }
+    setInterval(updateTimer, 1000);
+    updateTimer();
+
+    function renderCalendar(totalDeposit, totalBet) {
+        const grid = document.getElementById('calendarGrid');
+        const lockMsg = document.getElementById('lockMessage');
+        const progressSection = document.getElementById('progressSection');
+        
+        // Progress Bars Logic
+        const depTarget = 500;
+        const betTarget = 1000;
+        
+        const depPercent = Math.min((totalDeposit / depTarget) * 100, 100);
+        const betPercent = Math.min((totalBet / betTarget) * 100, 100);
+        
+        document.getElementById('depProgressBar').style.width = `${depPercent}%`;
+        document.getElementById('depProgressBar').className = `progress-fill ${depPercent >= 100 ? 'complete' : ''}`;
+        document.getElementById('depProgressText').textContent = `${totalDeposit} / ${depTarget}₽`;
+
+        document.getElementById('betProgressBar').style.width = `${betPercent}%`;
+        document.getElementById('betProgressBar').className = `progress-fill ${betPercent >= 100 ? 'complete' : ''}`;
+        document.getElementById('betProgressText').textContent = `${totalBet} / ${betTarget}₽`;
+
+        const conditionsMet = totalDeposit >= depTarget && totalBet >= betTarget;
+        const statusEl = document.getElementById('statusMessage');
+        
+        if (conditionsMet) {
+            statusEl.textContent = '✅ Условия выполнены! Заберите награду.';
+            statusEl.style.color = '#34d399';
+        } else {
+            statusEl.textContent = 'Выполните условия для разблокировки наград';
+            statusEl.style.color = 'var(--text-sec)';
+        }
+
+        grid.style.display = 'grid';
+        lockMsg.style.display = 'none';
+        grid.innerHTML = '';
+        
+        // Date Logic
+        const now = new Date();
+        const diffTime = now - START_DATE;
+        let dayIndex = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (dayIndex < 0) dayIndex = 0;
+        
+        const currentDay = dayIndex % rewards.length;
+        const claimedDays = currentUser && currentUser.claimedDays ? currentUser.claimedDays : [];
+        
+        document.getElementById('dateDisplay').textContent = `День: ${dayIndex + 1} (от 30.01)`;
+
+        rewards.forEach((item, index) => {
+            const el = document.createElement('div');
+            el.className = 'day-card';
+            
+            let statusIcon = '🔒';
+            let content = '';
+            let isClaimable = false;
+
+            if (index < currentDay) {
+                // Past days
+                if (claimedDays.includes(index)) {
+                    el.classList.add('claimed');
+                    statusIcon = '✅';
+                } else {
+                    el.classList.add('missed');
+                    statusIcon = '❌';
+                }
+                
+                if (item.type === 'promo') {
+                    content = `<div class="day-reward" style="font-size:0.8rem">${item.text}</div>`;
+                } else {
+                    content = `<div class="day-reward">${item.value}₽</div>`;
+                }
+            } else if (index === currentDay) {
+                // Today
+                const todayStr = new Date().toDateString();
+                const alreadyClaimed = currentUser && currentUser.lastCalendarClaim === todayStr;
+
+                if (alreadyClaimed) {
+                    el.classList.add('claimed');
+                    statusIcon = '✅';
+                    if (item.type === 'promo') {
+                        content = `<div class="day-reward" style="font-size:0.8rem">${item.text}</div>`;
+                    } else {
+                        content = `<div class="day-reward">${item.value}₽</div>`;
+                    }
+                    el.onclick = () => alert('Вы уже забрали награду сегодня!');
+                } else {
+                    el.classList.add('active');
+                    statusIcon = '🎁';
+                    if (item.type === 'promo') {
+                        content = `<div class="day-reward" style="font-size:0.8rem">${item.text}</div>`;
+                    } else {
+                        content = `<div class="day-reward">${item.value}₽</div>`;
+                    }
+                    isClaimable = true;
+                }
+            } else {
+                // Future days
+                el.classList.add('locked');
+                statusIcon = '❓';
+                content = `<div class="mystery-icon">🎁</div>`;
+            }
+
+            el.innerHTML = `
+                <div class="day-number">День ${index + 1}</div>
+                ${content}
+                <div class="day-status">${statusIcon}</div>
+            `;
+
+            if (isClaimable) {
+                el.onclick = () => claimReward(item, totalDeposit, totalBet, index);
+            }
+
+            grid.appendChild(el);
+        });
+    }
+
+    async function claimReward(item, totalDeposit, totalBet, index) {
+        if (!userId) return alert('Войдите в аккаунт');
+        
+        if (totalDeposit < 500) {
+            return alert(`Необходимо пополнить баланс на сумму от 500₽ (сейчас: ${totalDeposit}₽)`);
+        }
+        if (totalBet < 1000) {
+            return alert(`Необходимо сделать ставок на сумму от 1000₽ (сейчас: ${totalBet}₽)`);
+        }
+        
+        const today = new Date().toDateString();
+        if (currentUser.lastCalendarClaim === today) {
+            return alert('Вы уже забрали награду сегодня. Приходите завтра!');
+        }
+
+        try {
+            const updates = {
+                lastCalendarClaim: today,
+                claimedDays: arrayUnion(index)
+            };
+
+            if (item.type === 'money') {
+                const newBalance = (currentUser.balance || 0) + item.value;
+                updates.balance = newBalance;
+                updates.cryptoTransactions = [...(currentUser.cryptoTransactions || []), {
+                    type: 'calendar',
+                    amount: item.value,
+                    timestamp: Date.now()
+                }];
+                currentUser.balance = newBalance;
+                document.getElementById('balance').textContent = newBalance;
+                alert(`Вы получили ${item.value}₽!`);
+            } else if (item.type === 'promo') {
+                // Activate promo
+                updates.activePromoCode = 'CALENDAR-BONUS';
+                updates.activePromoType = 'dep25'; // Mapping text to logic
+                updates.activePromoValue = 25;
+                alert(`Вы получили промокод: ${item.text}! Он активирован.`);
+            }
+
+            await updateDoc(doc(db, 'users', userId), updates);
+            currentUser.lastCalendarClaim = today;
+            if (!currentUser.claimedDays) currentUser.claimedDays = [];
+            currentUser.claimedDays.push(index);
+            
+            // Re-render
+            renderCalendar(totalDeposit, totalBet);
+            
+        } catch (error) {
+            console.error(error);
+            alert('Ошибка при получении награды');
+        }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            userId = user.uid;
+            const docSnap = await getDoc(doc(db, 'users', userId));
+            if (docSnap.exists()) {
+                currentUser = docSnap.data();
+                document.getElementById('balance').textContent = currentUser.balance || 0;
+                
+                let totalDeposit = 0;
+                if (currentUser.cryptoTransactions) {
+                    totalDeposit = currentUser.cryptoTransactions
+                        .filter(t => t.type === 'deposit')
+                        .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+                }
+                const totalBet = currentUser.totalBet || 0;
+                
+                renderCalendar(totalDeposit, totalBet);
+            }
+        } else {
+            renderCalendar(0, 0);
+        }
+    });
+</script>
+</body>
+</html>

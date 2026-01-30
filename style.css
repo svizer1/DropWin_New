@@ -1,4 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+    --bg-dark: #13111a; /* Slightly richer dark */
+    --bg-card: #1e1b29;
+    --bg-hover: #2a2638;
+    --primary: #7c3aed; /* Brighter Violet */
+    --primary-hover: #8b5cf6;
+    --accent: #fbbf24;
+    --text-main: #ffffff;
+    --text-sec: #cbd5e1; /* Brighter secondary text */
+    --border: rgba(139, 92, 246, 0.15); /* Purple tint border */
+    --gradient-main: linear-gradient(135deg, #7c3aed, #a855f7); /* Brighter gradient */
+    --gradient-gold: linear-gradient(135deg, #f59e0b, #fbbf24);
+    --radius: 16px;
+    --nav-height: 64px;
+    --bottom-nav-height: 70px;
+}
 
 * {
     margin: 0;
@@ -7,749 +24,576 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-html {
-    height: 100%;
-    background: #0f0c29; /* Fallback color */
-    overflow-y: auto;
-}
-
 body {
-    font-family: 'Inter', system-ui, sans-serif;
-    background: transparent;
-    color: #e0e0ff;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-dark);
+    background-image: 
+        radial-gradient(circle at 10% 20%, rgba(124, 58, 237, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(251, 191, 36, 0.05) 0%, transparent 40%);
+    color: var(--text-main);
     min-height: 100vh;
+    padding-bottom: var(--bottom-nav-height);
     overflow-x: hidden;
 }
 
-/* Fixed background to replace background-attachment: fixed which causes issues on mobile */
-html::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    background:
-        radial-gradient(circle at 20% 30%, rgba(99,102,241,0.12) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(217,70,239,0.10) 0%, transparent 60%),
-        linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
-    pointer-events: none;
-    z-index: -2;
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+
+/* ─── LIVE FEED (Top Bar) ─────────────────────────────────────────────────── */
+.live-feed {
+    height: 70px;
+    background: #0f0f11;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+    z-index: 20;
 }
 
-.particles {
-    position: fixed;
-    top: 0;
+.live-feed-track {
+    display: flex;
+    /* gap: 12px; removed for seamless loop */
+    animation: scroll 30s linear infinite;
+    width: max-content;
+}
+
+/* Ensure enough items for seamless loop or use JS. 
+   Keyframe scroll usually goes from 0 to -50% if content is doubled. 
+   Assuming content is duplicated in HTML. */
+@keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+.live-item {
+    min-width: 100px;
+    height: 50px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 4px;
+    margin-right: 12px; /* moved gap here for seamless loop */
+}
+
+.live-item img {
+    max-height: 40px;
+    max-width: 80%;
+    object-fit: contain;
+}
+
+.live-item::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
     left: 0;
     width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: -1;
+    height: 3px;
+    background: var(--primary); /* Rarity color */
+    border-radius: 0 0 8px 8px;
 }
 
-.particle {
-    position: absolute;
-    background: rgba(255, 255, 255, 0.22);
-    border-radius: 50%;
-    animation: float 15s infinite linear;
-    will-change: transform;
-}
-
-@keyframes float {
-    0%   { transform: translateY(0) scale(1);   opacity: 0.8; }
-    100% { transform: translateY(-100vh) scale(0.5); opacity: 0; }
-}
+.live-item.gold::after { background: #fbbf24; }
+.live-item.purple::after { background: #a855f7; }
+.live-item.red::after { background: #ef4444; }
 
 /* ─── HEADER ──────────────────────────────────────────────────────────────── */
 .header {
-    background: rgba(15, 12, 41, 0.58);
-    backdrop-filter: blur(16px);
-    padding: 16px 20px;
-    border-bottom: 1px solid rgba(99,102,241,0.22);
+    height: var(--nav-height);
+    background: rgba(18, 18, 20, 0.85);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
     position: sticky;
     top: 0;
-    z-index: 1000;
-    box-shadow: 0 4px 20px rgba(192,132,252,0.18);
+    z-index: 100;
+    border-bottom: 1px solid var(--border);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 24px;
 }
 
 .logo {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 2.1rem;
     font-weight: 900;
-    text-align: center;
-    background: linear-gradient(90deg, #c084fc, #a78bfa, #7dd3fc);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    letter-spacing: 3px;
-    text-shadow: 0 0 15px rgba(192,132,252,0.6);
-}
-
-.balance-container {
+    font-size: 1.5rem;
+    letter-spacing: -0.5px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-top: 12px;
-    background: rgba(30, 27, 71, 0.42);
-    padding: 12px 18px;
-    border-radius: 16px;
-    border: 1px solid rgba(139,92,246,0.28);
-    backdrop-filter: blur(12px);
+    gap: 8px;
+    color: var(--text-main);
+}
+.logo span { color: var(--primary); }
+
+.main-nav {
+    display: none; /* Hidden on mobile */
 }
 
-.balance {
-    font-size: 1.35rem;
-    font-weight: 800;
-    color: #d1d5ff;
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-.auth-btn {
-    background: linear-gradient(135deg, #7c3aed, #a855f7);
-    border: none;
-    padding: 10px 24px;
-    border-radius: 50px;
-    color: white;
+.balance-box {
+    background: #1a1a20;
+    border: 1px solid #34d399;
+    padding: 6px 12px;
+    border-radius: 8px;
     font-weight: 700;
     font-size: 0.95rem;
+    color: #34d399;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.add-funds-btn {
+    width: 28px;
+    height: 28px;
+    background: #fbbf24;
+    color: #000;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(168,85,247,0.4);
-    transition: all 0.25s ease;
+    border: none;
 }
 
-.auth-btn:hover {
-    transform: scale(1.04);
-    box-shadow: 0 6px 25px rgba(168,85,247,0.6);
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #2a2a35;
+    overflow: hidden;
+    cursor: pointer;
+}
+.user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ─── HERO SECTION ────────────────────────────────────────────────────────── */
+.hero {
+    padding: 24px 20px;
+    display: grid;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-/* ─── Общие стили для контента, карточек, кнопок и т.д. ───────────────────── */
-.content {
-    padding: 16px;
-    position: relative;
-    z-index: 10;
-}
-
-.game-card {
-    background: rgba(30,41,59,0.7);
+.hero-banner {
+    background: linear-gradient(to right, #2c1e4a, #5b21b6);
     border-radius: 16px;
-    padding: 20px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(139,92,246,0.25);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 180px;
+    box-shadow: 0 10px 30px rgba(91, 33, 182, 0.2);
 }
 
-.game-title {
-    text-align: center;
-    font-size: 2rem;
-    margin-bottom: 16px;
+.hero-banner::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    background: radial-gradient(circle at 80% 50%, rgba(168,85,247,0.18), transparent 60%);
+    opacity: 1;
+    pointer-events: none;
+}
+
+.hero-title {
+    font-size: 1.8rem;
     font-weight: 800;
+    margin-bottom: 8px;
+    z-index: 1;
+    line-height: 1.1;
 }
 
-.btn {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    border: none;
-    color: white;
+.hero-subtitle {
+    font-size: 0.95rem;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 20px;
+    z-index: 1;
+    max-width: 60%;
+}
+
+.hero-btn {
+    background: #fff;
+    color: #5b21b6;
+    padding: 10px 24px;
+    border-radius: 8px;
     font-weight: 700;
-    padding: 14px 28px;
-    border-radius: 50px;
+    width: fit-content;
+    z-index: 1;
     cursor: pointer;
-    width: 100%;
-    max-width: 360px;
-    margin: 12px auto;
-    display: block;
-    transition: all 0.25s;
-}
-
-.btn:hover {
-    transform: scale(1.04);
-    box-shadow: 0 8px 25px rgba(139,92,246,0.5);
-}
-
-.input-group {
-    margin: 16px 0;
-}
-
-.input-label {
-    display: block;
-    margin-bottom: 6px;
-    font-weight: 600;
-    color: #c4b5fd;
-}
-
-input[type="number"], input[type="text"], input[type="email"], input[type="password"], select {
-    width: 100%;
-    padding: 12px 16px;
-    border-radius: 12px;
-    border: 1px solid rgba(139,92,246,0.4);
-    background: rgba(30,27,71,0.6);
-    color: white;
-    font-size: 1rem;
-}
-
-.back-btn {
-    background: transparent;
     border: none;
-    color: #fbbf24;
-    font-size: 1.1rem;
-    cursor: pointer;
-    margin-bottom: 16px;
+    transition: transform 0.2s;
+}
+.hero-btn:active { transform: scale(0.96); }
+
+/* Promo Blocks Grid */
+.promo-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
 }
 
-/* ─── Навигация внизу ─────────────────────────────────────────────────────── */
+.promo-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 120px;
+    position: relative;
+    overflow: hidden;
+}
+
+.promo-card.purple { background: radial-gradient(circle at top right, rgba(168,85,247,0.15), var(--bg-card)); }
+.promo-card.orange { background: radial-gradient(circle at top right, rgba(251,191,36,0.15), var(--bg-card)); }
+
+.promo-label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    z-index: 1;
+}
+
+.promo-icon {
+    position: absolute;
+    bottom: -10px;
+    right: -10px;
+    font-size: 4rem;
+    opacity: 0.2;
+    transform: rotate(-15deg);
+}
+
+.arrow-btn {
+    width: 32px;
+    height: 32px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: auto;
+    z-index: 1;
+}
+
+/* ─── GAMES GRID ──────────────────────────────────────────────────────────── */
+.content {
+    padding: 0 20px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    margin-top: 24px;
+}
+.section-title { font-size: 1.2rem; font-weight: 700; }
+.section-icon { color: var(--text-sec); }
+
+.games-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.game-icon {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    aspect-ratio: 1/1; /* Square cards */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.game-icon:hover {
+    border-color: var(--primary);
+    transform: translateY(-6px);
+    box-shadow: 0 12px 30px -5px rgba(124, 58, 237, 0.4);
+    background: var(--bg-hover);
+}
+
+.image-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.game-icon img {
+    max-width: 95%;
+    max-height: 145px; /* Increased size */
+    object-fit: contain;
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.6));
+    transition: transform 0.3s ease;
+}
+
+.game-icon:hover img {
+    transform: scale(1.15);
+}
+
+.game-icon-name {
+    margin-top: 8px;
+    font-weight: 700;
+    font-size: 1rem;
+    z-index: 1;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Large card variations */
+.game-icon.featured {
+    grid-column: span 2;
+    background: linear-gradient(to bottom right, #2e2e36, #1b1b1f);
+    aspect-ratio: 2/1;
+    flex-direction: row;
+    padding: 0 24px;
+    text-align: left;
+}
+.game-icon.featured .image-container {
+    justify-content: flex-end;
+}
+.game-icon.featured .game-icon-name {
+    font-size: 1.4rem;
+    margin-top: 0;
+}
+
+/* ─── BOTTOM NAVIGATION (Mobile) ──────────────────────────────────────────── */
 .nav {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(15,12,41,0.85);
-    backdrop-filter: blur(12px);
-    border-top: 1px solid rgba(99,102,241,0.2);
+    height: var(--bottom-nav-height);
+    background: rgba(18, 18, 20, 0.9);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border);
     display: flex;
-    padding: 8px 0;
+    justify-content: space-around;
+    align-items: center;
     z-index: 1000;
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 .nav-btn {
-    flex: 1;
-    background: transparent;
+    background: none;
     border: none;
-    color: #94a3b8;
-    font-size: 0.9rem;
-    padding: 8px;
+    color: var(--text-sec);
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 12px;
+    transition: color 0.2s;
+}
+
+.nav-btn span:first-child {
+    font-size: 1.4rem;
 }
 
 .nav-btn.active {
-    color: #c084fc;
+    color: var(--primary-hover);
 }
 
-.nav-label {
-    font-size: 0.68rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-}
-
-/* Контент */
-.content {
-    padding: 20px;
-    padding-bottom: 90px;
-    max-width: 520px;
-    margin: 0 auto;
-}
-
-.game-card {
-    background: rgba(30,27,71,0.45);
-    border-radius: 20px;
-    padding: 24px;
-    margin-bottom: 24px;
-    border: 1px solid rgba(139,92,246,0.25);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 0 15px rgba(139,92,246,0.2);
-    transition: transform 0.3s ease;
-}
-
-.game-card:hover {
-    transform: translateY(-4px);
-}
-
-.game-title {
-    font-size: 24px;
-    font-weight: 800;
-    margin-bottom: 20px;
-    background: linear-gradient(45deg, #6366f1, #8b5cf6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-/* Кнопки */
-.btn {
+/* ─── BUTTONS & INPUTS ─────────────────────────────────────────────────────── */
+.btn, .auth-btn {
     width: 100%;
-    padding: 16px;
-    margin: 12px 0 8px;
-    border-radius: 16px;
+    padding: 14px 24px;
+    border-radius: 12px;
     border: none;
-    background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    background: var(--gradient-main);
     color: white;
-    font-size: 1.05rem;
     font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 6px 20px rgba(168,85,247,0.45), inset 0 0 10px rgba(255,255,255,0.2);
-    transition: all 0.25s;
-}
-
-.btn:hover {
-    box-shadow: 0 0 25px rgba(168,85,247,0.6);
-}
-
-.btn:active {
-    transform: scale(0.97);
-    box-shadow: 0 4px 12px rgba(168,85,247,0.35);
-}
-
-.cashout-btn {
-    background: linear-gradient(135deg, #10b981, #059669) !important;
-    box-shadow: 0 6px 20px rgba(16,185,129,0.45) !important;
-}
-
-.logout-btn {
-    background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-}
-
-/* Игры сетка */
-.games-list {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-    margin-top: 24px;
-}
-
-.game-icon {
-    background: rgba(30,27,71,0.5);
-    border-radius: 18px;
-    padding: 20px 12px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
     text-align: center;
-    border: 1.5px solid rgba(139,92,246,0.3);
-    transition: all 0.3s ease;
-    backdrop-filter: blur(8px);
-    cursor: pointer;
-}
-
-.game-icon:hover {
-    transform: scale(1.02);
-    box-shadow: 0 0 20px rgba(192,132,252,0.5);
-}
-
-.game-icon-emoji {
-    font-size: 3.2rem;
-    margin-bottom: 10px;
-}
-
-.game-icon-name {
-    font-weight: 700;
-    font-size: 0.95rem;
-    color: #d1d5ff;
-}
-
-/* Анимации игр */
-.game-item.spin {
-    animation: spin 1s ease-in-out;
-}
-@keyframes spin {
-    0% { transform: rotateY(0deg); }
-    100% { transform: rotateY(360deg); }
-}
-
-.game-item.win {
-    animation: winPulse 1s infinite;
-    border-color: #fbbf24;
-    box-shadow: 0 0 30px rgba(251,191,36,0.6);
-}
-@keyframes winPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.15); }
-}
-
-.roulette-wheel.spinning {
-    animation: rouletteSpin 5s cubic-bezier(0.25, 0.1, 0.25, 1);
-}
-@keyframes rouletteSpin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(2160deg); }
-}
-
-.card.flipped {
-    animation: flip 0.8s ease;
-}
-@keyframes flip {
-    0% { transform: rotateY(0); }
-    100% { transform: rotateY(180deg); }
-}
-
-.dice-face.shake {
-    animation: shake 0.5s;
-}
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
-}
-
-.crash-multiplier {
-    animation: crashPulse 1s infinite;
-}
-@keyframes crashPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
-.crash-multiplier.crashed {
-    animation: crashShake 0.6s;
-}
-@keyframes crashShake {
-    0%, 100% { transform: translateX(0); }
-    20% { transform: translateX(-10px); }
-    40% { transform: translateX(10px); }
-    60% { transform: translateX(-10px); }
-    80% { transform: translateX(5px); }
-}
-
-.gem.win {
-    animation: gemShine 0.8s infinite alternate;
-}
-@keyframes gemShine {
-    0%, 100% { box-shadow: 0 0 15px rgba(16,185,129,0.5); }
-    50% { box-shadow: 0 0 30px rgba(16,185,129,0.8); }
-}
-
-/* Результат */
-.result {
-    margin-top: 20px;
-    padding: 20px;
-    border-radius: 16px;
-    background: rgba(99,102,241,0.1);
-    text-align: center;
-    font-weight: 700;
-    font-size: 16px;
-    border: 2px solid rgba(99,102,241,0.3);
-    min-height: 60px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
 }
-
-/* Бэк кнопка */
-.back-btn {
-    background: rgba(255,255,255,0.08);
-    border: none;
-    color: #c084fc;
-    padding: 10px 20px;
-    border-radius: 12px;
-    font-weight: 600;
-    margin-bottom: 20px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
+.btn:hover, .auth-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(124, 58, 237, 0.5);
 }
-
-/* Промокод в хедере */
-.promo-header {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(30,27,71,0.55);           /* тоже чуть прозрачнее */
-    backdrop-filter: blur(10px);
-    padding: 8px 14px;
-    border-radius: 12px;
-    border: 1px solid rgba(168,85,247,0.35);
-    font-size: 0.85rem;
-    color: #c084fc;
-    z-index: 999;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.promo-header input {
-    width: 110px;
-    background: transparent;
-    border: none;
-    color: white;
+.auth-btn {
+    width: auto;
+    border-radius: 50px;
+    padding: 8px 20px;
     font-size: 0.9rem;
 }
 
-.promo-header button {
-    background: none;
-    border: none;
-    color: #fbbf24;
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 1rem;
-}
-
-/* ИНПУТЫ */
-.input-group {
-    margin: 15px 0;
-}
-.input-label {
-    display: block;
-    margin-bottom: 10px;
-    font-size: 14px;
-    color: #aaa;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-input, select {
+input {
     width: 100%;
-    padding: 16px;
-    border-radius: 16px;
-    border: 2px solid rgba(99,102,241,0.3);
-    background: rgba(255,255,255,0.05);
-    color: #fff;
-    font-size: 16px;
-    font-weight: 600;
-    transition: all 0.3s;
+    padding: 14px;
+    background: rgba(30, 27, 71, 0.5);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: white;
+    font-family: inherit;
+    transition: border-color 0.2s;
 }
-input:focus, select:focus {
-    outline: none;
-    border-color: #6366f1;
-    background: rgba(99,102,241,0.1);
-}
+input:focus { outline: none; border-color: var(--primary); }
 
-/* История */
-.history-item {
-    background: rgba(255,255,255,0.03);
-    padding: 16px;
-    border-radius: 16px;
-    margin-bottom: 12px;
-    border-left: 4px solid #6366f1;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.history-item.win {
-    border-left-color: #10b981;
-    background: rgba(16,185,129,0.05);
-}
-.history-item.loss {
-    border-left-color: #ef4444;
-    background: rgba(239,68,68,0.05);
-}
-.history-game {
-    font-weight: 700;
-    font-size: 16px;
-    margin-bottom: 4px;
-}
-.history-time {
-    font-size: 12px;
-    color: #666;
-}
-.history-amount {
-    font-size: 20px;
-    font-weight: 800;
-}
-.history-amount.win {
-    color: #10b981;
-}
-.history-amount.loss {
-    color: #ef4444;
-}
-
-/* Статистика */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-    margin-top: 20px;
-}
-.stat-card {
-    background: rgba(99,102,241,0.1);
-    padding: 24px;
-    border-radius: 20px;
-    text-align: center;
-    border: 2px solid rgba(99,102,241,0.2);
-}
-.stat-value {
-    font-size: 32px;
-    font-weight: 900;
-    background: linear-gradient(45deg, #6366f1, #8b5cf6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-.stat-label {
-    font-size: 12px;
-    color: #aaa;
-    margin-top: 8px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: #666;
-}
-.empty-state-icon {
-    font-size: 64px;
-    margin-bottom: 16px;
-}
-
-/* Рулетка */
-.roulette-wheel {
-    width: 220px;
-    height: 220px;
-    border-radius: 50%;
-    margin: 20px auto;
+/* ─── PROMO CARDS (HOVER EFFECTS) ─────────────────────────────────────────── */
+.promo-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border); /* Default border, removed on hover if requested, but user said 'remove border THERE' implying active state or generally */
+    /* User said "remove border there", maybe they mean the visible border line */
+    border: none; /* Removing border as requested */
     position: relative;
-    border: 6px solid #fbbf24;
-    box-shadow: 0 0 40px rgba(251,191,36,0.5);
-    background: conic-gradient(
-        #ef4444 0deg,
-        #1f2937 20deg,
-        #ef4444 40deg,
-        #1f2937 60deg,
-        #ef4444 80deg,
-        #1f2937 100deg,
-        #ef4444 120deg,
-        #1f2937 140deg,
-        #ef4444 160deg,
-        #1f2937 180deg,
-        #ef4444 200deg,
-        #1f2937 220deg,
-        #ef4444 240deg,
-        #1f2937 260deg,
-        #ef4444 280deg,
-        #1f2937 300deg,
-        #ef4444 320deg,
-        #1f2937 340deg,
-        #10b981 350deg,
-        #ef4444 360deg
-    );
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.roulette-center {
+.promo-card::before {
+    content: '';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90px;
-    height: 90px;
-    background: #0a0a0f;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 36px;
-    font-weight: 900;
-    border: 4px solid #fbbf24;
+    inset: 0;
+    border-radius: 16px;
+    padding: 2px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+.promo-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    z-index: 5;
+}
+.promo-card.purple:hover {
+    box-shadow: 0 10px 30px rgba(168, 85, 247, 0.4);
+}
+.promo-card.orange:hover {
+    box-shadow: 0 10px 30px rgba(251, 191, 36, 0.4);
 }
 
-/* Карты */
-.card-container {
-    perspective: 1000px;
-    width: 140px;
-    height: 200px;
-    margin: 30px auto;
-}
-.card {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    transform-style: preserve-3d;
-    transition: transform 0.6s;
-}
-.card-face {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    backface-visibility: hidden;
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 80px;
-    border: 4px solid rgba(99,102,241,0.4);
-}
-.card-front {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-}
-.card-back {
-    background: linear-gradient(135deg, #1f2937, #111827);
-    transform: rotateY(180deg);
-}
-
-/* ─── СЛОТЫ ──────────────────────────────────────── */
+/* ─── SLOTS & GAME SPECIFIC STYLES ────────────────────────────────────────── */
 .slot-machine {
     display: flex;
     justify-content: center;
-    gap: 12px;
-    margin: 30px 0 40px;
+    gap: 10px;
+    margin: 30px 0;
     perspective: 1000px;
 }
-
 .reel {
-    width: 110px;
-    height: 110px;
+    width: 90px;
+    height: 120px;
+    background: rgba(15, 15, 20, 0.8);
+    border: 2px solid var(--border);
+    border-radius: 12px;
     overflow: hidden;
-    border-radius: 16px;
-    border: 3px solid #4b5563;
-    background: rgba(20, 20, 45, 0.9);
-    box-shadow:
-        inset 0 0 20px rgba(0,0,0,0.7),
-        0 0 25px rgba(139,92,246,0.25);
     position: relative;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
 }
-
 .slot-item {
-    width: 100%;
-    height: 100%;
+    font-size: 3.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 5.8rem;
-    font-weight: bold;
-    color: #fff;
-    text-shadow: 0 0 15px rgba(0,0,0,0.8);
-    transition: transform 0.4s ease-out;
+    height: 100%;
+    filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));
 }
-
-/* Вращение */
 .reel.spinning .slot-item {
-    animation: reelSpin 0.14s linear infinite;
+    animation: spinBlur 0.1s linear infinite;
+}
+@keyframes spinBlur {
+    0% { transform: translateY(-50%); filter: blur(5px); }
+    100% { transform: translateY(50%); filter: blur(5px); }
+}
+.result {
+    font-size: 1.2rem;
+    font-weight: 800;
+    text-align: center;
+    margin-top: 20px;
+    min-height: 1.5em;
 }
 
-@keyframes reelSpin {
-    0%   { transform: translateY(-120%); }
-    100% { transform: translateY(120%);  }
+/* ─── RESPONSIVE ──────────────────────────────────────────────────────────── */
+@media (min-width: 768px) {
+    body {
+        padding-bottom: 0; /* Remove bottom padding on desktop */
+    }
+    .nav {
+        display: none; /* Hide bottom nav on desktop */
+    }
+    .main-nav {
+        display: flex;
+        gap: 24px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text-sec);
+    }
+    .main-nav a:hover { color: var(--text-main); }
+    
+    .games-list {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    .hero {
+        grid-template-columns: 2fr 1fr;
+    }
+    .promo-grid {
+        display: flex;
+        flex-direction: column;
+    }
 }
 
-/* Остановка с отскоком */
-.reel.stopping .slot-item {
-    animation: none;
-    animation: reelStop 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+@media (min-width: 1024px) {
+    .games-list {
+        grid-template-columns: repeat(5, 1fr);
+    }
 }
 
-@keyframes reelStop {
-    0%   { transform: translateY(-40%); }
-    60%  { transform: translateY(18%);  }
-    80%  { transform: translateY(-10%); }
-    100% { transform: translateY(0);     }
+/* Particles Canvas */
+.particles {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -1;
+    pointer-events: none;
+}
+.particle {
+    position: absolute;
+    background: radial-gradient(circle, rgba(93,92,222,0.4) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: float linear infinite;
+}
+@keyframes float {
+    0% { transform: translateY(0) scale(1); opacity: 0.5; }
+    100% { transform: translateY(-100vh) scale(0); opacity: 0; }
 }
 
-/* Свечение при активном вращении */
-.reel.spinning {
-    box-shadow:
-        inset 0 0 30px rgba(139,92,246,0.5),
-        0 0 40px rgba(168,85,247,0.6);
-    border-color: #a78bfa;
-}
-
-/* Выигрышная комбинация */
-.slot-item.win-highlight {
-    animation: winGlow 1.2s infinite alternate;
-}
-
-@keyframes winGlow {
-    from { text-shadow: 0 0 10px #fbbf24, 0 0 30px #fbbf24; }
-    to   { text-shadow: 0 0 25px #fbbf24, 0 0 60px #fbbf24; }
-}
-
-/* Крипто стили (добавь в конец, если не было) */
-.crypto-item {
-  background: rgba(30,27,71,0.5);
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 16px;
-  border: 1px solid rgba(139,92,246,0.3);
-}
-
-.crypto-name {
-  font-size: 1.2rem;
-  font-weight: 700;
-}
-
-.crypto-price {
-  font-size: 1.5rem;
-  color: #10b981;
-  margin-bottom: 10px;
-}
+/* Compatibility for existing classes from previous CSS to prevent breakage */
+.game-card { padding: 20px; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); }
+.game-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; text-align: center; }
+.back-btn { background: none; border: none; color: var(--text-sec); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }

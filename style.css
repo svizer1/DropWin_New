@@ -41,7 +41,7 @@ ul { list-style: none; }
 
 /* ─── LIVE FEED (Top Bar) ─────────────────────────────────────────────────── */
 .live-feed {
-    height: 70px;
+    height: 90px; /* Increased height */
     background: #0f0f11;
     border-bottom: 1px solid var(--border);
     display: flex;
@@ -56,6 +56,7 @@ ul { list-style: none; }
     /* gap: 12px; removed for seamless loop */
     animation: scroll 30s linear infinite;
     width: max-content;
+    padding: 0 10px;
 }
 
 /* Ensure enough items for seamless loop or use JS. 
@@ -67,23 +68,37 @@ ul { list-style: none; }
 }
 
 .live-item {
-    min-width: 100px;
-    height: 50px;
+    min-width: 130px; /* Bigger width */
+    height: 70px;     /* Bigger height */
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 12px; /* Slightly more rounded */
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    padding: 4px;
-    margin-right: 12px; /* moved gap here for seamless loop */
+    padding: 6px;
+    margin-right: 16px; /* Bigger gap */
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, border-color 0.3s ease;
+    cursor: pointer;
+}
+
+.live-item:hover {
+    transform: scale(1.15);
+    z-index: 10;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+    border-color: var(--text-main);
 }
 
 .live-item img {
-    max-height: 40px;
-    max-width: 80%;
+    max-height: 55px; /* Bigger image */
+    max-width: 85%;
     object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.live-item:hover img {
+    transform: scale(1.1);
 }
 
 .live-item::after {
@@ -92,9 +107,9 @@ ul { list-style: none; }
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 3px;
+    height: 4px; /* Thicker strip */
     background: var(--primary); /* Rarity color */
-    border-radius: 0 0 8px 8px;
+    border-radius: 0 0 12px 12px;
 }
 
 .live-item.gold::after { background: #fbbf24; }
@@ -190,16 +205,16 @@ ul { list-style: none; }
 }
 
 .hero-banner {
-    background: linear-gradient(to right, #2c1e4a, #5b21b6);
-    border-radius: 16px;
-    padding: 24px;
+    width: 100%;
     position: relative;
     overflow: hidden;
+    padding: 24px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: 180px;
-    box-shadow: 0 10px 30px rgba(91, 33, 182, 0.2);
+    min-height: 280px;
+    border-radius: 0; /* Changed from 16px to 0 to fill container */
+    box-shadow: none; /* Remove shadow to avoid gaps */
 }
 
 .hero-banner::before {
@@ -279,6 +294,49 @@ ul { list-style: none; }
     transform: rotate(-15deg);
 }
 
+.promo-img {
+    position: absolute;
+    bottom: -15px; 
+    right: -15px;
+    width: 150px; /* Increased from 130px to 150px */
+    height: auto;
+    object-fit: contain;
+    transform: rotate(-5deg);
+    opacity: 1;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+}
+
+.promo-card:hover .promo-img {
+    transform: rotate(0deg) scale(1.1) translateY(-5px);
+}
+
+.promo-banner-img {
+    position: absolute;
+    right: -25px; /* Adjusted position */
+    bottom: -25px;
+    width: 160px; /* Increased from 150px */
+    height: auto;
+    object-fit: contain;
+    transform: rotate(-5deg);
+    opacity: 0.95;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.2));
+}
+
+/* Make sure the parent has relative positioning and overflow hidden */
+.promo-banner-card {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+}
+.promo-banner-card:hover {
+    transform: translateY(-5px) scale(1.01);
+    box-shadow: 0 10px 30px rgba(180, 83, 9, 0.3);
+    z-index: 5;
+}
+.promo-banner-card:hover .promo-banner-img {
+    transform: rotate(0deg) scale(1.1);
+}
+
 .arrow-btn {
     width: 32px;
     height: 32px;
@@ -348,7 +406,7 @@ ul { list-style: none; }
 
 .game-icon img {
     max-width: 95%;
-    max-height: 145px; /* Increased size */
+    max-height: 145px;
     object-fit: contain;
     filter: drop-shadow(0 6px 16px rgba(0,0,0,0.6));
     transition: transform 0.3s ease;
@@ -597,3 +655,178 @@ input:focus { outline: none; border-color: var(--primary); }
 .game-card { padding: 20px; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); }
 .game-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; text-align: center; }
 .back-btn { background: none; border: none; color: var(--text-sec); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+
+.nav-bonus-btn {
+    background: var(--gradient-gold);
+    color: #000 !important;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    transition: all 0.2s;
+}
+.nav-bonus-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+    opacity: 1;
+}
+
+.recommended-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: #000;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 4px 8px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    z-index: 2;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ─── NEW NAV STYLES ─── */
+.main-nav {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.main-nav a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+.main-nav a:hover {
+    color: white;
+    background: rgba(255,255,255,0.05);
+}
+/* Ensure bonus button keeps its color */
+.main-nav a.nav-bonus-btn:hover {
+    background: linear-gradient(135deg, #fcd34d, #f59e0b);
+    color: #000 !important;
+    opacity: 1;
+}
+
+.nav-icon {
+    font-size: 1.1rem;
+}
+.nav-bonus-btn {
+    background: linear-gradient(135deg, #fbbf24, #d97706);
+    color: #000 !important;
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+}
+.nav-bonus-btn:hover {
+    background: linear-gradient(135deg, #fcd34d, #f59e0b);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(251, 191, 36, 0.5);
+}
+
+/* ─── HERO SLIDER ─── */
+.hero-slider-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    min-height: 220px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.hero-slides {
+    display: flex;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
+}
+.hero-slide {
+    min-width: 100%;
+    display: flex;
+    height: 100%;
+}
+.hero-banner {
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 280px;
+    height: 100%; /* Force full height */
+    border-radius: 0;
+}
+.slide-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+.slide-bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.slide-bg .overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgba(15,15,20,0.7) 0%, rgba(15,15,20,0.4) 50%, rgba(15,15,20,0.1) 100%);
+}
+.dino-slide .slide-bg .overlay {
+    background: linear-gradient(to right, rgba(30, 64, 175, 0.7), rgba(30, 64, 175, 0.2));
+}
+.slide-content {
+    position: relative;
+    z-index: 2;
+    max-width: 60%;
+    padding: 30px;
+}
+.slider-arrow {
+    position: absolute;
+    bottom: 20px;
+    top: auto;
+    transform: none;
+    width: 36px;
+    height: 36px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 50%;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.slider-arrow:hover {
+    background: rgba(255,255,255,0.3);
+    transform: scale(1.1);
+}
+.prev { right: 64px; left: auto; }
+.next { right: 20px; }
+.slider-dots {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+}
+.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.dot.active {
+    background: white;
+    transform: scale(1.2);
+}

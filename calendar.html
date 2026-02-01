@@ -219,41 +219,41 @@
     const START_DATE = new Date(START_DATE_STR);
 
     const rewards = [
-        { type: 'money', value: 10 },
-        { type: 'money', value: 20 },
-        { type: 'promo', value: 25, text: '+25% к депу' }, // Day 3
-        { type: 'money', value: 40 },
         { type: 'money', value: 50 },
-        
-        { type: 'money', value: 60 },
-        { type: 'promo', value: 25, text: '+25% к депу' }, // Day 7
-        { type: 'money', value: 80 },
-        { type: 'money', value: 90 },
+        { type: 'money', value: 75 },
+        { type: 'promo', value: 15, text: '+15% к депу' },
         { type: 'money', value: 100 },
-
-        { type: 'money', value: 10 },
-        { type: 'money', value: 20 },
-        { type: 'promo', value: 25, text: '+25% к депу' }, // Day 13
-        { type: 'money', value: 40 },
-        { type: 'money', value: 50 },
-
-        { type: 'money', value: 60 },
-        { type: 'money', value: 70 },
-        { type: 'money', value: 80 },
-        { type: 'money', value: 90 },
+        { type: 'money', value: 150 },
+        
         { type: 'money', value: 200 },
+        { type: 'promo', value: 20, text: '+20% к депу' },
+        { type: 'money', value: 250 },
+        { type: 'money', value: 300 },
+        { type: 'money', value: 500 }, // Big Bonus
 
-        { type: 'promo', value: 25, text: '+25% к депу' }, // Day 21
-        { type: 'money', value: 20 },
-        { type: 'money', value: 30 },
-        { type: 'money', value: 40 },
-        { type: 'money', value: 50 },
+        { type: 'money', value: 350 },
+        { type: 'money', value: 400 },
+        { type: 'promo', value: 25, text: '+25% к депу' },
+        { type: 'money', value: 450 },
+        { type: 'money', value: 600 },
 
-        { type: 'money', value: 60 },
-        { type: 'money', value: 70 },
-        { type: 'money', value: 80 },
-        { type: 'money', value: 90 },
-        { type: 'money', value: 500 }
+        { type: 'money', value: 700 },
+        { type: 'money', value: 800 },
+        { type: 'money', value: 900 },
+        { type: 'promo', value: 30, text: '+30% к депу' },
+        { type: 'money', value: 1500 }, // Super Bonus
+
+        { type: 'money', value: 1000 },
+        { type: 'money', value: 1200 },
+        { type: 'promo', value: 35, text: '+35% к депу' },
+        { type: 'money', value: 1500 },
+        { type: 'money', value: 2000 },
+
+        { type: 'money', value: 2500 },
+        { type: 'promo', value: 40, text: '+40% к депу' },
+        { type: 'money', value: 3000 },
+        { type: 'money', value: 4000 },
+        { type: 'money', value: 5000 } // Legendary
     ];
 
     function updateTimer() {
@@ -317,7 +317,7 @@
         const currentDay = dayIndex % rewards.length;
         const claimedDays = currentUser && currentUser.claimedDays ? currentUser.claimedDays : [];
         
-        document.getElementById('dateDisplay').textContent = `День: ${dayIndex + 1} (от 30.01)`;
+        document.getElementById('dateDisplay').textContent = `День: ${dayIndex + 1} (от 01.02)`;
 
         rewards.forEach((item, index) => {
             const el = document.createElement('div');
@@ -420,17 +420,20 @@
                 document.getElementById('balance').textContent = newBalance;
                 alert(`Вы получили ${item.value}₽!`);
             } else if (item.type === 'promo') {
-                // Activate promo
-                updates.activePromoCode = 'CALENDAR-BONUS';
-                updates.activePromoType = 'dep25'; // Mapping text to logic
-                updates.activePromoValue = 25;
-                alert(`Вы получили промокод: ${item.text}! Он активирован.`);
+                // Activate promo with generated code
+                const codeStr = 'CALENDAR-' + Math.random().toString(36).substring(2,8).toUpperCase();
+                
+                updates.activePromoCode = codeStr;
+                updates.activePromoType = 'dep25'; 
+                updates.activePromoValue = item.value;
+                
+                alert(`🎉 Поздравляем! Ваш промокод: ${codeStr}\nБонус: ${item.text}\n\nКод сохранен! Введите его на странице пополнения.`);
             }
 
             await updateDoc(doc(db, 'users', userId), updates);
             currentUser.lastCalendarClaim = today;
-            if (!currentUser.claimedDays) currentUser.claimedDays = [];
-            currentUser.claimedDays.push(index);
+            if (!currentUser.claimedDays_Feb2026) currentUser.claimedDays_Feb2026 = [];
+            currentUser.claimedDays_Feb2026.push(index);
             
             // Re-render
             renderCalendar(totalDeposit, totalBet);
@@ -450,12 +453,35 @@
                 document.getElementById('balance').textContent = currentUser.balance || 0;
                 
                 let totalDeposit = 0;
+                
+                // Get today start timestamp (00:00)
+                const todayStart = new Date();
+                todayStart.setHours(0, 0, 0, 0);
+                const todayTs = todayStart.getTime();
+
                 if (currentUser.cryptoTransactions) {
                     totalDeposit = currentUser.cryptoTransactions
-                        .filter(t => t.type === 'deposit')
+                        .filter(t => t.type === 'deposit' && t.timestamp >= todayTs) // Filter by today
                         .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
                 }
-                const totalBet = currentUser.totalBet || 0;
+                
+                // Reset daily bet logic
+                let totalBet = currentUser.totalBet || 0;
+                // If lastBetDate is not today, reset displayed bet to 0 (assuming totalBet is lifetime, we need dailyBet)
+                // Since we don't have dailyBet in DB yet, let's use a workaround or check lastBetTime
+                // Better approach: Use 'dailyBet' field if exists, else 0 if day changed
+                
+                // Check if we need to reset daily stats in DB (lazy reset)
+                const todayStr = new Date().toDateString();
+                if (currentUser.lastDailyReset !== todayStr) {
+                    // It's a new day, so daily stats are 0
+                    totalBet = 0;
+                    // We don't update DB here to avoid write spam, just display 0
+                    // But if user makes a bet, backend/game logic should handle reset. 
+                    // Here we just visualize.
+                } else {
+                    totalBet = currentUser.dailyBet || 0;
+                }
                 
                 renderCalendar(totalDeposit, totalBet);
             }

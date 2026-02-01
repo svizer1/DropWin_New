@@ -376,7 +376,107 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, updateDoc, setDoc, runTransaction, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  
+  // INLINED shared_promo.js due to CORS on file://
+  async function redeemPromoCode(db, userId, codeInput) {
+      if (!userId) throw new Error('Сначала войдите в аккаунт');
+      
+      const code = codeInput.trim();
+      const promoRef = doc(db, 'promocodes', code);
+      const userRef = doc(db, 'users', userId);
+
+      return await runTransaction(db, async (transaction) => {
+          const promoSnap = await transaction.get(promoRef);
+          
+          // 1. Check Firestore Promos
+          if (promoSnap.exists()) {
+              const promoData = promoSnap.data();
+              
+              if (promoData.activationsLeft <= 0) {
+                  throw new Error('Активации этого промокода закончились');
+              }
+              
+              if (promoData.usersUsed && promoData.usersUsed.includes(userId)) {
+                  throw new Error('Вы уже использовали этот промокод');
+              }
+
+              // Apply Reward
+              if (promoData.type === 'money') {
+                  const userSnap = await transaction.get(userRef);
+                  const userData = userSnap.data() || {};
+                  const newBalance = (userData.balance || 0) + promoData.value;
+                  
+                  transaction.update(userRef, {
+                      balance: newBalance
+                  });
+              } else if (promoData.type === 'dep' || promoData.type.startsWith('dep')) {
+                  // Deposit bonus
+                  transaction.update(userRef, {
+                      activePromoCode: code,
+                      activePromoType: promoData.type,
+                      activePromoValue: promoData.value,
+                      activePromoUsed: false
+                  });
+              }
+
+              // Update Promo Stats
+              transaction.update(promoRef, {
+                  activationsLeft: increment(-1),
+                  usersUsed: arrayUnion(userId)
+              });
+              
+              return { success: true, value: promoData.value, type: promoData.type, message: `Промокод активирован: +${promoData.value}${promoData.type === 'money' ? '₽' : '% к депу'}` };
+          } 
+          
+          // 2. Check Global/Legacy Hardcoded Promos (Fallback)
+          const userSnap = await transaction.get(userRef);
+          const userData = userSnap.data() || {};
+          
+          const GLOBAL_PROMOS = {
+              'PROMOCODE_DAY_670': { val: 50, type: 'money' },
+              'WELCOME': { val: 100, type: 'money' },
+              'DROPWIN2026': { val: 200, type: 'money' },
+              'KAVEXS': { val: 1000, type: 'money' },
+              'KAVEXS2026': { val: 5000, type: 'money' }
+          };
+          
+          if (GLOBAL_PROMOS[code]) {
+              const reward = GLOBAL_PROMOS[code];
+              const used = userData.usedPromos || [];
+              
+              if (used.includes(code)) {
+                  throw new Error('Вы уже использовали этот промокод');
+              }
+              
+              const newBalance = (userData.balance || 0) + reward.val;
+              transaction.update(userRef, {
+                  balance: newBalance,
+                  usedPromos: arrayUnion(code)
+              });
+              
+              return { success: true, value: reward.val, type: reward.type, message: `Промокод активирован: +${reward.val}₽` };
+          }
+
+          // 3. Check Personal Active Promo
+          if (userData.activePromoCode === code && !userData.activePromoUsed) {
+               if (userData.activePromoType && userData.activePromoType.startsWith('bonus')) {
+                   const val = userData.activePromoValue || 0;
+                   transaction.update(userRef, {
+                       balance: (userData.balance || 0) + val,
+                       activePromoCode: null,
+                       activePromoValue: 0,
+                       activePromoUsed: true
+                   });
+                   return { success: true, value: val, type: 'money', message: `Бонус активирован: +${val}₽` };
+               } else {
+                   return { success: false, redirect: 'dep.html', message: 'Это бонус к депозиту. Переходим на пополнение...' };
+               }
+          }
+
+          throw new Error('Неверный промокод');
+      });
+  }
 
   const firebaseConfig = {
     apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
@@ -496,6 +596,30 @@
     const code = document.getElementById('depPromoCode').value.trim().toUpperCase();
     if (!code) return alert('Введите промокод');
 
+    // Try to redeem promo code (general or dep)
+    try {
+        const result = await redeemPromoCode(db, userId, code);
+        if (result.success) {
+            if (result.type === 'money') {
+                alert(result.message);
+                // Update local balance
+                currentUser.balance = (currentUser.balance || 0) + result.value;
+                document.getElementById('balance').textContent = currentUser.balance;
+                return; // Money promo activated, no deposit logic needed
+            } else {
+                alert(result.message);
+                // Deposit promo activated on user. Refresh user to update logic below.
+                const snap = await getDoc(doc(db, 'users', userId));
+                currentUser = snap.data();
+            }
+        } else if (result.redirect) {
+            alert(result.message);
+        }
+    } catch(e) {
+        // Proceed, maybe it is already active
+        console.log("Promo redeem check:", e.message);
+    }
+
     const amount = Number(document.getElementById('depAmount').value) || 0;
     if (amount < 50) return alert('Минимальная сумма депозита — 50₽');
 
@@ -512,6 +636,9 @@
         calculatedBonus = Math.round(amount * 0.25);
       } else if (promoType === 'dep30') {
         calculatedBonus = Math.round(amount * 0.30);
+      } else if (promoType && promoType.startsWith('dep')) {
+        // Handle generic dep type from promo system
+        calculatedBonus = Math.round(amount * (promoValue / 100));
       } else if (promoType && promoType.startsWith('bonus')) {
         calculatedBonus = promoValue;
       } else {
@@ -526,14 +653,12 @@
 
       document.getElementById('totalWithBonus').textContent = `= ${amount + calculatedBonus}₽`;
 
-      try {
-        await updateDoc(doc(db, 'users', userId), { activePromoUsed: true });
-        currentUser.activePromoUsed = true;
-        const float = document.getElementById('promoFloat');
-        if (float) float.style.display = 'none';
-      } catch (e) {
-        console.error('Не удалось отметить промокод использованным:', e);
-      }
+      // We don't mark it used yet, only on successful payment!
+      // But we hide the float if it matches
+      const float = document.getElementById('promoFloat');
+      if (float) float.style.display = 'none';
+      
+      alert(`Промокод активен! Бонус: +${calculatedBonus}₽`);
     }
     // Ежедневный промокод DROPWIN-XXXXXX, единоразово в день
     else if (currentUser?.dailyPromoCode && code === currentUser.dailyPromoCode) {
@@ -551,16 +676,12 @@
         value: 20
       };
       document.getElementById('totalWithBonus').textContent = `= ${amount + calculatedBonus}₽`;
-      try {
-        await updateDoc(doc(db, 'users', userId), { dailyPromoUsed: true });
-        currentUser.dailyPromoUsed = true;
-        const float = document.getElementById('promoFloat');
-        if (float) float.style.display = 'none';
-      } catch (e) {
-        console.error('Не удалось отметить ежедневный промокод использованным:', e);
-      }
+      alert(`Ежедневный промокод активен! Бонус: +${calculatedBonus}₽`);
     }
     else {
+      // Only clear if we didn't just activate a money promo (which returns early)
+      // But we are here, so it's not a money promo.
+      // If we are here, it means it's not active on user AND redeem failed/threw.
       document.getElementById('totalWithBonus').textContent = '';
       alert('Неверный или просроченный промокод');
     }
@@ -596,6 +717,7 @@
       if (promoType === 'dep20') return Math.round(amount * 0.20);
       if (promoType === 'dep25') return Math.round(amount * 0.25);
       if (promoType === 'dep30') return Math.round(amount * 0.30);
+      if (promoType && promoType.startsWith('dep')) return Math.round(amount * (promoValue / 100));
       if (promoType && promoType.startsWith('bonus')) return promoValue;
     }
     return 0;
@@ -756,6 +878,20 @@
       updateData.activePromoValue = newPromoBonus;
     }
 
+    // Если был использован активный промокод на депозит - помечаем его использованным
+    // Но подождите, мы должны сделать это в submitPayment или здесь?
+    // Мы должны сделать это здесь, после успешной оплаты.
+    // Если это был промокод, который мы активировали (activePromoCode)
+    if (activePromoCode && activePromoCode.code) {
+         if (currentUser.activePromoCode === activePromoCode.code) {
+             updateData.activePromoUsed = true;
+         }
+         // Если это ежедневный
+         if (currentUser.dailyPromoCode === activePromoCode.code) {
+             updateData.dailyPromoUsed = true;
+         }
+    }
+
     await updateDoc(doc(db, 'users', userId), updateData);
     document.getElementById('balance').textContent = currentUser.balance;
 
@@ -828,4 +964,3 @@
 </script>
 </body>
 </html>
-

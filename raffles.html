@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <title>Розыгрыши | DropWin</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --card-bg: #181820;
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #8b5cf6;
+            --text-muted: #94a3b8;
+        }
+
+        .toast-container {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 2000; display: flex; flex-direction: column; gap: 10px;
+        }
+        .toast {
+            background: #1e1b2e; border: 1px solid rgba(139, 92, 246, 0.3);
+            color: #fff; padding: 12px 20px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6); backdrop-filter: blur(10px);
+            min-width: 300px; text-align: center; font-weight: 600;
+            animation: slideDown 0.3s ease; display: flex; align-items: center; gap: 10px; justify-content: center;
+        }
+        @keyframes slideDown { from { transform: translate(-50%, -20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+
+        .content { max-width: 1200px; margin: 0 auto; padding: 24px 20px; padding-bottom: 100px; }
+        
+        .raffles-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;
+        }
+        .raffles-title { font-size: 1.8rem; font-weight: 800; display: flex; align-items: center; gap: 12px; }
+        .how-it-works {
+            background: rgba(255, 255, 255, 0.05); color: var(--text-muted);
+            padding: 10px 18px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; transition: 0.2s;
+            font-weight: 600;
+        }
+        .how-it-works:hover { background: rgba(255, 255, 255, 0.1); color: white; }
+
+        .raffles-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px;
+        }
+
+        /* New Card Style */
+        .raffle-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--card-border);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+            will-change: transform;
+        }
+        .raffle-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border-color: rgba(255,255,255,0.2);
+        }
+        
+        .raffle-card::before {
+            content: ''; position: absolute; top: 16px; left: 16px; width: 12px; height: 12px;
+            border-radius: 2px; transform: rotate(45deg);
+            background: var(--accent-color);
+            box-shadow: 0 0 10px var(--accent-color);
+            z-index: 2;
+        }
+
+        .raffle-card.mythical { --accent-color: #ef4444; --bg-grad: linear-gradient(180deg, rgba(239,68,68,0.15) 0%, rgba(24,24,32,0) 50%); }
+        .raffle-card.legendary { --accent-color: #fbbf24; --bg-grad: linear-gradient(180deg, rgba(251,191,36,0.15) 0%, rgba(24,24,32,0) 50%); }
+        .raffle-card.epic { --accent-color: #a855f7; --bg-grad: linear-gradient(180deg, rgba(168,85,247,0.15) 0%, rgba(24,24,32,0) 50%); }
+        .raffle-card.rare { --accent-color: #3b82f6; --bg-grad: linear-gradient(180deg, rgba(59,130,246,0.15) 0%, rgba(24,24,32,0) 50%); }
+
+        .card-bg {
+            position: absolute; inset: 0; background: var(--bg-grad); pointer-events: none;
+        }
+
+        .raffle-content {
+            padding: 24px;
+            display: flex; flex-direction: column; height: 100%;
+            position: relative; z-index: 1;
+        }
+
+        .raffle-image-container {
+            height: 180px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 10px 0 20px;
+            position: relative;
+            transition: transform 0.4s ease;
+            will-change: transform;
+        }
+        .raffle-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+            transition: transform 0.4s ease;
+            will-change: transform;
+        }
+        .raffle-card:hover .raffle-img { transform: scale(1.1) rotate(3deg); }
+
+        .raffle-details {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        .item-info h3 {
+            font-size: 1.1rem; font-weight: 800; line-height: 1.3;
+            margin-bottom: 4px; color: white;
+        }
+        .item-info .item-type {
+            font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        .item-price {
+            display: flex; align-items: center; gap: 6px;
+            font-weight: 700; color: #fbbf24; background: rgba(251, 191, 36, 0.1);
+            padding: 4px 10px; border-radius: 6px; margin-top: 8px; width: fit-content;
+        }
+
+        .participants-badge {
+            display: flex; flex-direction: column; align-items: flex-end;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+        .p-count { font-size: 1.1rem; font-weight: 700; color: white; display: flex; align-items: center; gap: 6px; }
+        .p-label { font-size: 0.75rem; color: var(--text-muted); }
+        .p-icon { color: var(--primary); }
+        .participants-badge:hover { transform: translateY(-1px); }
+
+        .timer-row {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 24px;
+        }
+        .timer-cell {
+            background: rgba(0,0,0,0.3); border-radius: 8px; padding: 10px 4px;
+            text-align: center; display: flex; flex-direction: column;
+        }
+        .t-val { font-weight: 800; font-size: 1.2rem; line-height: 1; margin-bottom: 4px; }
+        .t-lbl { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
+
+        .join-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 14px;
+            border: none;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            background: var(--accent-color);
+            color: #000;
+            transition: all 0.2s;
+            margin-top: auto;
+            position: relative;
+            overflow: hidden;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .join-btn:hover { filter: brightness(1.15); transform: translateY(-2px); }
+        .join-btn:active { transform: scale(0.98); }
+        .join-btn:disabled {
+            background: #2a2a35; color: #64748b; cursor: not-allowed; transform: none; filter: none;
+        }
+        .join-icon { font-size: 1.2rem; }
+
+        .last-winner-display {
+            background: rgba(255, 255, 255, 0.03);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            margin-top: 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+        }
+        .winner-avatar {
+            width: 32px; height: 32px; background: linear-gradient(135deg, #10b981, #059669); 
+            color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 0.8rem; flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+        .winner-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
+        .winner-info { display: flex; flex-direction: column; line-height: 1.2; overflow: hidden; width: 100%; }
+        .winner-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
+        .winner-name { font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .winner-prize { color: #fbbf24; font-size: 0.8rem; }
+
+        /* Modal for Participants */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 3000;
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
+        }
+        .modal {
+            background: #1e1b2e; width: 90%; max-width: 400px; border-radius: 20px;
+            border: 1px solid var(--card-border); padding: 24px;
+            max-height: 80vh; display: flex; flex-direction: column;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { font-size: 1.2rem; font-weight: 800; }
+        .close-modal { background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer; }
+        .participants-list { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .p-row { display: flex; align-items: center; gap: 12px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 10px; transition: background 0.2s ease; }
+        .p-row:hover { background: rgba(255,255,255,0.06); }
+        .p-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; overflow: hidden; }
+        .p-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .p-name { font-weight: 600; font-size: 0.95rem; }
+        .p-time { margin-left: auto; font-size: 0.8rem; color: var(--text-muted); }
+
+        /* User chip */
+        .user-chip { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); margin-bottom: 12px; }
+        .chip-avatar { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+        .chip-avatar-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .chip-initial { font-weight: 700; font-size: 0.85rem; color: #fff; }
+        .chip-name { font-weight: 700; font-size: 0.95rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chip-tag { margin-left: auto; font-size: 0.7rem; background:#22c55e; padding:2px 6px; border-radius:4px; color:black; font-weight:bold; }
+
+        /* Responsive */
+        @media (max-width: 520px) {
+            .raffles-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+            .raffle-image-container { height: 140px; }
+            .timer-row { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .raffle-card, .raffle-img, .raffle-image-container, .participants-badge, .modal { transition: none !important; animation: none !important; }
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
+
+    </style>
+</head>
+<body>
+    <div class="toast-container" id="toastContainer"></div>
+    <div class="particles" id="particles"></div>
+    <div class="modal-overlay" id="participantsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Участники</div>
+                <button class="close-modal" onclick="closeModal()">×</button>
+            </div>
+            <div class="participants-list" id="participantsList"></div>
+        </div>
+    </div>
+
+    <div class="header">
+        <div class="logo" onclick="location.href='index.html'" style="cursor: pointer;">💎 DROPWIN</div>
+        <div class="balance-container">
+            <div class="balance">💰 <span id="balance">0</span>₽</div>
+            <button class="auth-btn" id="authBtn">Аккаунт</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="raffles-header">
+            <div class="raffles-title">🎁 Активные розыгрыши</div>
+            <div class="how-it-works" onclick="showRules()">Как это работает? ℹ️</div>
+        </div>
+
+        <div class="raffles-grid" id="rafflesGrid"></div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-btn" onclick="location.href='index.html'"><span>🏠</span>Главная</button>
+      <button class="nav-btn" onclick="location.href='leaderboard.html'"><span>🏆</span>Топ</button>
+      <button class="nav-btn active" onclick="location.href='raffles.html'"><span>🎁</span>Розыгрыши</button>
+      <button class="nav-btn" onclick="location.href='profile.html'"><span>👤</span>Профиль</button>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc, arrayUnion, runTransaction, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+            authDomain: "dropwin-8d94b.firebaseapp.com",
+            projectId: "dropwin-8d94b",
+            storageBucket: "dropwin-8d94b.firebasestorage.app",
+            messagingSenderId: "988974289403",
+            appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+            measurementId: "G-BK010MHN8N"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let userId = null;
+        let totalDeposited = 0;
+        let realParticipants = {};
+
+        const BOT_NAMES = ['Alex','Mira','Titan','Luna','Viktor','Aria','Zen','Nova','Kira','Orion','Ghost','Rex','Sera','Blitz','Iris','Volt','Neon','Flux','Aero','Nyx','Shadow','Viper','Raven','Hawk','Wolf'];
+        
+        // --- DATA FROM BATTLES.HTML ---
+        const CASES_DATA = {
+            bomj: {
+                image: 'images/bomj.png',
+                items: [
+                    {emoji: '🧦', name: 'Дырявый носок',      value: 1},
+                    {emoji: '🍞', name: 'Чёрствый хлеб',       value: 3},
+                    {emoji: '🗑️', name: 'Мусорный пакет',      value: 7},
+                    {emoji: '🍺', name: 'Тёплое пиво 0.5',     value: 12},
+                    {emoji: '🪙', name: 'Горстка мелочи',      value: 25},
+                    {emoji: '🧥', name: 'Старая куртка',       value: 50},
+                    {emoji: '📱', name: 'Сломанный Nokia',     value: 100},
+                    {emoji: '💸', name: 'Заначка',value: 180}
+                ]
+            },
+            vibe: {
+                image: 'images/vibe.png',
+                items: [
+                    {emoji: '💖', name: 'Сердце',          value: 15},
+                    {emoji: '🌹', name: 'Роза',            value: 25},
+                    {emoji: '🚀', name: 'Ракета',          value: 50},
+                    {emoji: '💐', name: 'Цветы',           value: 50},
+                    {emoji: '💍', name: 'Кольцо',          value: 100},
+                    {emoji: '💎', name: 'Алмаз',           value: 100},
+                    {emoji: '🍭', name: 'Лол-поп',         value: 325},
+                    {emoji: '🐶', name: 'Суп Дог',         value: 425},
+                    {emoji: '🤡', name: 'Шапка шута',      value: 500},
+                    {emoji: '⭐', name: 'Звезда',           value: 200}
+                ]
+            },
+            santa: {
+                image: 'images/Santa.png',
+                items: [
+                    {emoji: '🍪', name: 'Печенье', value: 30},
+                    {emoji: '🥛', name: 'Молоко', value: 60},
+                    {emoji: '🎅', name: 'Колпак', value: 120},
+                    {emoji: '🦌', name: 'Олень', value: 300},
+                    {emoji: '🎁', name: 'Большой подарок', value: 1000}
+                ]
+            },
+            c2024: {
+                image: 'images/2024.png',
+                items: [
+                    {emoji: '🐉', name: 'Дракон', value: 300},
+                    {emoji: '🍾', name: 'Шампанское', value: 600},
+                    {emoji: '🎁', name: 'Подарок 2024', value: 1200},
+                    {emoji: '👑', name: 'Корона', value: 2500},
+                    {emoji: '💎', name: 'Алмаз', value: 5000},
+                    {emoji: '🏰', name: 'Замок', value: 15000}
+                ]
+            },
+            c2025: {
+                image: 'images/2025.png',
+                items: [
+                    {emoji: '🐍', name: 'Змея', value: 200},
+                    {emoji: '🎊', name: 'Хлопушка', value: 400},
+                    {emoji: '🎫', name: 'Билет 2025', value: 800},
+                    {emoji: '🤖', name: 'Кибер-Змея', value: 2000},
+                    {emoji: '🚀', name: 'Ракета', value: 4000}
+                ]
+            },
+            battle: {
+                image: 'images/battles.png',
+                items: [
+                    {emoji: '🛡️', name: 'Щит', value: 50},
+                    {emoji: '⚔️', name: 'Меч', value: 100},
+                    {emoji: '💊', name: 'Аптечка', value: 200},
+                    {emoji: '🔫', name: 'Пистолет', value: 400},
+                    {emoji: '💣', name: 'Граната', value: 800},
+                    {emoji: '🚁', name: 'Вертолет', value: 2000}
+                ]
+            },
+            dvornik: {
+                image: 'images/dvornik.png',
+                items: [
+                    {emoji: '🧹', name: 'Метла', value: 5},
+                    {emoji: '🪣', name: 'Ведро', value: 10},
+                    {emoji: '🧼', name: 'Мыло', value: 15},
+                    {emoji: '🪓', name: 'Топор старый', value: 35},
+                    {emoji: '🧤', name: 'Перчатки', value: 50},
+                    {emoji: '⛏️', name: 'Лопата', value: 80},
+                    {emoji: '🛠️', name: 'Инструменты', value: 150},
+                    {emoji: '🚲', name: 'Велосипед', value: 400}
+                ]
+            },
+            schoolboy: {
+                image: 'images/schoolboy.png',
+                items: [
+                    {emoji: '📚', name: 'Учебник', value: 80},
+                    {emoji: '🎒', name: 'Рюкзак', value: 150},
+                    {emoji: '📱', name: 'Смартфон', value: 400},
+                    {emoji: '💻', name: 'Ноутбук', value: 700},
+                    {emoji: '🎮', name: 'PlayStation', value: 1000},
+                    {emoji: '🚗', name: 'Машинка', value: 1300},
+                    {emoji: '🏠', name: 'Квартира', value: 4000}
+                ]
+            },
+            event: {
+                image: 'images/event.png',
+                items: [
+                    {emoji: '🎉', name: 'Конфетти', value: 150},
+                    {emoji: '🎁', name: 'Подарок', value: 300},
+                    {emoji: '🎈', name: 'Шар', value: 400},
+                    {emoji: '🍾', name: 'Шампанское', value: 600},
+                    {emoji: '🎤', name: 'Микрофон', value: 900},
+                    {emoji: '🎬', name: 'Кино', value: 1500},
+                    {emoji: '✈️', name: 'Путешествие', value: 3000}
+                ]
+            },
+            milioner: {
+                image: 'images/milioner.png',
+                items: [
+                    {emoji: '💵', name: 'Деньги', value: 300},
+                    {emoji: '🏦', name: 'Банк', value: 600},
+                    {emoji: '💰', name: 'Мешок денег', value: 1200},
+                    {emoji: '📈', name: 'График', value: 2000},
+                    {emoji: '🤑', name: 'Миллионер', value: 3000},
+                    {emoji: '🚀', name: 'Ракета', value: 6000},
+                    {emoji: '🏰', name: 'Дворец', value: 25000}
+                ]
+            },
+            neoprime: {
+                image: 'images/NeoPrime.png',
+                items: [
+                    {emoji: '💡', name: 'Неоновая лампа', value: 450},
+                    {emoji: '💾', name: 'Кибер-чип', value: 1000},
+                    {emoji: '🥽', name: 'VR-очки', value: 1600},
+                    {emoji: '🚁', name: 'Дрон', value: 2200},
+                    {emoji: '🤖', name: 'Робот', value: 3500},
+                    {emoji: '🚚', name: 'Кибер-трак', value: 7000},
+                    {emoji: '🌌', name: 'Neo Prime', value: 30000}
+                ]
+            },
+            grinch: {
+                image: 'images/grinch.png',
+                items: [
+                    {emoji: '🧅', name: 'Лук', value: 500},
+                    {emoji: '🐕', name: 'Макс', value: 1500},
+                    {emoji: '🎄', name: 'Украденная елка', value: 3000},
+                    {emoji: '🎁', name: 'Чужие подарки', value: 5000},
+                    {emoji: '💚', name: 'Сердце Гринча', value: 15000}
+                ]
+            },
+            maldives: {
+                image: 'images/Maldives.png',
+                items: [
+                    {emoji: '🐚', name: 'Ракушка', value: 700},
+                    {emoji: '🥥', name: 'Кокос', value: 1600},
+                    {emoji: '🍹', name: 'Коктейль', value: 2500},
+                    {emoji: '🌴', name: 'Пальма', value: 4000},
+                    {emoji: '🚤', name: 'Гидроцикл', value: 7500},
+                    {emoji: '🏠', name: 'Бунгало', value: 18000},
+                    {emoji: '🏝️', name: 'Личный остров', value: 65000}
+                ]
+            },
+            elka: {
+                image: 'images/elka.png',
+                items: [
+                    {emoji: '❄️', name: 'Снежинка', value: 50},
+                    {emoji: '🍬', name: 'Леденец', value: 100},
+                    {emoji: '🎄', name: 'Гирлянда', value: 200},
+                    {emoji: '⭐', name: 'Звезда', value: 400},
+                    {emoji: '🎅', name: 'Шапка Санты', value: 800},
+                    {emoji: '🍾', name: 'Шампанское', value: 1500},
+                    {emoji: '🎆', name: 'Фейерверк', value: 5000}
+                ]
+            },
+            snowman: {
+                image: 'images/snowman.png',
+                items: [
+                    {emoji: '🥕', name: 'Морковка', value: 400},
+                    {emoji: '🧣', name: 'Шарф', value: 800},
+                    {emoji: '🛷', name: 'Санки', value: 1500},
+                    {emoji: '⛸️', name: 'Коньки', value: 3000},
+                    {emoji: '🌨️', name: 'Снегоход', value: 7000},
+                    {emoji: '🧊', name: 'Ледяной трон', value: 15000},
+                    {emoji: '🏰', name: 'Ледяной дворец', value: 50000}
+                ]
+            }
+        };
+
+        // Flatten all items into a single pool but keep Case Image reference
+        const ALL_ITEMS = [];
+        Object.keys(CASES_DATA).forEach(key => {
+            const c = CASES_DATA[key];
+            c.items.forEach(i => {
+                ALL_ITEMS.push({
+                    ...i,
+                    caseImage: c.image // Attach case image to item
+                });
+            });
+        });
+
+        // Helper to get random item within range
+        function getRandomItem(minVal, maxVal) {
+            let pool = ALL_ITEMS.filter(i => i.value >= minVal && i.value <= maxVal);
+            
+            // If strict pool empty, try slightly wider
+            if (pool.length === 0) {
+                 pool = ALL_ITEMS.filter(i => i.value <= maxVal); // Relax min
+            }
+            if (pool.length === 0) {
+                // Return fallback
+                return ALL_ITEMS[0];
+            }
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        // Updated Slots Configuration based on User Request
+        // Dep 500 -> Prize 1000-2500
+        // Dep 1000 -> Prize 2500-5000
+        // Dep 2500 -> Prize 3500-7000
+        // Dep 5000 -> Prize 7000-15000
+        // Dep 7000 -> Prize 15000-22000
+        // Dep 10000 -> Prize 20000-30000
+        
+        const RAFFLE_SLOTS = [
+            { id: 'slot_1h', label: '1 Hour', duration: 3600 * 1000, minDeposit: 500, minPrize: 1000, maxPrize: 2500 },
+            { id: 'slot_3h', label: '3 Hours', duration: 3 * 3600 * 1000, minDeposit: 1000, minPrize: 2500, maxPrize: 5000 },
+            { id: 'slot_8h', label: '8 Hours', duration: 8 * 3600 * 1000, minDeposit: 2500, minPrize: 5000, maxPrize: 12500 },
+            { id: 'slot_12h', label: '12 Hours', duration: 12 * 3600 * 1000, minDeposit: 5000, minPrize: 10000, maxPrize: 20000 },
+            { id: 'slot_1d', label: '1 Day', duration: 24 * 3600 * 1000, minDeposit: 7500, minPrize: 15000, maxPrize: 25000 },
+            { id: 'slot_2d', label: '2 Days', duration: 48 * 3600 * 1000, minDeposit: 10000, minPrize: 20000, maxPrize: 25000 }
+        ];
+
+        let activeRaffles = {};
+
+        function showToast(text, type='info') {
+            const c = document.getElementById('toastContainer');
+            const d = document.createElement('div');
+            d.className = 'toast';
+            d.innerHTML = type === 'success' ? `✅ ${text}` : `ℹ️ ${text}`;
+            if(type==='error') d.innerHTML = `❌ ${text}`;
+            c.appendChild(d);
+            setTimeout(() => { d.style.opacity='0'; setTimeout(()=>d.remove(),300); }, 3000);
+        }
+
+        window.showRules = () => {
+            alert('Правила участия:\n\n1. Для участия необходим свежий депозит (после последнего участия).\n2. Сумма депозитов должна соответствовать требованию слота.\n3. Победитель выбирается случайно.\n4. Приз автоматически начисляется в инвентарь.');
+        };
+
+        window.closeModal = () => {
+            document.getElementById('participantsModal').style.display = 'none';
+        };
+
+        function checkFreshDeposit(user) {
+            if(!user.cryptoTransactions || user.cryptoTransactions.length === 0) return false;
+            const lastJoinTime = user.lastRaffleJoinTime || 0;
+            const freshDeps = user.cryptoTransactions.filter(t => t.type === 'deposit' && t.timestamp > lastJoinTime);
+            return freshDeps.length > 0;
+        }
+
+        function renderRaffles() {
+            const grid = document.getElementById('rafflesGrid');
+            grid.innerHTML = '';
+
+            RAFFLE_SLOTS.forEach(slot => {
+                const data = activeRaffles[slot.id];
+                if (!data || data.status === 'ended') return;
+
+                const card = document.createElement('div');
+                // Determine rarity based on value
+                let rarity = 'common';
+                if(data.item.value >= 20000) rarity = 'mythical';
+                else if(data.item.value >= 10000) rarity = 'legendary';
+                else if(data.item.value >= 5000) rarity = 'epic';
+                else rarity = 'rare';
+
+                card.className = `raffle-card ${rarity}`;
+                
+                const now = Date.now();
+                let diff = data.endTime - now;
+                if(diff < 0) diff = 0;
+                
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                // FIX: Check if user is in the CURRENT active participants list
+                // NOT in the historical currentUser.raffles list
+                const isJoined = currentUser && data.participants && data.participants.includes(userId);
+                
+                const count = (data.participants?.length || 0) + (data.bots?.length || 0);
+                
+                // Winner section
+                let winnerHtml = '';
+                if(data.pastWinners && data.pastWinners.length > 0) {
+                    const lastWinner = data.pastWinners[data.pastWinners.length - 1];
+                    if (lastWinner.isBot || !lastWinner.winnerId) {
+                        winnerHtml = `
+                            <div class="last-winner-display">
+                                <div class="winner-avatar">${lastWinner.winnerName[0]}</div>
+                                <div class="winner-info">
+                                    <div class="winner-label">Последний победитель</div>
+                                    <div class="winner-name">${lastWinner.winnerName}</div>
+                                    <div class="winner-prize">Выиграл: ${lastWinner.prize}</div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        winnerHtml = `<div id="winner-${slot.id}"></div>`;
+                    }
+                }
+
+                // Use CASE IMAGE for display
+                const displayImage = data.item.caseImage || 'images/battles3.png';
+                        const initial = (currentUser?.username || 'A').charAt(0).toUpperCase();
+                        const userChip = isJoined ? `
+                            <div class="user-chip">
+                                <div class="chip-avatar">
+                                    ${currentUser?.avatarUrl ? `<img src="${currentUser.avatarUrl}" alt="${currentUser.username || ''}" class="chip-avatar-img" loading="lazy" decoding="async" onerror="this.remove()">` : ``}
+                                    <span class="chip-initial">${initial}</span>
+                                </div>
+                                <div class="chip-name">${currentUser?.username || 'Игрок'}</div>
+                                <span class="chip-tag">REAL</span>
+                            </div>
+                        ` : '';
+
+                card.innerHTML = `
+                    <div class="card-bg"></div>
+                    <div class="raffle-content">
+                        <div class="raffle-details">
+                            <div class="item-info">
+                                <div class="item-type">Розыгрыш</div>
+                                <h3>${data.item.name}</h3>
+                                <div class="item-price">₽ ${data.item.value}</div>
+                            </div>
+                            <div class="participants-badge" onclick="showParticipants('${slot.id}')" style="cursor:pointer">
+                                <div class="p-count"><span class="p-icon">👥</span> <span id="count-${slot.id}">${count}</span></div>
+                                <div class="p-label">Участников</div>
+                            </div>
+                        </div>
+
+                        <div class="raffle-image-container">
+                                    <img src="${displayImage}" class="raffle-img" alt="Case" loading="lazy" decoding="async">
+                        </div>
+
+                        <div class="timer-row" id="timer-${slot.id}">
+                            <div class="timer-cell"><span class="t-val">${days}</span><span class="t-lbl">Дни</span></div>
+                            <div class="timer-cell"><span class="t-val">${hours}</span><span class="t-lbl">Часы</span></div>
+                            <div class="timer-cell"><span class="t-val">${minutes}</span><span class="t-lbl">Мин</span></div>
+                            <div class="timer-cell"><span class="t-val">${seconds}</span><span class="t-lbl">Сек</span></div>
+                        </div>
+
+                                ${userChip}
+
+                        <button class="join-btn" onclick="joinRaffle('${slot.id}', ${slot.minDeposit})" ${isJoined ? 'disabled' : ''}>
+                            <span class="join-icon">${isJoined ? '✓' : '⚡'}</span>
+                            ${isJoined ? 'Вы участвуете' : 'Принять участие'}
+                        </button>
+                        <div style="text-align:center; font-size:0.75rem; color:#64748b; margin-top:8px;">
+                            Депозит от ${slot.minDeposit}₽ (свежий)
+                        </div>
+
+                        ${winnerHtml}
+                    </div>
+                `;
+                grid.appendChild(card);
+                if(data.pastWinners && data.pastWinners.length > 0) {
+                    const lastWinner = data.pastWinners[data.pastWinners.length - 1];
+                    if (!lastWinner.isBot && lastWinner.winnerId) {
+                        enrichWinner(slot.id, lastWinner);
+                    }
+                }
+            });
+        }
+
+        const userInfoCache = {};
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+        function escapeAttr(text) {
+            if (!text) return '';
+            return String(text).replace(/"/g, '&quot;');
+        }
+        function getCachedAvatarSrc(user) {
+            try {
+                const key = `avatar_cache_${user.id}`;
+                const cached = localStorage.getItem(key);
+                if (cached) {
+                    const entry = JSON.parse(cached);
+                    if (entry && entry.ts && user.avatarUpdatedAt && entry.ts === user.avatarUpdatedAt && entry.dataUrl) {
+                        return entry.dataUrl;
+                    }
+                }
+                setTimeout(() => {
+                    if (user.avatarUrl) {
+                        fetch(user.avatarUrl, { cache: 'force-cache' }).then(r => r.blob()).then(b => {
+                            const fr = new FileReader();
+                            fr.onload = () => {
+                                const dataUrl = fr.result;
+                                const entry = { dataUrl, ts: user.avatarUpdatedAt || Date.now() };
+                                localStorage.setItem(key, JSON.stringify(entry));
+                            };
+                            fr.readAsDataURL(b);
+                        }).catch(()=>{});
+                    }
+                }, 0);
+                return user.avatarUrl;
+            } catch (e) {
+                return user.avatarUrl;
+            }
+        }
+        async function fetchUserInfo(uid) {
+            if (userInfoCache[uid]) return userInfoCache[uid];
+            try {
+                const snap = await getDoc(doc(db, 'users', uid));
+                if (snap.exists()) {
+                    const u = snap.data();
+                    const info = { id: uid, username: u.username || 'Игрок', avatarUrl: u.avatarUrl || null, avatarUpdatedAt: u.avatarUpdatedAt || null };
+                    userInfoCache[uid] = info;
+                    return info;
+                }
+            } catch {}
+            const fallback = { id: uid, username: 'Игрок', avatarUrl: null, avatarUpdatedAt: null };
+            userInfoCache[uid] = fallback;
+            return fallback;
+        }
+        async function enrichWinner(slotId, lastWinner) {
+            try {
+                const info = await fetchUserInfo(lastWinner.winnerId);
+                const container = document.getElementById(`winner-${slotId}`);
+                if (!container) return;
+                const initial = escapeHtml((info.username || 'A').charAt(0).toUpperCase());
+                const avatarSrc = info.avatarUrl ? escapeAttr(getCachedAvatarSrc(info)) : null;
+                const avatarHtml = avatarSrc
+                    ? `<img src="${avatarSrc}" alt="${escapeAttr(info.username || '')}" loading="lazy" decoding="async" onerror="this.remove()">`
+                    : `${initial}`;
+                container.innerHTML = `
+                    <div class="last-winner-display">
+                        <div class="winner-avatar">${avatarHtml}</div>
+                        <div class="winner-info">
+                            <div class="winner-label">Последний победитель</div>
+                            <div class="winner-name">${escapeHtml(info.username)}</div>
+                            <div class="winner-prize">Выиграл: ${escapeHtml(lastWinner.prize)}</div>
+                        </div>
+                    </div>
+                `;
+            } catch {}
+        }
+
+        window.showParticipants = async (slotId) => {
+            const modal = document.getElementById('participantsModal');
+            const list = document.getElementById('participantsList');
+            list.innerHTML = '';
+            modal.style.display = 'flex';
+            
+            const data = activeRaffles[slotId];
+            if(!data) return;
+
+            const realIds = (data.participants || []).slice(0, 50);
+            const infos = await Promise.all(realIds.map(uid => fetchUserInfo(uid)));
+            infos.forEach(u => {
+                const row = document.createElement('div');
+                row.className = 'p-row';
+                const initial = escapeHtml((u.username || 'A').charAt(0).toUpperCase());
+                const avatarSrc = u.avatarUrl ? escapeAttr(getCachedAvatarSrc(u)) : null;
+                const avatarHtml = avatarSrc
+                    ? `<img src="${avatarSrc}" alt="${escapeAttr(u.username || '')}" loading="lazy" decoding="async" onerror="this.remove()">`
+                    : `<span>${initial}</span>`;
+                row.innerHTML = `
+                    <div class="p-avatar">${avatarHtml}</div>
+                    <div class="p-name">${escapeHtml(u.username)}</div>
+                    <span style="font-size:0.7rem; background:#22c55e; padding:2px 6px; border-radius:4px; color:black; font-weight:bold;">REAL</span>
+                `;
+                list.appendChild(row);
+            });
+            (data.bots || []).slice(0, 50 - infos.length).forEach(b => {
+                const row = document.createElement('div');
+                row.className = 'p-row';
+                const initial = escapeHtml((b.name || 'B').charAt(0).toUpperCase());
+                row.innerHTML = `
+                    <div class="p-avatar"><span>${initial}</span></div>
+                    <div class="p-name">${escapeHtml(b.name)}</div>
+                `;
+                list.appendChild(row);
+            });
+        };
+
+        window.joinRaffle = async (slotId, minDep) => {
+            if(!currentUser) { showToast('Войдите в аккаунт', 'error'); return; }
+            
+            // Only check deposit requirements if the slot requires a deposit
+            if (minDep > 0) {
+                // FRESH DEPOSIT CHECK
+                const hasFresh = checkFreshDeposit(currentUser, slotId);
+                
+                if(totalDeposited < minDep) { 
+                    showToast(`Ваш общий депозит должен быть от ${minDep}₽`, 'error'); 
+                    return; 
+                }
+                
+                if(!hasFresh) {
+                showToast('Требуется новый депозит для повторного участия!', 'error');
+                return;
+            }
+        }
+
+        // FIX: Check against ACTIVE raffle participants, not user history
+        // currentUser.raffles is historical and doesn't clear after raffle end
+        const activeRaffle = activeRaffles[slotId];
+        if(activeRaffle && activeRaffle.participants && activeRaffle.participants.includes(userId)) {
+             showToast('Вы уже участвуете в этом раунде', 'info'); 
+             return; 
+        }
+
+        const btn = document.querySelector(`button[onclick*="${slotId}"]`);
+            if(btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="join-icon">⏳</span> Обработка...';
+            }
+
+            try {
+                const raffleRef = doc(db, 'active_raffles', slotId);
+                await updateDoc(raffleRef, {
+                    participants: arrayUnion(userId)
+                });
+                
+                // Update specific slot join time
+                const userRef = doc(db, 'users', userId);
+                const joinUpdate = {};
+                joinUpdate[`raffleJoins.${slotId}`] = Date.now();
+                joinUpdate['raffles'] = arrayUnion(slotId);
+                
+                await updateDoc(userRef, joinUpdate);
+
+                if(!currentUser.raffles) currentUser.raffles = [];
+                if(!currentUser.raffleJoins) currentUser.raffleJoins = {};
+                
+                currentUser.raffles.push(slotId);
+                currentUser.raffleJoins[slotId] = Date.now();
+                
+                showToast('Вы успешно участвуете!', 'success');
+                renderRaffles(); 
+            } catch(e) {
+                console.error(e);
+                showToast('Ошибка участия', 'error');
+                if(btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Принять участие';
+                }
+            }
+        };
+
+        function startTimer() {
+            setInterval(() => {
+                RAFFLE_SLOTS.forEach(slot => {
+                    const data = activeRaffles[slot.id];
+                    if(!data || data.status === 'ended') return;
+
+                    const now = Date.now();
+                    let diff = data.endTime - now;
+                    if(diff < 0) diff = 0;
+                    
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                    const timerEl = document.getElementById(`timer-${slot.id}`);
+                    if(timerEl) {
+                        const vals = timerEl.querySelectorAll('.t-val');
+                        if(vals.length) {
+                            vals[0].textContent = days;
+                            vals[1].textContent = hours;
+                            vals[2].textContent = minutes;
+                            vals[3].textContent = seconds;
+                        }
+                    }
+                });
+            }, 1000);
+        }
+
+        // --- Core Logic ---
+
+        function listenSlots() {
+            RAFFLE_SLOTS.forEach(slot => {
+                onSnapshot(doc(db, 'active_raffles', slot.id), async (snap) => {
+                    if (snap.exists()) {
+                        activeRaffles[slot.id] = snap.data();
+                        checkAndClaimAward(slot.id);
+                        
+                        if (activeRaffles[slot.id].endTime < Date.now() && !activeRaffles[slot.id].processing) {
+                            processRaffleEnd(slot.id);
+                        }
+                    } else {
+                        startNewRaffle(slot.id);
+                    }
+                    renderRaffles();
+                });
+            });
+        }
+        
+        function hasClaimed(ts) {
+            try {
+                return Array.isArray(currentUser?.awardsClaimed) && currentUser.awardsClaimed.includes(ts);
+            } catch { return false; }
+        }
+
+        async function checkAndClaimAward(slotId) {
+            if (!currentUser || !userId) return;
+            const data = activeRaffles[slotId];
+            if (!data || !Array.isArray(data.pastWinners) || data.pastWinners.length === 0) return;
+            const last = data.pastWinners[data.pastWinners.length - 1];
+            if (!last || last.isBot || last.winnerId !== userId) return;
+            if (hasClaimed(last.timestamp)) return;
+            try {
+                const invItem = {
+                    name: last.prize,
+                    value: last.prizeValue || 0,
+                    emoji: last.emoji || '',
+                    image: last.caseImage || '',
+                    source: 'Розыгрыш',
+                    timestamp: Date.now()
+                };
+                const userRef = doc(db, 'users', userId);
+                await updateDoc(userRef, {
+                    inventory: arrayUnion(invItem),
+                    awardsClaimed: arrayUnion(last.timestamp)
+                });
+                if (!Array.isArray(currentUser.awardsClaimed)) currentUser.awardsClaimed = [];
+                currentUser.awardsClaimed.push(last.timestamp);
+                showToast('Приз начислен в инвентарь!', 'success');
+            } catch (e) {
+                console.error('Claim award error', e);
+            }
+        }
+
+        async function startNewRaffle(slotId) {
+            const slot = RAFFLE_SLOTS.find(s => s.id === slotId);
+            if(!slot) return;
+
+            // Pick random item within range
+            const item = getRandomItem(slot.minPrize, slot.maxPrize);
+            
+            const bots = [];
+            const botCount = 15 + Math.floor(Math.random() * 20);
+            for(let i=0; i<botCount; i++) bots.push({ name: BOT_NAMES[Math.floor(Math.random()*BOT_NAMES.length)], id: `bot_${Date.now()}_${i}` });
+
+            const newData = {
+                id: slotId,
+                item: item,
+                startTime: Date.now(),
+                endTime: Date.now() + slot.duration,
+                participants: [],
+                bots: bots,
+                pastWinners: activeRaffles[slotId]?.pastWinners || [],
+                status: 'active',
+                processing: false
+            };
+
+            try {
+                await setDoc(doc(db, 'active_raffles', slotId), newData, { merge: true });
+            } catch(e) { console.error('Start raffle err', e); }
+        }
+
+        async function processRaffleEnd(slotId) {
+            const ref = doc(db, 'active_raffles', slotId);
+            try {
+                await runTransaction(db, async (tx) => {
+                    const docSnap = await tx.get(ref);
+                    if(!docSnap.exists()) return;
+                    
+                    const data = docSnap.data();
+                    if(data.status !== 'active') return;
+                    if(data.endTime > Date.now()) return;
+
+                    const pool = [
+                        ...(data.participants || []).map(uid => ({ type: 'user', id: uid })),
+                        ...(data.bots || []).map(b => ({ type: 'bot', name: b.name }))
+                    ];
+                    
+                    if(pool.length === 0) {
+                         tx.update(ref, { status: 'ended', processing: true });
+                         return;
+                    }
+
+                    // INCREASED CHANCE FOR REAL PLAYERS
+                    // If there are real players, add them to the pool again (2x weight)
+                    const weightedPool = [...pool];
+                    pool.forEach(p => {
+                        if(p.type === 'user') {
+                            weightedPool.push(p); // Add user again (2x chance)
+                            weightedPool.push(p); // Add user again (3x chance)
+                        }
+                    });
+
+                    const winner = weightedPool[Math.floor(Math.random() * weightedPool.length)];
+                    const winRecord = {
+                        winnerName: winner.type === 'user' ? 'Игрок' : winner.name,
+                        winnerId: winner.type === 'user' ? winner.id : null,
+                        isBot: winner.type === 'bot',
+                        prize: data.item.name,
+                        prizeValue: data.item.value, // Added prize value for better sorting/display later
+                        emoji: data.item.emoji,
+                        caseImage: data.item.caseImage,
+                        timestamp: Date.now()
+                    };
+
+                    const pastWinners = data.pastWinners || [];
+                    pastWinners.push(winRecord);
+                    if(pastWinners.length > 5) pastWinners.shift();
+
+                    // Restart
+                    const slot = RAFFLE_SLOTS.find(s => s.id === slotId);
+                    const newItem = getRandomItem(slot.minPrize, slot.maxPrize);
+                    
+                    const newBots = [];
+                    const botCount = 15 + Math.floor(Math.random() * 20);
+                    for(let i=0; i<botCount; i++) newBots.push({ name: BOT_NAMES[Math.floor(Math.random()*BOT_NAMES.length)], id: `bot_${Date.now()}_${i}` });
+
+                    tx.set(ref, {
+                        id: slotId,
+                        item: newItem,
+                        startTime: Date.now(),
+                        endTime: Date.now() + slot.duration,
+                        participants: [],
+                        bots: newBots,
+                        pastWinners: pastWinners,
+                        status: 'active',
+                        processing: false
+                    });
+                });
+            } catch(e) {
+                console.error('Process end error', e);
+            }
+        }
+        
+        setInterval(() => {
+            RAFFLE_SLOTS.forEach(slot => {
+                if(activeRaffles[slot.id] && activeRaffles[slot.id].endTime <= Date.now()) {
+                    processRaffleEnd(slot.id);
+                }
+            });
+        }, 5000);
+
+        function loadUser() {
+            onAuthStateChanged(auth, async (u) => {
+                if(u) {
+                    userId = u.uid;
+                    const snap = await getDoc(doc(db, 'users', userId));
+                    if(snap.exists()) {
+                        currentUser = snap.data();
+                        document.getElementById('balance').textContent = currentUser.balance || 0;
+                        document.getElementById('authBtn').textContent = currentUser.username || 'Профиль';
+                        document.getElementById('authBtn').onclick = () => location.href = 'profile.html';
+                        if(currentUser.cryptoTransactions) {
+                             totalDeposited = currentUser.cryptoTransactions.filter(t => t.type === 'deposit').reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+                        }
+                    }
+                }
+                listenSlots();
+            });
+        }
+
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 20; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.width = p.style.height = Math.random() * 3 + 'px';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDuration = Math.random() * 20 + 10 + 's';
+                p.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(p);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            createParticles();
+            loadUser();
+            startTimer();
+        });
+
+    </script>
+</body>
+</html>

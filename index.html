@@ -5,8 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>DropWin - Лучшие кейсы и игры</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+      .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+      .toast { pointer-events: auto; background: rgba(20, 20, 30, 0.95); border: 1px solid rgba(34, 197, 94, 0.5); color: #fff; padding: 16px 24px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); backdrop-filter: blur(12px); min-width: 300px; display: flex; align-items: center; gap: 12px; animation: slideDown 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+      .toast-icon { font-size: 1.5rem; }
+      .toast-content { display: flex; flex-direction: column; }
+      .toast-title { font-weight: 800; font-size: 1rem; color: #4ade80; margin-bottom: 2px; }
+      .toast-msg { font-size: 0.9rem; color: #cbd5e1; }
+      @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
 </head>
 <body>
+<div class="toast-container" id="toastContainer"></div>
 
 <!-- Live Feed Strip -->
 <div class="live-feed">
@@ -74,10 +84,11 @@
   <div class="header-left">
     <div class="logo" onclick="location.href='index.html'" style="cursor: pointer;">💎 DROP<span>WIN</span></div>
     <nav class="main-nav">
-      <a href="inventory.html">Инвентарь</a>
-      <a href="leaderboard.html">Топ Игроков</a>
-      <a href="freebet.html">Бонусы</a>
-      <a href="https://t.me/DropWinHelp_bot" target="_blank">Поддержка</a>
+      <a href="inventory.html"><span class="nav-icon">🎒</span> ИНВЕНТАРЬ</a>
+      <a href="leaderboard.html"><span class="nav-icon">🏆</span> ТОП ИГРОКОВ</a>
+      <a href="raffles.html"><span class="nav-icon">🎁</span> РОЗЫГРЫШИ</a>
+      <a href="freebet.html" class="nav-bonus-btn"><span class="nav-icon">⚡</span> БОНУСЫ</a>
+      <a href="https://t.me/DropWinHelp_bot" target="_blank"><span class="nav-icon">💬</span> ПОДДЕРЖКА</a>
     </nav>
   </div>
   
@@ -93,30 +104,80 @@
 
 <!-- Hero Section -->
 <div class="hero">
-  <div class="hero-banner" style="position: relative; overflow: hidden; padding: 24px; min-height: 200px; border-radius: 16px;">
-    <!-- Background Image Layer -->
-    <div style="position: absolute; inset: 0; z-index: 0;">
-       <img src="images/calendar.png" onerror="this.src='images/case-bg.jpg'" alt="Calendar" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.6;">
-       <div style="position: absolute; inset: 0; background: linear-gradient(to right, rgba(19, 17, 26, 0.9), rgba(19, 17, 26, 0.4));"></div>
+  <div class="hero-slider-container">
+    <div class="hero-slides" id="heroSlides">
+        <!-- Slide 1: Calendar -->
+        <div class="hero-slide active">
+            <div class="hero-banner calendar-slide">
+                <div class="slide-bg">
+                   <img src="images/calendar.png" style="width: 100%; height: 100%; object-fit: cover; display: block; max-width: none;" onerror="this.src='images/case-bg.jpg'" alt="Calendar">
+                   <div class="overlay"></div>
+                </div>
+                <div class="slide-content">
+                    <div class="hero-title">Призовой календарь</div>
+                    <div class="hero-subtitle">Заходи каждый день и получай бесплатные бонусы!</div>
+                    <button class="hero-btn" onclick="location.href='calendar.html'">Перейти</button>
+                </div>
+            </div>
+        </div>
+        <!-- Slide 2: Dino Welcome -->
+        <div class="hero-slide">
+            <div class="hero-banner dino-slide" style="background: linear-gradient(to right, #2563eb, #1e40af);">
+                <div class="slide-bg">
+                    <img src="images/tg.png" style="width: 100%; height: 100%; object-fit: cover; display: block; max-width: none;" onerror="this.src='images/index/dino-throw.png'" alt="Telegram">
+                    <div class="overlay" style="background: linear-gradient(to right, rgba(30, 64, 175, 0.9), transparent);"></div>
+                </div>
+                <div class="slide-content">
+                    <div class="hero-title">Заходи и забирай!</div>
+                    <div class="hero-subtitle">Ежедневные бонусы, скидки и промокоды уже ждут тебя в наших соц. сетях</div>
+                    <button class="hero-btn" onclick="window.open('https://t.me/Drop_Vins', '_blank')">Забрать</button>
+                </div>
+            </div>
+        </div>
+        <!-- Slide 3: Battles -->
+        <div class="hero-slide">
+            <div class="hero-banner battles-slide">
+                <div class="slide-bg">
+                    <img src="images/battles2.png" style="width: 100%; height: 100%; object-fit: cover; display: block; max-width: none;" onerror="this.src='images/case-bg.jpg'" alt="Battles">
+                    <div class="overlay"></div>
+                </div>
+                <div class="slide-content">
+                    <div class="hero-title">Баттлы Кейсов</div>
+                    <div class="hero-subtitle">Сражайся с другими игроками и забирай весь дроп!</div>
+                    <button class="hero-btn" onclick="location.href='games/battles.html'">Играть</button>
+                </div>
+            </div>
+        </div>
     </div>
-    
-    <div style="position: relative; z-index: 1;">
-        <div class="hero-title">Призовой календарь</div>
-        <div class="hero-subtitle">Заходи каждый день и получай бесплатные бонусы!</div>
-        <button class="hero-btn" onclick="location.href='calendar.html'">Перейти</button>
+    <div class="slider-controls">
+        <button class="slider-arrow prev" id="prevSlide">❮</button>
+        <button class="slider-arrow next" id="nextSlide">❯</button>
     </div>
+    <div class="slider-dots" id="sliderDots"></div>
   </div>
   
   <div class="promo-grid">
     <div class="promo-card purple" onclick="location.href='games/battles.html'" style="background: radial-gradient(circle at top right, rgba(168,85,247,0.4), #2e1065);">
       <div class="promo-label" style="font-size: 1.1rem; color: #fff;">Баттлы</div>
-      <div class="promo-icon" style="opacity: 0.8; filter: drop-shadow(0 0 10px rgba(168,85,247,0.5));">⚔️</div>
+      <img src="images/battles3.png" class="promo-img" alt="Battles">
       <div class="arrow-btn" style="background: #a855f7;">➜</div>
     </div>
     <div class="promo-card orange" onclick="location.href='games/roulette.html'" style="background: radial-gradient(circle at top right, rgba(251,191,36,0.4), #451a03);">
       <div class="promo-label" style="font-size: 1.1rem; color: #fff;">Колесо удачи</div>
-      <div class="promo-icon" style="opacity: 0.8; filter: drop-shadow(0 0 10px rgba(251,191,36,0.5));">🎡</div>
+      <img src="images/luckyspin.png" class="promo-img" alt="Lucky Spin" style="width: 200px;">
       <div class="arrow-btn" style="background: #fbbf24; color: black;">➜</div>
+    </div>
+
+    <!-- Promo Banner (inside grid) -->
+    <div class="promo-banner-card" style="grid-column: 1 / -1; background: linear-gradient(90deg, #b45309, #78350f); border-radius: 16px; padding: 16px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; min-height: 100px;">
+       <img src="images/money.png" class="promo-banner-img" alt="Money">
+       <div style="position: relative; z-index: 2;">
+           <div style="font-weight: 800; font-size: 1rem; margin-bottom: 8px; color: white;">Промокод на пополнение</div>
+           <div style="display: flex; gap: 8px;">
+               <input type="text" id="mainPromoInput" placeholder="PROMOCODE_DAY_670" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); color: white; padding: 10px 14px; border-radius: 10px; flex: 1; font-weight: 600; font-size: 0.9rem;">
+               <button onclick="redeemPromoFromMain()" style="background: rgba(255,255,255,0.15); border: none; width: 42px; border-radius: 10px; color: white; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">➜</button>
+           </div>
+       </div>
     </div>
   </div>
 </div>
@@ -130,11 +191,10 @@
 
   <div class="games-list">
     
-    <div class="game-icon featured" onclick="location.href='games/battles.html'">
-      <div class="game-icon-name">Баттлы Кейсов</div>
-      <div class="image-container">
-        <img src="images/index/battles.png" alt="Баттлы">
-      </div>
+    <div class="game-icon featured" onclick="location.href='games/battles.html'" style="position: relative; overflow: hidden; padding: 0 !important; display: flex; align-items: flex-end; border: none;">
+      <div class="recommended-badge" style="z-index: 10; background: #ef4444; color: white; padding: 4px 8px; border-radius: 6px; position: absolute; top: 10px; right: 10px; font-size: 0.8rem; font-weight: 700; box-shadow: 0 2px 10px rgba(239, 68, 68, 0.5);">РЕКОМЕНДУЕМОЕ</div>
+      <img src="images/battles2.png" style="width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; z-index: 1; transition: transform 0.3s; max-width: none !important; max-height: none !important; display: block;" alt="Баттлы">
+      <div class="game-icon-name" style="position: relative; z-index: 2; margin: 15px; text-shadow: 0 2px 8px rgba(0,0,0,0.9); font-size: 1.2rem; font-weight: 800; color: white;">Баттлы Кейсов</div>
     </div>
 
     <div class="game-icon" onclick="location.href='games/slots.html'">
@@ -148,7 +208,7 @@
     </div>
 
     <div class="game-icon" onclick="location.href='games/roulette.html'">
-      <div class="image-container"><img src="images/index/roulette.png" alt="Roulette"></div>
+      <div class="image-container"><img src="images/index/roulette.png" alt="Roulette" style="max-height: 180px; max-width: 100%;"></div>
       <div class="game-icon-name">Roulette</div>
     </div>
 
@@ -216,7 +276,107 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, collection, updateDoc, runTransaction, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+  // INLINED shared_promo.js due to CORS on file://
+  async function redeemPromoCode(db, userId, codeInput) {
+      if (!userId) throw new Error('Сначала войдите в аккаунт');
+      
+      const code = codeInput.trim();
+      const promoRef = doc(db, 'promocodes', code);
+      const userRef = doc(db, 'users', userId);
+
+      return await runTransaction(db, async (transaction) => {
+          const promoSnap = await transaction.get(promoRef);
+          
+          // 1. Check Firestore Promos
+          if (promoSnap.exists()) {
+              const promoData = promoSnap.data();
+              
+              if (promoData.activationsLeft <= 0) {
+                  throw new Error('Активации этого промокода закончились');
+              }
+              
+              if (promoData.usersUsed && promoData.usersUsed.includes(userId)) {
+                  throw new Error('Вы уже использовали этот промокод');
+              }
+
+              // Apply Reward
+              if (promoData.type === 'money') {
+                  const userSnap = await transaction.get(userRef);
+                  const userData = userSnap.data() || {};
+                  const newBalance = (userData.balance || 0) + promoData.value;
+                  
+                  transaction.update(userRef, {
+                      balance: newBalance
+                  });
+              } else if (promoData.type === 'dep' || promoData.type.startsWith('dep')) {
+                  // Deposit bonus
+                  transaction.update(userRef, {
+                      activePromoCode: code,
+                      activePromoType: promoData.type,
+                      activePromoValue: promoData.value,
+                      activePromoUsed: false
+                  });
+              }
+
+              // Update Promo Stats
+              transaction.update(promoRef, {
+                  activationsLeft: increment(-1),
+                  usersUsed: arrayUnion(userId)
+              });
+              
+              return { success: true, value: promoData.value, type: promoData.type, message: `Промокод активирован: +${promoData.value}${promoData.type === 'money' ? '₽' : '% к депу'}` };
+          } 
+          
+          // 2. Check Global/Legacy Hardcoded Promos (Fallback)
+          const userSnap = await transaction.get(userRef);
+          const userData = userSnap.data() || {};
+          
+          const GLOBAL_PROMOS = {
+              'PROMOCODE_DAY_670': { val: 50, type: 'money' },
+              'WELCOME': { val: 100, type: 'money' },
+              'DROPWIN2026': { val: 200, type: 'money' },
+              'KAVEXS': { val: 1000, type: 'money' },
+              'KAVEXS2026': { val: 5000, type: 'money' }
+          };
+          
+          if (GLOBAL_PROMOS[code]) {
+              const reward = GLOBAL_PROMOS[code];
+              const used = userData.usedPromos || [];
+              
+              if (used.includes(code)) {
+                  throw new Error('Вы уже использовали этот промокод');
+              }
+              
+              const newBalance = (userData.balance || 0) + reward.val;
+              transaction.update(userRef, {
+                  balance: newBalance,
+                  usedPromos: arrayUnion(code)
+              });
+              
+              return { success: true, value: reward.val, type: reward.type, message: `Промокод активирован: +${reward.val}₽` };
+          }
+
+          // 3. Check Personal Active Promo
+          if (userData.activePromoCode === code && !userData.activePromoUsed) {
+               if (userData.activePromoType && userData.activePromoType.startsWith('bonus')) {
+                   const val = userData.activePromoValue || 0;
+                   transaction.update(userRef, {
+                       balance: (userData.balance || 0) + val,
+                       activePromoCode: null,
+                       activePromoValue: 0,
+                       activePromoUsed: true
+                   });
+                   return { success: true, value: val, type: 'money', message: `Бонус активирован: +${val}₽` };
+               } else {
+                   return { success: false, redirect: 'dep.html', message: 'Это бонус к депозиту. Переходим на пополнение...' };
+               }
+          }
+
+          throw new Error('Неверный промокод');
+      });
+  }
 
   const firebaseConfig = {
     apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
@@ -231,6 +391,76 @@
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
+
+  function showToast(title, msg) {
+      const c = document.getElementById('toastContainer');
+      if(!c) return;
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.innerHTML = `<div class="toast-icon">🎉</div><div class="toast-content"><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div>`;
+      c.appendChild(t);
+      setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 5000);
+  }
+
+  const RAFFLE_IDS = ['dragon_2024', 'grinch_heart', 'neo_prime_item', 'palace_milioner', 'ice_palace', 'island_maldives'];
+
+  window.redeemPromoFromMain = async function() {
+      const input = document.getElementById('mainPromoInput');
+      const code = input.value.trim();
+      if(!code) return showToast('Ошибка', 'Введите промокод');
+      
+      // Wait for currentUser to load if it's null
+      let attempts = 0;
+      while (!currentUser && attempts < 20) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
+      }
+
+      if(!currentUser) return showToast('Ошибка', 'Сначала войдите в аккаунт');
+      
+      try {
+          const result = await redeemPromoCode(db, currentUser.uid, code);
+          if (result.success) {
+              showToast('Успешно!', result.message);
+              input.value = '';
+              if (result.redirect) {
+                  setTimeout(() => location.href = result.redirect, 1500);
+              } else {
+                  // Update local balance display if money
+                  if (result.type === 'money') {
+                      document.getElementById('balance').textContent = (currentUser.balance || 0) + result.value;
+                      // Refresh user data in background
+                      currentUser.balance = (currentUser.balance || 0) + result.value; 
+                  }
+              }
+          }
+      } catch (e) {
+          showToast('Ошибка', e.message);
+      }
+  }
+
+  async function checkWinners(uid) {
+      const seen = JSON.parse(localStorage.getItem('seen_wins') || '[]');
+      for (const id of RAFFLE_IDS) {
+          try {
+              const snap = await getDoc(doc(db, 'raffles', id));
+              if (snap.exists()) {
+                  const data = snap.data();
+                  if (data.winners && data.winners.length > 0) {
+                      const last = data.winners[data.winners.length - 1];
+                      const winId = `${id}_${last.when}`;
+                      // Check if win is recent (last 24h) and not seen
+                      const isRecent = (Date.now() - last.when) < 86400000;
+                      if (!last.isBot && last.userId === uid && !seen.includes(winId) && isRecent) {
+                          showToast('Поздравляем!', `Вы выиграли: ${last.prizeName || 'Приз'}!`);
+                          seen.push(winId);
+                          localStorage.setItem('seen_wins', JSON.stringify(seen));
+                      }
+                  }
+              }
+          } catch(e) { console.log('Check winner error', e); }
+      }
+  }
 
   function createParticles() {
     const container = document.getElementById('particles');
@@ -253,12 +483,15 @@
         getDoc(doc(db, 'users', user.uid)).then((docSnap) => {
           if (docSnap.exists()) {
             currentUser = docSnap.data();
+            currentUser.uid = user.uid; // Ensure uid is set
             document.getElementById('balance').textContent = currentUser.balance || 0;
             // Update Auth Button to show name or profile icon
             const authBtn = document.getElementById('authBtn');
             authBtn.textContent = currentUser.username || 'Профиль';
             authBtn.style.background = '#2a2a35'; // Darker for profile
             authBtn.onclick = () => location.href = 'profile.html';
+            checkWinners(user.uid);
+            setInterval(() => { if(currentUser) checkWinners(user.uid); }, 60000);
           } else {
             // No user doc
             resetAuthUI();
@@ -299,7 +532,50 @@
   document.addEventListener('DOMContentLoaded', () => {
     loadCurrentUser();
     createParticles();
+    initSlider();
   });
+
+  function initSlider() {
+      const slidesContainer = document.getElementById('heroSlides');
+      const slides = document.querySelectorAll('.hero-slide');
+      const dotsContainer = document.getElementById('sliderDots');
+      const prevBtn = document.getElementById('prevSlide');
+      const nextBtn = document.getElementById('nextSlide');
+      
+      if (!slidesContainer || slides.length === 0) return;
+
+      let currentSlide = 0;
+      const totalSlides = slides.length;
+
+      // Create dots
+      slides.forEach((_, i) => {
+          const dot = document.createElement('div');
+          dot.className = `dot ${i === 0 ? 'active' : ''}`;
+          dot.onclick = () => goToSlide(i);
+          dotsContainer.appendChild(dot);
+      });
+
+      const dots = document.querySelectorAll('.dot');
+
+      function updateSlider() {
+          slidesContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
+          dots.forEach((dot, i) => {
+              dot.classList.toggle('active', i === currentSlide);
+          });
+      }
+
+      function goToSlide(n) {
+          currentSlide = (n + totalSlides) % totalSlides;
+          updateSlider();
+      }
+
+      prevBtn.addEventListener('click', () => goToSlide(currentSlide - 1));
+      nextBtn.addEventListener('click', () => goToSlide(currentSlide + 1));
+
+      // Optional: Auto-slide every 5s
+      setInterval(() => goToSlide(currentSlide + 1), 5000);
+  }
+
 </script>
 </body>
 </html>

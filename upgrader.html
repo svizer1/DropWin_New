@@ -299,101 +299,72 @@
     @media (max-width: 520px) {
       .upgrade-container {
         grid-template-columns: 1fr;
-        gap: 10px;
+        gap: 16px; /* Increased gap */
       }
       .item-slot {
         min-height: 160px;
-        padding: 10px;
+        padding: 16px; /* Increased padding */
+        border-width: 2px;
       }
       .slot-emoji {
-        font-size: 2.8rem;
+        font-size: 3.5rem; /* Larger emoji */
+        margin-bottom: 8px;
       }
       .slot-header {
-        font-size: 0.9rem;
-        flex-direction: column;
-        gap: 8px;
-        align-items: stretch;
-      }
-      .ring-wrap {
-        width: 130px;
-        height: 130px;
-      }
-      .ring-svg {
-        width: 130px;
-        height: 130px;
-      }
-      .ring-bg, .ring-progress {
-        cx: 65;
-        cy: 65;
-        r: 52;
-      }
-      .ring-progress {
-        stroke-width: 9;
-      }
-      .ring-bg {
-        stroke-width: 9;
-      }
-      .chance-percent {
-        font-size: 1.4rem;
-      }
-      .mult-row {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 6px;
-      }
-      .mult-btn {
-        font-size: 0.9rem;
-        padding: 10px 4px;
-        min-height: 48px;
+        font-size: 1rem;
+        flex-direction: row; /* Keep row for better space usage */
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
       }
       .select-btn {
-        padding: 10px 14px;
-        font-size: 0.95rem;
-        min-height: 44px;
-        width: 100%;
+        padding: 10px 18px; /* Larger button */
+        font-size: 1rem;
+        min-height: 48px;
+        width: auto;
       }
-      .fast-toggle {
-        font-size: 0.95rem;
+      .ring-wrap {
+        width: 150px; /* Larger ring */
+        height: 150px;
+        margin-bottom: 12px;
       }
-      .fast-toggle input {
-        width: 52px;
-        height: 28px;
+      .ring-svg {
+        width: 150px;
+        height: 150px;
       }
-      .inventory-grid {
-        grid-template-columns: repeat(2, 1fr);
+      .ring-bg, .ring-progress {
+        cx: 75;
+        cy: 75;
+        r: 60;
+      }
+      .chance-percent {
+        font-size: 1.8rem;
+      }
+      .mult-row {
+        grid-template-columns: repeat(5, 1fr); /* Keep 5 cols if fits, or 3 */
         gap: 8px;
+        overflow-x: auto; /* Scroll if too tight */
+        padding-bottom: 4px;
       }
-      .selected-list {
-        grid-template-columns: repeat(2, 1fr);
+      .mult-btn {
+        font-size: 1rem;
+        padding: 12px 0;
+        min-height: 52px;
       }
       .upgrade-btn {
-        font-size: 1.05rem;
-        padding: 12px 16px;
-        min-height: 50px;
+        font-size: 1.2rem;
+        padding: 16px;
+        min-height: 60px; /* Big action button */
+        margin-top: 16px;
       }
-      .balance-use {
-        font-size: 0.9rem;
+      /* Hide inventory initially or make it collapsible if too long? No, just grid */
+      .inventory-grid {
+        grid-template-columns: repeat(3, 1fr); /* 3 cols on mobile */
+        gap: 8px;
       }
-      .modal-actions {
-        flex-direction: column;
-        gap: 10px;
-      }
-      .modal-actions > div:last-child {
-        width: 100%;
-        flex-direction: column;
-        display: flex;
-      }
-      .modal-search-wrapper {
-        margin-left: 0;
-        width: 100%;
-      }
-      .modal-actions .btn {
-        width: 100%;
-        min-height: 48px;
-        font-size: 1rem;
-      }
-      .section-title {
-        font-size: 1.1rem;
-      }
+    }
+    @media (max-width: 380px) {
+        .inventory-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 380px) {
       .ring-wrap {

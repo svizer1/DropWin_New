@@ -1,0 +1,34 @@
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+    authDomain: "dropwin-8d94b.firebaseapp.com",
+    projectId: "dropwin-8d94b",
+    storageBucket: "dropwin-8d94b.firebasestorage.app",
+    messagingSenderId: "988974289403",
+    appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+    measurementId: "G-BK010MHN8N"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function initPromo() {
+    try {
+        await setDoc(doc(db, 'promocodes', 'BONUS-FNSO8GB'), {
+            amount: 500, // Giving 500 RUB as a nice bonus
+            maxActivations: 1000,
+            usedBy: [],
+            createdAt: Date.now()
+        });
+        console.log('Promo BONUS-FNSO8GB created');
+        document.body.innerHTML = '<h1>Promo Code Created Successfully!</h1>';
+    } catch(e) {
+        console.error(e);
+        document.body.innerHTML = '<h1>Error: ' + e.message + '</h1>';
+    }
+}
+
+initPromo();

@@ -6,7 +6,26 @@
   <title>Профиль | DropWin</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* Profile specific styles */
+    /* Dark Minimalism Theme */
+    :root {
+        --bg-main: #09090b;
+        --bg-card: #18181b;
+        --bg-hover: #27272a;
+        --border: #27272a;
+        --text-main: #e4e4e7;
+        --text-sec: #a1a1aa;
+        --primary: #8b5cf6;
+        --success: #10b981;
+        --danger: #ef4444;
+        --radius: 12px;
+    }
+
+    body {
+        background-color: var(--bg-main);
+        color: var(--text-main);
+        font-family: 'Inter', sans-serif;
+    }
+
     .profile-header {
         display: flex;
         align-items: center;
@@ -26,25 +45,31 @@
         align-items: center;
         justify-content: center;
         font-size: 2.5rem;
-        border: 2px solid var(--primary);
+        border: 2px solid var(--border);
         position: relative;
+        transition: border-color 0.2s;
+    }
+    .profile-avatar:hover {
+        border-color: var(--primary);
     }
     .profile-info {
         flex: 1;
     }
     .profile-name {
         font-size: 1.5rem;
-        font-weight: 800;
-        margin-bottom: 5px;
+        font-weight: 700;
+        margin-bottom: 4px;
+        color: var(--text-main);
     }
     .profile-id {
         color: var(--text-sec);
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+        font-family: monospace;
     }
     
     .balance-section {
-        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
-        border: 1px solid rgba(16, 185, 129, 0.3);
+        background: var(--bg-card);
+        border: 1px solid var(--border);
         border-radius: var(--radius);
         padding: 24px;
         text-align: center;
@@ -52,10 +77,10 @@
     }
     .balance-amount {
         font-size: 2.5rem;
-        font-weight: 900;
-        color: #34d399;
+        font-weight: 800;
+        color: var(--text-main);
         margin: 10px 0;
-        text-shadow: 0 0 20px rgba(52, 211, 153, 0.3);
+        letter-spacing: -1px;
     }
     .action-buttons {
         display: grid;
@@ -73,13 +98,13 @@
     .stat-card {
         background: var(--bg-card);
         padding: 16px;
-        border-radius: 12px;
+        border-radius: var(--radius);
         text-align: center;
         border: 1px solid var(--border);
     }
     .stat-value {
         font-size: 1.4rem;
-        font-weight: 800;
+        font-weight: 700;
         color: var(--text-main);
     }
     .stat-label {
@@ -97,13 +122,14 @@
     .menu-item {
         background: var(--bg-card);
         padding: 16px;
-        border-radius: 12px;
+        border-radius: var(--radius);
         display: flex;
         justify-content: space-between;
         align-items: center;
         cursor: pointer;
         transition: 0.2s;
         border: 1px solid var(--border);
+        color: var(--text-main);
     }
     .menu-item:hover {
         border-color: var(--primary);
@@ -111,30 +137,52 @@
     }
 
     .referral-box {
-        background: radial-gradient(circle at 80% 0%, rgba(124,58,237,0.18), rgba(124,58,237,0.08));
-        border: 1px solid rgba(124, 58, 237, 0.35);
+        background: var(--bg-card);
+        border: 1px solid var(--primary);
         padding: 24px;
         border-radius: var(--radius);
         margin-bottom: 24px;
         text-align: center;
-        box-shadow: 0 0 24px rgba(124,58,237,0.22);
+        position: relative;
+        overflow: hidden;
+    }
+    .referral-box::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.1), transparent 70%);
+        pointer-events: none;
     }
     .referral-code {
-        font-size: 2rem;
-        font-weight: 900;
-        color: var(--accent);
-        letter-spacing: 2px;
-        margin: 10px 0;
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--primary);
+        letter-spacing: 1px;
+        margin: 12px 0;
+        font-family: monospace;
     }
-    .ref-row {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 8px;
-        align-items: center;
-        margin-top: 8px;
+
+    /* Admin Panel */
+    #adminPanel {
+        background: var(--bg-card); 
+        padding: 24px; 
+        border-radius: var(--radius); 
+        margin-bottom: 24px; 
+        border: 1px solid #7c3aed; 
+        box-shadow: 0 0 20px rgba(124, 58, 237, 0.1);
     }
-    .ref-actions {
-        margin-top: 14px;
+    .admin-input {
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg-main);
+        color: var(--text-main);
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .admin-input:focus {
+        border-color: var(--primary);
+        outline: none;
     }
 
   </style>
@@ -147,7 +195,7 @@
       <div class="logo" onclick="location.href='index.html'" style="cursor: pointer;">💎 DROP<span>WIN</span></div>
     </div>
     <div class="header-right">
-      <button class="back-btn" onclick="location.href='index.html'" style="font-size: 1.2rem;">✖</button>
+      <button class="back-btn" onclick="location.href='index.html'" style="font-size: 1.2rem; color: var(--text-sec);">✖</button>
     </div>
   </header>
 
@@ -157,22 +205,22 @@
     <div class="profile-header">
       <div class="profile-avatar" id="profileAvatar" style="cursor: pointer; overflow: hidden;">
         <img id="avatarImg" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; display: none;">
-        <span id="avatarPlaceholder">👤</span>
+        <span id="avatarPlaceholder" style="color: var(--text-sec);">👤</span>
       </div>
       <div class="profile-info">
         <div class="profile-name" id="usernameDisplay">Загрузка...</div>
         <div class="profile-id">ID: <span id="userIdDisplay">...</span></div>
       </div>
-      <button onclick="logout()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">🚪</button>
+      <button onclick="logout()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color: var(--text-sec);">🚪</button>
     </div>
 
     <!-- Balance -->
     <div class="balance-section">
-      <div style="color: var(--text-sec);">Ваш баланс</div>
+      <div style="color: var(--text-sec); font-size: 0.9rem;">Ваш баланс</div>
       <div class="balance-amount"><span id="balanceBig">0</span> ₽</div>
       <div class="action-buttons">
-        <button class="btn" style="background: #10b981;" onclick="location.href='dep.html'">Пополнить</button>
-        <button class="btn" style="background: #374151;" onclick="location.href='вывод.html'">Вывести</button>
+        <button class="btn" style="background: var(--success); color: #000; font-weight: 700;" onclick="location.href='dep.html'">Пополнить</button>
+        <button class="btn" style="background: var(--bg-hover); color: var(--text-main); border: 1px solid var(--border);" onclick="location.href='вывод.html'">Вывести</button>
       </div>
     </div>
 
@@ -201,28 +249,28 @@
       <div class="stat-label">Ваш реферальный код</div>
       <div class="referral-code" id="myReferralCode">LOADING</div>
       <div class="ref-actions">
-        <button class="btn" style="background:#7c3aed; width:100%;" onclick="copyReferralCode()">Скопировать код</button>
+        <button class="btn" style="background: var(--primary); width:100%; font-weight: 600;" onclick="copyReferralCode()">Скопировать код</button>
       </div>
-      <div style="margin-top: 10px; font-size: 0.9rem;">Приглашено: <span id="refCount" style="color:white; font-weight:bold;">0</span></div>
+      <div style="margin-top: 12px; font-size: 0.85rem; color: var(--text-sec);">Приглашено: <span id="refCount" style="color:var(--text-main); font-weight:bold;">0</span></div>
     </div>
 
     <!-- Menu -->
     <div class="menu-list">
       <div class="menu-item" onclick="openDailyCaseFromProfile()">
         <span>📦 Ежедневный кейс</span>
-        <span>➜</span>
+        <span style="color: var(--text-sec);">➜</span>
       </div>
       <div class="menu-item" onclick="location.href='inventory.html'">
         <span>🎒 Инвентарь</span>
-        <span>➜</span>
+        <span style="color: var(--text-sec);">➜</span>
       </div>
       <div class="menu-item" onclick="activatePromoPrompt()">
         <span>🎁 Активировать промокод</span>
-        <span>➜</span>
+        <span style="color: var(--text-sec);">➜</span>
       </div>
       <div class="menu-item" onclick="toggleHistory()">
         <span>📜 История игр и транзакций</span>
-        <span id="historyArrow">▼</span>
+        <span id="historyArrow" style="color: var(--text-sec);">▼</span>
       </div>
       <div id="historySection" style="display: none; padding-top: 10px;">
           <div class="stat-label" style="margin-bottom: 8px;">Последние игры</div>
@@ -232,8 +280,34 @@
       </div>
       <div class="menu-item" onclick="location.href='https://t.me/DropWinHelp_bot'">
         <span>💬 Поддержка</span>
-        <span>➜</span>
+        <span style="color: var(--text-sec);">➜</span>
       </div>
+    </div>
+
+    <!-- Admin Panel (Hidden) -->
+    <div id="adminPanel" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+            <h3 style="color: var(--text-main); font-size: 1.2rem; margin: 0;">👑 Панель Создателя</h3>
+            <span style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">ADMIN</span>
+        </div>
+        <div style="display: grid; gap: 12px;">
+            <input type="text" id="adminPromoCode" placeholder="Код (напр. WIN100)" class="admin-input">
+            <input type="number" id="adminPromoActivations" placeholder="Кол-во активаций (напр. 3)" class="admin-input">
+            <input type="number" id="adminPromoValue" placeholder="Сумма (напр. 100)" class="admin-input">
+            <select id="adminPromoType" class="admin-input">
+                <option value="money">Деньги на баланс</option>
+                <option value="dep">Бонус к депозиту (%)</option>
+            </select>
+            <button onclick="createAdminPromo()" class="btn" style="background: var(--danger); font-weight: 600;">Создать Промокод</button>
+        </div>
+        
+        <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;">
+            <div style="color: var(--text-sec); font-size: 0.9rem; margin-bottom: 12px;">Последние промокоды:</div>
+            <div id="adminPromoList" style="display:flex; flex-direction:column; gap:8px; max-height: 200px; overflow-y:auto;">
+                <div style="text-align:center; color:rgba(255,255,255,0.4); font-size:0.9rem;">Нажмите обновить...</div>
+            </div>
+            <button onclick="loadRecentPromos()" class="btn" style="margin-top: 12px; background: var(--bg-hover); border: 1px solid var(--border); padding: 8px; font-size: 0.9rem;">🔄 Обновить список</button>
+        </div>
     </div>
 
   </div>
@@ -249,7 +323,132 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, updateDoc, setDoc, deleteDoc, runTransaction, arrayUnion, increment, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+  // INLINED shared_promo.js due to CORS on file://
+
+  async function createPromoCode(db, code, activations, value, type = 'money') {
+      const promoRef = doc(db, 'promocodes', code);
+      await setDoc(promoRef, {
+          code: code,
+          activationsLeft: Number(activations),
+          value: Number(value),
+          type: type, // 'money' or 'dep'
+          usersUsed: [],
+          createdAt: Date.now()
+      });
+      return true;
+  }
+
+  async function deletePromoCode(db, code) {
+      await deleteDoc(doc(db, 'promocodes', code));
+      return true;
+  }
+
+  async function getRecentPromos(db) {
+      const q = query(collection(db, 'promocodes'), orderBy('createdAt', 'desc'), limit(20));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => d.data());
+  }
+
+  async function redeemPromoCode(db, userId, codeInput) {
+      if (!userId) throw new Error('Сначала войдите в аккаунт');
+      
+      const code = codeInput.trim();
+      const promoRef = doc(db, 'promocodes', code);
+      const userRef = doc(db, 'users', userId);
+
+      return await runTransaction(db, async (transaction) => {
+          const promoSnap = await transaction.get(promoRef);
+          
+          // 1. Check Firestore Promos
+          if (promoSnap.exists()) {
+              const promoData = promoSnap.data();
+              
+              if (promoData.activationsLeft <= 0) {
+                  throw new Error('Активации этого промокода закончились');
+              }
+              
+              if (promoData.usersUsed && promoData.usersUsed.includes(userId)) {
+                  throw new Error('Вы уже использовали этот промокод');
+              }
+
+              // Apply Reward
+              if (promoData.type === 'money') {
+                  const userSnap = await transaction.get(userRef);
+                  const userData = userSnap.data() || {};
+                  const newBalance = (userData.balance || 0) + promoData.value;
+                  
+                  transaction.update(userRef, {
+                      balance: newBalance
+                  });
+              } else if (promoData.type === 'dep' || promoData.type.startsWith('dep')) {
+                  // Deposit bonus
+                  transaction.update(userRef, {
+                      activePromoCode: code,
+                      activePromoType: promoData.type,
+                      activePromoValue: promoData.value,
+                      activePromoUsed: false
+                  });
+              }
+
+              // Update Promo Stats
+              transaction.update(promoRef, {
+                  activationsLeft: increment(-1),
+                  usersUsed: arrayUnion(userId)
+              });
+              
+              return { success: true, value: promoData.value, type: promoData.type, message: `Промокод активирован: +${promoData.value}${promoData.type === 'money' ? '₽' : '% к депу'}` };
+          } 
+          
+          // 2. Check Global/Legacy Hardcoded Promos (Fallback)
+          const userSnap = await transaction.get(userRef);
+          const userData = userSnap.data() || {};
+          
+          const GLOBAL_PROMOS = {
+              'PROMOCODE_DAY_670': { val: 50, type: 'money' },
+              'WELCOME': { val: 100, type: 'money' },
+              'DROPWIN2026': { val: 200, type: 'money' },
+              'KAVEXS': { val: 1000, type: 'money' },
+              'KAVEXS2026': { val: 5000, type: 'money' }
+          };
+          
+          if (GLOBAL_PROMOS[code]) {
+              const reward = GLOBAL_PROMOS[code];
+              const used = userData.usedPromos || [];
+              
+              if (used.includes(code)) {
+                  throw new Error('Вы уже использовали этот промокод');
+              }
+              
+              const newBalance = (userData.balance || 0) + reward.val;
+              transaction.update(userRef, {
+                  balance: newBalance,
+                  usedPromos: arrayUnion(code)
+              });
+              
+              return { success: true, value: reward.val, type: reward.type, message: `Промокод активирован: +${reward.val}₽` };
+          }
+
+          // 3. Check Personal Active Promo
+          if (userData.activePromoCode === code && !userData.activePromoUsed) {
+               if (userData.activePromoType && userData.activePromoType.startsWith('bonus')) {
+                   const val = userData.activePromoValue || 0;
+                   transaction.update(userRef, {
+                       balance: (userData.balance || 0) + val,
+                       activePromoCode: null,
+                       activePromoValue: 0,
+                       activePromoUsed: true
+                   });
+                   return { success: true, value: val, type: 'money', message: `Бонус активирован: +${val}₽` };
+               } else {
+                   return { success: false, redirect: 'dep.html', message: 'Это бонус к депозиту. Переходим на пополнение...' };
+               }
+          }
+
+          throw new Error('Неверный промокод');
+      });
+  }
 
   const firebaseConfig = {
     apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
@@ -269,6 +468,7 @@
   let userId = null;
   let viewUid = null;
   let canEdit = false;
+
   function promptSetAvatarUrl() {
       if (!canEdit) return;
       const url = prompt('Вставьте ссылку на изображение (http/https):', currentUser && currentUser.avatarUrl ? currentUser.avatarUrl : '');
@@ -340,25 +540,87 @@
   window.activatePromoPrompt = async function() {
     const code = prompt("Введите промокод:");
     if (!code) return;
-    
     if (!currentUser) return;
     
-    // Simple promo logic reuse
-    const upperCode = code.toUpperCase().trim();
-    if (upperCode === 'KAVEXS' || upperCode === 'KAVEXS2026') {
-        const today = new Date().toDateString();
-        if (currentUser.lastPromoDate === today) return alert('Уже активирован сегодня');
-        
-        const bonus = 100;
-        await updateDoc(doc(db, 'users', userId), {
-            balance: (currentUser.balance || 0) + bonus,
-            lastPromoDate: today
-        });
-        alert(`Промокод активирован! +${bonus}₽`);
-        location.reload();
-    } else {
-        alert('Неверный промокод');
+    try {
+        const result = await redeemPromoCode(db, userId, code);
+        if (result.success) {
+            alert(result.message);
+            if (result.redirect) location.href = result.redirect;
+            else location.reload();
+        }
+    } catch (e) {
+        alert(e.message);
     }
+  }
+
+  window.createAdminPromo = async function() {
+      const code = document.getElementById('adminPromoCode').value.trim();
+      const activations = document.getElementById('adminPromoActivations').value;
+      const value = document.getElementById('adminPromoValue').value;
+      const type = document.getElementById('adminPromoType').value;
+
+      if (!code || !activations || !value) return alert('Заполните все поля');
+
+      try {
+          await createPromoCode(db, code, activations, value, type);
+          alert('Промокод создан!');
+          document.getElementById('adminPromoCode').value = '';
+          loadRecentPromos(); // Refresh list
+      } catch (e) {
+          console.error(e);
+          alert('Ошибка создания: ' + e.message);
+      }
+  }
+
+  window.loadRecentPromos = async function() {
+      const list = document.getElementById('adminPromoList');
+      if (!list) {
+          console.error('adminPromoList element not found');
+          return;
+      }
+      list.innerHTML = '<div style="text-align:center; font-size:0.9rem; color:var(--text-sec);">Загрузка...</div>';
+      try {
+          const promos = await getRecentPromos(db);
+          list.innerHTML = '';
+          if(promos.length === 0) {
+              list.innerHTML = '<div style="text-align:center; color:var(--text-sec);">Нет промокодов</div>';
+              return;
+          }
+          promos.forEach(p => {
+              const div = document.createElement('div');
+              div.style.cssText = 'background:var(--bg-main); padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; border:1px solid var(--border);';
+              
+              const info = document.createElement('div');
+              info.innerHTML = `
+                  <div style="font-weight:bold; color:var(--primary); font-family:monospace;">${p.code}</div>
+                  <div style="font-size:0.8rem; color:var(--text-sec);">
+                    Ост: ${p.activationsLeft} | 
+                    ${p.type==='money' ? p.value+'₽' : '+'+p.value+'% Dep'}
+                  </div>
+              `;
+              
+              const delBtn = document.createElement('button');
+              delBtn.innerHTML = '🗑️';
+              delBtn.title = 'Удалить';
+              delBtn.style.cssText = 'background:rgba(239, 68, 68, 0.1); border:1px solid var(--danger); color:var(--danger); padding:6px 10px; border-radius:6px; cursor:pointer; transition:0.2s;';
+              delBtn.onmouseover = () => delBtn.style.background = 'rgba(239, 68, 68, 0.2)';
+              delBtn.onmouseout = () => delBtn.style.background = 'rgba(239, 68, 68, 0.1)';
+              delBtn.onclick = async () => {
+                  if(confirm(`Удалить промокод ${p.code}?`)) {
+                      await deletePromoCode(db, p.code);
+                      loadRecentPromos();
+                  }
+              };
+              
+              div.appendChild(info);
+              div.appendChild(delBtn);
+              list.appendChild(div);
+          });
+      } catch(e) {
+          console.error(e);
+          list.innerHTML = '<div style="color:var(--danger); text-align:center;">Ошибка загрузки</div>';
+      }
   }
 
   onAuthStateChanged(auth, async (user) => {
@@ -366,6 +628,14 @@
       location.href = 'register.html';
       return;
     }
+    
+    // Admin Check
+    if (user.uid === 'fB5LvM4j5yVkcBE0c6eyvhV4WG02') {
+        const adminPanel = document.getElementById('adminPanel');
+        if (adminPanel) adminPanel.style.display = 'block';
+        loadRecentPromos();
+    }
+
     const params = new URLSearchParams(location.search);
     viewUid = params.get('uid');
     userId = viewUid && viewUid !== user.uid ? viewUid : user.uid;
@@ -427,7 +697,7 @@
         currentUser.history.slice(-5).reverse().forEach(h => {
           const div = document.createElement('div');
           div.style.cssText = 'display:flex; justify-content:space-between; padding:8px; border-bottom:1px solid var(--border); font-size:0.9rem;';
-          div.innerHTML = `<span>${h.game}</span><span style="color:${h.result==='win'?'#34d399':'#ef4444'}">${h.result==='win'?'+':''}${h.win}₽</span>`;
+          div.innerHTML = `<span>${h.game}</span><span style="color:${h.result==='win'?'var(--success)':'var(--danger)'}">${h.result==='win'?'+':''}${h.win}₽</span>`;
           histList.appendChild(div);
         });
       } else {

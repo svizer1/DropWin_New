@@ -556,11 +556,21 @@
 
     <div class="header">
         <div class="logo" onclick="location.href='../index.html'" style="cursor: pointer;">💎 DROPWIN</div>
+        <button class="hamburger" id="hamburgerBtn"><span class="bar"></span><span class="bar"></span><span class="bar"></span></button>
         <div class="balance-container">
             <div class="balance">💰 <span id="balance">0</span>₽</div>
             <button class="auth-btn" id="authBtn">Аккаунт</button>
             <button class="auth-btn" onclick="window.open('https://t.me/DropWinHelp_bot','_blank')">Поддержка</button>
         </div>
+    </div>
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+    <div class="mobile-drawer" id="mobileDrawer">
+        <a href="../inventory.html"><span>🎒</span> Инвентарь</a>
+        <a href="../leaderboard.html"><span>🏆</span> Топ игроков</a>
+        <a href="../raffles.html"><span>🎁</span> Розыгрыши</a>
+        <a href="../freebet.html"><span>⚡</span> Бонусы</a>
+        <a href="../profile.html"><span>👤</span> Профиль</a>
+        <a href="https://t.me/DropWinHelp_bot" target="_blank"><span>💬</span> Поддержка</a>
     </div>
 
     <div class="content">
@@ -629,6 +639,7 @@
                     <button class="btn" id="confirmCreate">Создать</button>
                 </div>
 
+                <div class="game-title" style="margin-top:16px; text-align:center;">Открытые баттлы</div>
                 <div class="battle-list" id="battleList"></div>
             </div>
 
@@ -641,6 +652,16 @@
         <button class="nav-btn" onclick="location.href='../profile.html'"><span>👤</span><span class="nav-label">Профиль</span></button>
         <button class="nav-btn" onclick="location.href='../register.html'"><span>🔑</span><span class="nav-label">Вход</span></button>
     </div>
+    <script>
+        const hb = document.getElementById('hamburgerBtn');
+        const overlay = document.getElementById('mobileMenuOverlay');
+        function toggleDrawer() {
+            document.body.classList.toggle('drawer-open');
+            hb && hb.classList.toggle('active');
+        }
+        hb && hb.addEventListener('click', toggleDrawer);
+        overlay && overlay.addEventListener('click', toggleDrawer);
+    </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";

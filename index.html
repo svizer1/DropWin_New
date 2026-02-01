@@ -83,6 +83,7 @@
 <header class="header">
   <div class="header-left">
     <div class="logo" onclick="location.href='index.html'" style="cursor: pointer;">💎 DROP<span>WIN</span></div>
+    <button class="hamburger" id="hamburgerBtn"><span class="bar"></span><span class="bar"></span><span class="bar"></span></button>
     <nav class="main-nav">
       <a href="inventory.html"><span class="nav-icon">🎒</span> ИНВЕНТАРЬ</a>
       <a href="leaderboard.html"><span class="nav-icon">🏆</span> ТОП ИГРОКОВ</a>
@@ -101,6 +102,16 @@
     <button class="btn" id="authBtn" style="width: auto; padding: 8px 16px; font-size: 0.9rem;">Войти</button>
   </div>
 </header>
+
+<div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+<div class="mobile-drawer" id="mobileDrawer">
+  <a href="inventory.html"><span>🎒</span> Инвентарь</a>
+  <a href="leaderboard.html"><span>🏆</span> Топ игроков</a>
+  <a href="raffles.html"><span>🎁</span> Розыгрыши</a>
+  <a href="freebet.html"><span>⚡</span> Бонусы</a>
+  <a href="profile.html"><span>👤</span> Профиль</a>
+  <a href="https://t.me/DropWinHelp_bot" target="_blank"><span>💬</span> Поддержка</a>
+</div>
 
 <!-- Hero Section -->
 <div class="hero">
@@ -576,6 +587,31 @@
       setInterval(() => goToSlide(currentSlide + 1), 5000);
   }
 
+</script>
+<script>
+  const hb = document.getElementById('hamburgerBtn');
+  const overlay = document.getElementById('mobileMenuOverlay');
+  function toggleDrawer() {
+    document.body.classList.toggle('drawer-open');
+    hb && hb.classList.toggle('active');
+  }
+  hb && hb.addEventListener('click', toggleDrawer);
+  overlay && overlay.addEventListener('click', toggleDrawer);
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('img').forEach((img) => {
+      if (!img.hasAttribute('loading')) img.setAttribute('loading', 'lazy');
+      img.setAttribute('decoding', 'async');
+      const src = img.getAttribute('src');
+      if (src && /\.(png|jpe?g)$/i.test(src)) {
+        const webp = src.replace(/\.(png|jpe?g)$/i, '.webp');
+        const tester = new Image();
+        tester.onload = () => { img.src = webp; };
+        tester.src = webp;
+      }
+    });
+  });
 </script>
 </body>
 </html>

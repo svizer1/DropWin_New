@@ -477,11 +477,10 @@
       setTimeout(() => {
         const result = Math.floor(Math.random() * 37);
         const anglePerNumber = 360 / 37;
-        const pointerOffset = 1.1;
-        let finalAngle = - (result * anglePerNumber) + pointerOffset;
-        finalAngle += 360 * (12 + Math.floor(Math.random() * 4));
+        const base = 90 - (anglePerNumber / 2);
+        const fullTurns = fastSpin ? 8 : 12;
+        const finalAngle = 360 * fullTurns + (base - result * anglePerNumber);
         wheel.style.transform = `rotate(${finalAngle}deg)`;
-
         setTimeout(() => finishSpin(result, bet, type, betNumber), fastSpin ? 2600 : 5000);
       }, 120);
     } else {
@@ -498,24 +497,18 @@
 
       setTimeout(() => {
         const result = Math.floor(Math.random() * 37);
-        const cellWidth = 110;
-        const fullCycles = fastSpin ? 6 + Math.floor(Math.random() * 3) : 12 + Math.floor(Math.random() * 5);
-        const index = rouletteNumbers.indexOf(result);
-
-        const halfContainer = 380 / 2;
-        const halfCell = cellWidth / 2;
-        const centerOffset = halfContainer - halfCell;
-
-        let offset = -(
-          fullCycles * rouletteNumbers.length * cellWidth +
-          index * cellWidth +
-          centerOffset
-        );
-
-        offset += (Math.random() - 0.5) * 36;
-
+        const per = rouletteNumbers.length;
+        const indexInSet = rouletteNumbers.indexOf(result);
+        const targetIndex = per * (fastSpin ? 8 : 12) + indexInSet;
+        const container = document.getElementById('tapeContainer');
+        const cells = tape.children;
+        const targetEl = cells[targetIndex];
+        const containerRect = container.getBoundingClientRect();
+        const targetRect = targetEl.getBoundingClientRect();
+        const markerX = containerRect.left + (containerRect.width / 2);
+        const cellCenterX = targetRect.left + (targetRect.width / 2);
+        const offset = -(cellCenterX - markerX);
         tape.style.transform = `translateX(${offset}px)`;
-
         setTimeout(() => finishSpin(result, bet, type, betNumber), fastSpin ? 2600 : 5600);
       }, 60);
     }

@@ -72,7 +72,7 @@
       color: #34d399;
     }
     .select-btn {
-      padding: 7px 12px;
+      padding: 6px 10px;
       border: none;
       border-radius: 12px;
       background: linear-gradient(135deg, #8b5cf6, #7c3aed);
@@ -80,8 +80,9 @@
       font-weight: 700;
       cursor: pointer;
       transition: transform 0.16s ease, box-shadow 0.2s ease, filter 0.2s ease;
-      min-height: 44px;
-      min-width: 44px;
+      min-height: 38px;
+      min-width: 38px;
+      font-size: 0.95rem;
     }
     .select-btn:hover {
       transform: translateY(-1px);
@@ -230,7 +231,7 @@
       margin-top: 10px;
     }
     .mult-btn {
-      padding: 8px 0;
+      padding: 6px 0;
       border-radius: 10px;
       border: none;
       background: rgba(99,102,241,0.25);
@@ -238,7 +239,8 @@
       font-weight: 800;
       cursor: pointer;
       transition: transform 0.14s ease, background 0.2s ease, box-shadow 0.2s ease;
-      min-height: 44px;
+      min-height: 36px;
+      font-size: 0.9rem;
     }
     .mult-btn:hover {
       transform: translateY(-1px);
@@ -256,6 +258,33 @@
     }
     .balance-use input[type="range"] {
       width: 100%;
+    }
+    .spin-type-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      margin-top: 10px;
+    }
+    .spin-type-btn {
+      padding: 4px 0;
+      border-radius: 8px;
+      border: none;
+      background: rgba(99,102,241,0.25);
+      color: #e5e7eb;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.14s ease, background 0.2s ease, box-shadow 0.2s ease;
+      min-height: 28px;
+      font-size: 0.8rem;
+      font-size: 0.9rem;
+    .spin-type-btn:hover {
+      transform: translateY(-1px);
+      background: rgba(99,102,241,0.35);
+      box-shadow: 0 8px 16px rgba(99,102,241,0.25);
+    }
+    .spin-type-btn.active {
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      color: white;
     }
     @media (max-width: 860px) {
       .upgrade-container {
@@ -432,7 +461,7 @@
     .upgrade-btn {
       margin-top: 12px;
       width: 100%;
-      padding: 10px 16px;
+      padding: 8px 14px;
       border: none;
       border-radius: 14px;
       background: linear-gradient(135deg, #fbbf24, #d97706);
@@ -440,7 +469,8 @@
       font-weight: 900;
       cursor: pointer;
       transition: transform 0.16s ease, box-shadow 0.2s ease, filter 0.2s ease;
-      min-height: 44px;
+      min-height: 40px;
+      font-size: 0.95rem;
     }
     .upgrade-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 24px rgba(217,119,6,0.25); filter: brightness(1.05); }
     .upgrade-btn:active { transform: translateY(0); filter: brightness(0.95); }
@@ -673,6 +703,11 @@
             <span>Быстро</span>
             <input type="checkbox" id="fastMode">
           </div>
+          <div class="spin-type-row">
+            <button class="spin-type-btn active" data-type="normal">Обыч</button>
+            <button class="spin-type-btn" data-type="degen">Луд</button>
+            <button class="spin-type-btn" data-type="bait">Азарт</button>
+          </div>
           <div class="mult-row">
             <button class="mult-btn" data-mult="1.5">x1.5</button>
             <button class="mult-btn" data-mult="2">x2</button>
@@ -767,6 +802,96 @@
     let battleCatalog = [];
     let rightSelected = null;
     let selectedLeftIndices = [];
+    let spinType = 'normal';
+    const audioCtx = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext) ? new (window.AudioContext || window.webkitAudioContext)() : null;
+    function playTick(freq=1200, vol=0.06, dur=0.09) {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(vol, audioCtx.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + Math.max(0.08, dur));
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + Math.max(0.09, dur));
+    }
+    function playSpinStart() {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.25);
+      gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.08, audioCtx.currentTime + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.42);
+    }
+    function playNearHit() {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.18);
+      gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.07, audioCtx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.22);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.24);
+    }
+    function playWinSound() {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.35);
+      gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.08, audioCtx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.52);
+    }
+    function playLoseSound() {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(180, audioCtx.currentTime + 0.25);
+      gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.06, audioCtx.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.42);
+    }
+    function startTickLoop(ms, mode='normal') {
+      const start = performance.now();
+      let interval = 110;
+      let pitch = 900;
+      if (mode === 'degen') interval = 90;
+      if (mode === 'bait') interval = 120;
+      const id = setInterval(() => {
+        const elapsed = performance.now() - start;
+        if (elapsed >= ms) { clearInterval(id); return; }
+        pitch = Math.min(1500, pitch + 20);
+        playTick(pitch, 0.05);
+      }, interval);
+      return id;
+    }
 
     function createParticles() {
       const container = document.getElementById('particles');
@@ -1220,35 +1345,106 @@
       const arc = Math.max(1, Math.min(95, chance)) * 3.6;
       const rollByAngle = (angleIn360) => angleIn360 <= arc;
       const runAnimation = () => new Promise(resolve => {
+        const ringPtr = document.getElementById('ringPointer');
+        playSpinStart();
         if (fastMode) {
-          const ringPtr = document.getElementById('ringPointer');
+          const angleIn360 = Math.random() * 360;
           if (ringPtr) {
-            const angleIn360 = Math.random() * 360;
             window.__ringAnimating = true;
-            ringPtr.style.transition = 'transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1)';
+            ringPtr.style.transition = 'transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1)';
             ringPtr.style.transform = `rotate(${angleIn360}deg)`;
-            setTimeout(() => {
-              window.__ringAnimating = false;
-              resolve(rollByAngle(angleIn360));
-            }, 800);
-            return;
           }
-          resolve(rollByAngle(Math.random() * 360));
+          const tickId = startTickLoop(900, spinType);
+          setTimeout(() => {
+            window.__ringAnimating = false;
+            clearInterval(tickId);
+            const res = rollByAngle(angleIn360);
+            if (res) playWinSound(); else playLoseSound();
+            resolve(res);
+          }, 900);
           return;
         }
-        const ringPtr = document.getElementById('ringPointer');
         const baseSpins = 5 * 360;
         const angleIn360 = Math.random() * 360;
         const totalAngle = baseSpins + angleIn360;
-        if (ringPtr) {
-          window.__ringAnimating = true;
-          ringPtr.style.transition = 'transform 2.8s cubic-bezier(0.11, 0.89, 0.32, 1.00)';
-          ringPtr.style.transform = `rotate(${totalAngle}deg)`;
+        if (spinType === 'normal') {
+          if (ringPtr) {
+            window.__ringAnimating = true;
+            ringPtr.style.transition = 'transform 2.8s cubic-bezier(0.11, 0.89, 0.32, 1.00)';
+            ringPtr.style.transform = `rotate(${totalAngle}deg)`;
+          }
+          const tickId = startTickLoop(2800, 'normal');
+          setTimeout(() => {
+            window.__ringAnimating = false;
+            clearInterval(tickId);
+            const res = rollByAngle(angleIn360);
+            if (Math.abs(angleIn360 - arc) < 8) playNearHit();
+            if (res) playWinSound(); else playLoseSound();
+            resolve(res);
+          }, 2800);
+          return;
         }
-        setTimeout(() => {
-          window.__ringAnimating = false;
-          resolve(rollByAngle(angleIn360));
-        }, 2800);
+        if (spinType === 'bait') {
+          const nearAngle = rollByAngle(angleIn360) ? Math.max(0, arc - 6) : Math.min(360, arc + 6);
+          const phase1 = baseSpins + nearAngle;
+          const phase2 = totalAngle;
+          if (ringPtr) {
+            window.__ringAnimating = true;
+            ringPtr.style.transition = 'transform 1.6s cubic-bezier(0.18, 0.9, 0.2, 1)';
+            ringPtr.style.transform = `rotate(${phase1}deg)`;
+          }
+          const tickId = startTickLoop(2600, 'bait');
+          setTimeout(() => {
+            playNearHit();
+            if (ringPtr) {
+              ringPtr.style.transition = 'transform 0.4s cubic-bezier(0.6, 0.0, 0.4, 1)';
+              ringPtr.style.transform = `rotate(${phase1 + (rollByAngle(angleIn360) ? -4 : 8)}deg)`;
+            }
+            setTimeout(() => {
+              if (ringPtr) {
+                ringPtr.style.transition = 'transform 0.8s cubic-bezier(0.11, 0.89, 0.32, 1.00)';
+                ringPtr.style.transform = `rotate(${phase2}deg)`;
+              }
+              setTimeout(() => {
+                window.__ringAnimating = false;
+                clearInterval(tickId);
+                const res = rollByAngle(angleIn360);
+                if (res) playWinSound(); else playLoseSound();
+                resolve(res);
+              }, 800);
+            }, 420);
+          }, 1600);
+          return;
+        }
+        if (spinType === 'degen') {
+          const accelSpins = 6 * 360;
+          const win = rollByAngle(angleIn360);
+          const delta = 6;
+          const nearAngle = win ? Math.min(360, arc + delta) : Math.max(0, arc - delta);
+          const phase1 = accelSpins + nearAngle;
+          if (ringPtr) {
+            window.__ringAnimating = true;
+            ringPtr.style.transition = 'transform 2.0s cubic-bezier(0.12, 0.85, 0.25, 1)';
+            ringPtr.style.transform = `rotate(${phase1}deg)`;
+          }
+          const tickId = startTickLoop(3200, 'degen');
+          setTimeout(() => {
+            playNearHit();
+            if (ringPtr) {
+              ringPtr.style.transition = 'transform 1.2s cubic-bezier(0.11, 0.89, 0.32, 1.00)';
+              ringPtr.style.transform = `rotate(${totalAngle}deg)`;
+            }
+            setTimeout(() => {
+              window.__ringAnimating = false;
+              clearInterval(tickId);
+              const res = rollByAngle(angleIn360);
+              if (res) playWinSound(); else playLoseSound();
+              resolve(res);
+            }, 1200);
+          }, 2000);
+          return;
+        }
+        resolve(rollByAngle(angleIn360));
       });
       success = await runAnimation();
       {
@@ -1315,6 +1511,13 @@
       });
       document.getElementById('fastMode')?.addEventListener('change', e => {
         fastMode = !!e.target.checked;
+      });
+      document.querySelectorAll('.spin-type-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.spin-type-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          spinType = btn.dataset.type || 'normal';
+        });
       });
       document.querySelectorAll('.mult-btn').forEach(btn => {
         btn.addEventListener('click', () => {

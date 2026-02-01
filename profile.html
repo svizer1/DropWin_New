@@ -758,5 +758,20 @@
     }
   }
 </script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('img').forEach((img) => {
+      if (!img.hasAttribute('loading')) img.setAttribute('loading', 'lazy');
+      img.setAttribute('decoding', 'async');
+      const src = img.getAttribute('src');
+      if (src && /\.(png|jpe?g)$/i.test(src)) {
+        const webp = src.replace(/\.(png|jpe?g)$/i, '.webp');
+        const tester = new Image();
+        tester.onload = () => { img.src = webp; };
+        tester.src = webp;
+      }
+    });
+  });
+</script>
 </body>
 </html>

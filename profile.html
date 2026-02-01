@@ -290,7 +290,20 @@
             <h3 style="color: var(--text-main); font-size: 1.2rem; margin: 0;">👑 Панель Создателя</h3>
             <span style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700;">ADMIN</span>
         </div>
+
+        <!-- Broadcast Section -->
+        <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border);">
+            <div style="font-weight: 700; margin-bottom: 8px;">📢 Массовая рассылка</div>
+            <textarea id="adminBroadcastText" class="admin-input" style="height: 80px; resize: vertical; margin-bottom: 8px;" placeholder="Введите сообщение для всех пользователей..."></textarea>
+            <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
+                <input type="checkbox" id="adminBroadcastHighlight" style="width:16px; height:16px;">
+                <label for="adminBroadcastHighlight" style="color:var(--text-sec); font-size:0.9rem;">✨ Выделить (Золотая рамка)</label>
+            </div>
+            <button id="broadcastBtn" onclick="sendBroadcast()" class="btn" style="background: var(--primary); font-weight: 600;">Отправить всем</button>
+        </div>
+
         <div style="display: grid; gap: 12px;">
+            <div style="font-weight: 700;">🎟️ Создать промокод</div>
             <input type="text" id="adminPromoCode" placeholder="Код (напр. WIN100)" class="admin-input">
             <input type="number" id="adminPromoActivations" placeholder="Кол-во активаций (напр. 3)" class="admin-input">
             <input type="number" id="adminPromoValue" placeholder="Сумма (напр. 100)" class="admin-input">
@@ -323,9 +336,19 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, updateDoc, setDoc, deleteDoc, runTransaction, arrayUnion, increment, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, updateDoc, setDoc, deleteDoc, runTransaction, arrayUnion, increment, collection, query, orderBy, limit, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
   // INLINED shared_promo.js due to CORS on file://
+
+  async function createBroadcast(db, text, isHighlighted = false) {
+      await addDoc(collection(db, 'system_notifications'), {
+          text: text,
+          timestamp: Date.now(),
+          type: 'broadcast',
+          isHighlighted: isHighlighted
+      });
+      return true;
+  }
 
   async function createPromoCode(db, code, activations, value, type = 'money') {
       const promoRef = doc(db, 'promocodes', code);
@@ -570,6 +593,35 @@
       } catch (e) {
           console.error(e);
           alert('Ошибка создания: ' + e.message);
+      }
+  }
+
+  window.sendBroadcast = async function() {
+      const text = document.getElementById('adminBroadcastText').value.trim();
+      const highlight = document.getElementById('adminBroadcastHighlight').checked;
+      const btn = document.getElementById('broadcastBtn');
+      if (!text) return alert('Введите текст сообщения');
+      
+      if (!confirm('Отправить это сообщение всем пользователям?')) return;
+
+      if(btn) {
+          btn.disabled = true;
+          btn.textContent = 'Отправка...';
+      }
+
+      try {
+          await createBroadcast(db, text, highlight);
+          alert('Сообщение отправлено!');
+          document.getElementById('adminBroadcastText').value = '';
+          document.getElementById('adminBroadcastHighlight').checked = false;
+      } catch (e) {
+          console.error(e);
+          alert('Ошибка отправки: ' + e.message);
+      } finally {
+          if(btn) {
+              btn.disabled = false;
+              btn.textContent = 'Отправить всем';
+          }
       }
   }
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <title>Rooster Run | DropWin</title>
+    <title>Chicken Road | DropWin</title>
     <link rel="stylesheet" href="../style.css">
     <style>
         * {
@@ -854,6 +854,49 @@
 
         const failChance = 0.25;
 
+        // Audio effects (Web Audio API)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playTone(frequency, duration, type = 'sine', volume = 0.2) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+            gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            setTimeout(() => {
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.05);
+                osc.stop(audioCtx.currentTime + 0.06);
+            }, duration);
+        }
+        function playJumpSound() {
+            playTone(600, 100, 'triangle', 0.15);
+            setTimeout(() => playTone(900, 80, 'triangle', 0.12), 90);
+        }
+        function playFailSound() {
+            playTone(200, 160, 'sawtooth', 0.2);
+            setTimeout(() => playTone(150, 200, 'sawtooth', 0.18), 140);
+        }
+
+        // History logging
+        function addToHistory(game, change) {
+            const entry = {
+                game,
+                time: new Date().toLocaleString('ru-RU'),
+                win: change,
+                result: change > 0 ? 'win' : (change < 0 ? 'loss' : 'draw')
+            };
+            currentUser.history = currentUser.history || [];
+            currentUser.history.unshift(entry);
+            if (currentUser.history.length > 30) currentUser.history = currentUser.history.slice(0, 30);
+            if (!isGuest && userId) {
+                updateDoc(doc(db, 'users', userId), { history: currentUser.history }).catch(() => {});
+            } else {
+                saveGuestUser();
+            }
+        }
+
         // Bet mode switching
         window.switchBetMode = function(mode) {
             betMode = mode;
@@ -1038,8 +1081,10 @@
                     return;
                 }
 
-                // Deduct balance
+                // Deduct balance and track stats
                 currentUser.balance -= bet;
+                currentUser.totalBet = (currentUser.totalBet || 0) + bet;
+                currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
             } else {
                 // Items mode
                 if (selectedItems.length === 0) {
@@ -1071,7 +1116,9 @@
             if (!isGuest && userId) {
                 await updateDoc(doc(db, 'users', userId), { 
                     balance: currentUser.balance,
-                    inventory: currentUser.inventory 
+                    inventory: currentUser.inventory,
+                    totalBet: currentUser.totalBet,
+                    gamesPlayed: currentUser.gamesPlayed
                 });
             } else {
                 saveGuestUser();
@@ -1099,6 +1146,7 @@
             btn.disabled = true;
 
             rooster.classList.add('jump');
+            try { playJumpSound(); } catch {}
             
             setTimeout(async () => {
                 rooster.classList.remove('jump');
@@ -1149,6 +1197,7 @@
         function handleFail() {
             const rooster = document.getElementById('rooster');
             rooster.classList.add('dead');
+            try { playFailSound(); } catch {}
             
             const nextCardId = currentStep + 1;
             if (nextCardId < multipliers.length) {
@@ -1167,6 +1216,13 @@
             document.getElementById('balanceTab').disabled = false;
             document.getElementById('itemsTab').disabled = false;
             document.getElementById('cashoutBtn').style.display = 'none';
+            currentUser.losses = (currentUser.losses || 0) + 1;
+            if (!isGuest && userId) {
+                updateDoc(doc(db, 'users', userId), { losses: currentUser.losses }).catch(() => {});
+            } else {
+                saveGuestUser();
+            }
+            addToHistory('Chicken Road', -currentBet);
         }
 
         window.cashout = async () => {
@@ -1178,15 +1234,20 @@
             createConfetti();
             
             currentUser.balance += win;
+            currentUser.totalWin = (currentUser.totalWin || 0) + win;
+            currentUser.wins = (currentUser.wins || 0) + 1;
             updateBalanceDisplay();
             if (!isGuest && userId) {
                 await updateDoc(doc(db, 'users', userId), { 
                     balance: currentUser.balance,
-                    inventory: currentUser.inventory 
+                    inventory: currentUser.inventory,
+                    totalWin: currentUser.totalWin,
+                    wins: currentUser.wins
                 });
             } else {
                 saveGuestUser();
             }
+            addToHistory('Chicken Road', win);
 
             gameActive = false;
             document.getElementById('mainBtn').textContent = `🎉 ПОБЕДА: ${win} ₽`;

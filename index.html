@@ -13,6 +13,9 @@
       .toast-title { font-weight: 800; font-size: 1rem; color: #4ade80; margin-bottom: 2px; }
       .toast-msg { font-size: 0.9rem; color: #cbd5e1; }
       @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+      .chat-suggestions { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border, rgba(255,255,255,0.1)); background: rgba(0,0,0,0.2); max-height: 100px; overflow-y: auto; }
+      .chat-chip { background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #d8b4fe; padding: 6px 12px; border-radius: 16px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+      .chat-chip:hover { background: rgba(139, 92, 246, 0.4); color: white; }
   </style>
 </head>
 <body>
@@ -98,6 +101,24 @@
       <span id="balance">0</span> ₽
       <button class="add-funds-btn" onclick="location.href='dep.html'">+</button>
     </div>
+    
+    <!-- Notification Bell -->
+    <button class="icon-btn" id="notifyBtn" style="background: rgba(255,255,255,0.1); border: none; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; margin-right: 8px; position: relative; display: flex; align-items: center; justify-content: center; color: #cbd5e1;">
+        🔔
+        <span class="notify-badge" style="position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; background: #ef4444; border-radius: 50%; display: block;"></span>
+    </button>
+
+    <!-- Notification Widget -->
+    <div class="notification-widget" id="notificationWidget">
+        <div class="notif-header">
+            Уведомления
+            <button onclick="clearNotifications()" style="background:none; border:none; color:var(--text-sec); cursor:pointer; font-size:0.8rem;">Очистить</button>
+        </div>
+        <div class="notif-list" id="notifList">
+            <div style="text-align:center; padding:20px; color:var(--text-sec);">Нет новых уведомлений</div>
+        </div>
+    </div>
+
     <!-- Auth Button / Profile -->
     <button class="btn" id="authBtn" style="width: auto; padding: 8px 16px; font-size: 0.9rem;">Войти</button>
   </div>
@@ -208,6 +229,8 @@
       <div class="game-icon-name" style="position: relative; z-index: 2; margin: 15px; text-shadow: 0 2px 8px rgba(0,0,0,0.9); font-size: 1.2rem; font-weight: 800; color: white;">Баттлы Кейсов</div>
     </div>
 
+    
+
     <div class="game-icon" onclick="location.href='games/slots.html'">
       <div class="image-container"><img src="images/index/slots.png" alt="Slots"></div>
       <div class="game-icon-name">Slots</div>
@@ -254,8 +277,8 @@
     </div>
 
     <div class="game-icon" onclick="location.href='games/rooster-run.html'">
-      <div class="image-container"><img src="images/index/rooster-run.png" alt="Rooster Run"></div>
-      <div class="game-icon-name">Rooster Run</div>
+      <div class="image-container"><img src="images/index/rooster-run.png" alt="Chicken Road"></div>
+      <div class="game-icon-name">Chicken Road</div>
     </div>
 
   </div>
@@ -284,10 +307,56 @@
 <!-- Particles Background -->
 <div class="particles" id="particles"></div>
 
+<!-- Admin Chat Button & Widget -->
+<div class="admin-chat-btn" id="adminChatBtn">
+    <span style="font-size: 30px;">💬</span>
+    <div class="badge"></div>
+</div>
+
+<div class="chat-widget" id="chatWidget">
+    <div class="chat-header">
+        <div class="chat-title">
+            <span class="chat-status"></span>
+            Поддержка
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+             <button class="chat-suggestions-toggle" id="chatSuggestionsToggle" title="Свернуть/Развернуть меню">▼</button>
+             <button class="chat-close" id="chatClose">✕</button>
+        </div>
+    </div>
+    <div class="chat-user-list" id="chatUserList" style="display: none; flex: 1; overflow-y: auto; padding: 10px;"></div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-suggestions" id="chatSuggestions">
+        <div class="chat-chip" data-question="Как получить бонус?">Как получить бонус?</div>
+        <div class="chat-chip" data-question="Как вывести деньги?">Как вывести деньги?</div>
+        <div class="chat-chip" data-question="Не пришел депозит">Не пришел депозит</div>
+        <div class="chat-chip" data-question="Проблема с игрой">Проблема с игрой</div>
+        <div class="chat-chip" data-question="Понял">Понял</div>
+        <div class="chat-chip" data-question="resolved" style="background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.3); color: #86efac;">✅ Вопрос решен</div>
+        <div class="chat-chip" data-question="Связаться с оператором" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5;">Связаться с оператором</div>
+    </div>
+    <div class="chat-input-area" id="chatInputArea">
+        <input type="text" class="chat-input" id="chatInput" placeholder="Введите сообщение...">
+        <button class="chat-send" id="chatSend">➜</button>
+    </div>
+</div>
+
+<!-- Win Notification Popup -->
+<div class="win-popup" id="winPopup">
+    <div class="win-icon">🏆</div>
+    <div class="win-title">ПОЗДРАВЛЯЕМ!</div>
+    <div class="win-desc" id="winDesc">Вы выиграли в розыгрыше!</div>
+    <button class="win-btn" onclick="document.getElementById('winPopup').classList.remove('active')">ЗАБРАТЬ</button>
+</div>
+
+<script>
+    // Legacy script removed. Chat logic moved to module script below.
+</script>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, collection, updateDoc, runTransaction, arrayUnion, increment } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, collection, updateDoc, runTransaction, arrayUnion, increment, setDoc, onSnapshot, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
   // INLINED shared_promo.js due to CORS on file://
   async function redeemPromoCode(db, userId, codeInput) {
@@ -532,6 +601,325 @@
     });
   }
 
+  // Chat Logic
+  function initChat() {
+      const chatBtn = document.getElementById('adminChatBtn');
+      const chatWidget = document.getElementById('chatWidget');
+      const chatClose = document.getElementById('chatClose');
+      const chatInput = document.getElementById('chatInput');
+      const chatSend = document.getElementById('chatSend');
+      const chatMessages = document.getElementById('chatMessages');
+      const chatSuggestions = document.getElementById('chatSuggestions');
+      const chatUserList = document.getElementById('chatUserList');
+      const chatInputArea = document.getElementById('chatInputArea');
+      const chatTitle = document.querySelector('.chat-title');
+      
+      const ADMIN_UID = 'fB5LvM4j5yVkcBE0c6eyvhV4WG02';
+      let chatUnsub = null;
+      let listUnsub = null;
+      let activeChatUserId = null; // For admin: which user they are talking to
+
+      if (!chatBtn || !chatWidget) return;
+
+      // Toggle Chat
+      chatBtn.addEventListener('click', () => {
+          chatWidget.classList.add('active');
+          chatBtn.style.display = 'none';
+          // Clear badge
+          const badge = chatBtn.querySelector('.badge');
+          if(badge) badge.style.display = 'none';
+          
+          openChatInterface();
+      });
+
+      chatClose.addEventListener('click', () => {
+          chatWidget.classList.remove('active');
+          chatBtn.style.display = 'flex';
+          cleanupListeners();
+      });
+
+      function cleanupListeners() {
+          if(chatUnsub) { chatUnsub(); chatUnsub = null; }
+          // Don't clean listUnsub if admin, so we can get notifications? 
+          // For now clean all to save resources, but we might want background listener later.
+          if(listUnsub) { listUnsub(); listUnsub = null; }
+      }
+
+      function openChatInterface() {
+          cleanupListeners();
+          
+          if (!currentUser) {
+              renderGuestView();
+              return;
+          }
+
+          if (currentUser.uid === ADMIN_UID) {
+              // Admin Mode
+              renderAdminListView();
+          } else {
+              // User Mode
+              renderUserChatView();
+          }
+      }
+
+      // --- USER MODE ---
+      function renderUserChatView() {
+          chatUserList.style.display = 'none';
+          chatMessages.style.display = 'flex';
+          chatInputArea.style.display = 'flex';
+          if(chatSuggestions) chatSuggestions.style.display = 'grid';
+          chatTitle.innerHTML = '<span class="chat-status"></span>Поддержка';
+
+          loadChatMessages(currentUser.uid);
+      }
+
+      function renderGuestView() {
+          chatUserList.style.display = 'none';
+          chatMessages.style.display = 'flex';
+          chatInputArea.style.display = 'flex';
+          if(chatSuggestions) chatSuggestions.style.display = 'grid';
+          chatMessages.innerHTML = '<div class="chat-msg bot"><div class="chat-msg-header">DropWin Bot</div>Пожалуйста, войдите в аккаунт, чтобы написать в поддержку.</div>';
+      }
+
+      // --- ADMIN MODE ---
+      function renderAdminListView() {
+          chatUserList.style.display = 'block';
+          chatMessages.style.display = 'none';
+          chatInputArea.style.display = 'none';
+          if(chatSuggestions) chatSuggestions.style.display = 'none';
+          chatTitle.innerHTML = 'Чаты <span style="font-size:0.8rem; opacity:0.7; margin-left:8px;">(Админ)</span>';
+          activeChatUserId = null;
+
+          const q = query(collection(db, 'support_chats'), orderBy('lastUpdated', 'desc'));
+          listUnsub = onSnapshot(q, (snapshot) => {
+              chatUserList.innerHTML = '';
+              if (snapshot.empty) {
+                  chatUserList.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Нет активных чатов</div>';
+                  return;
+              }
+
+              snapshot.forEach(doc => {
+                  const data = doc.data();
+                  if (data.status === 'archived') return; // Skip archived
+
+                  const item = document.createElement('div');
+                  item.className = 'chat-list-item';
+                  item.style.padding = '12px';
+                  item.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
+                  item.style.cursor = 'pointer';
+                  item.style.display = 'flex';
+                  item.style.justifyContent = 'space-between';
+                  item.style.alignItems = 'center';
+                  
+                  // Check unread
+                  const isUnread = data.lastSender === 'user';
+                  const bg = isUnread ? 'rgba(124, 58, 237, 0.1)' : 'transparent';
+                  item.style.background = bg;
+
+                  const lastMsg = data.messages && data.messages.length > 0 ? data.messages[data.messages.length - 1].text : '';
+                  const shortMsg = lastMsg.length > 30 ? lastMsg.substring(0, 30) + '...' : lastMsg;
+
+                  item.innerHTML = `
+                      <div style="flex:1;" onclick="window.openAdminChat('${doc.id}', '${data.username || 'User'}')">
+                          <div style="font-weight:700; color:${isUnread ? '#a78bfa' : '#e2e8f0'}">${data.username || 'User'} ${isUnread ? '●' : ''}</div>
+                          <div style="font-size:0.8rem; color:#94a3b8;">${shortMsg}</div>
+                      </div>
+                      <button onclick="window.archiveChat('${doc.id}')" style="background:none; border:none; color:#64748b; cursor:pointer; font-size:1.2rem; padding:8px;">✕</button>
+                  `;
+                  chatUserList.appendChild(item);
+              });
+          });
+      }
+
+      // Exposed global functions for Admin click handlers
+      window.openAdminChat = function(userId, username) {
+          activeChatUserId = userId;
+          chatUserList.style.display = 'none';
+          chatMessages.style.display = 'flex';
+          chatInputArea.style.display = 'flex';
+          chatTitle.innerHTML = `<button onclick="window.backToAdminList()" style="background:none; border:none; color:white; font-size:1.2rem; margin-right:8px; cursor:pointer;">❮</button> ${username}`;
+          
+          loadChatMessages(userId);
+      };
+
+      window.backToAdminList = function() {
+          if(chatUnsub) chatUnsub();
+          renderAdminListView();
+      };
+
+      window.archiveChat = async function(userId) {
+          if(!confirm('Скрыть этот чат?')) return;
+          try {
+              await updateDoc(doc(db, 'support_chats', userId), {
+                  status: 'archived'
+              });
+          } catch(e) { console.error(e); }
+      };
+
+
+      // --- SHARED CHAT LOGIC ---
+      function loadChatMessages(userId) {
+          if(chatUnsub) chatUnsub();
+          
+          const chatRef = doc(db, 'support_chats', userId);
+          chatUnsub = onSnapshot(chatRef, (docSnap) => {
+              if (docSnap.exists()) {
+                  const data = docSnap.data();
+                  renderMessages(data.messages || []);
+                  
+                  // If Admin is viewing, mark as read (optional logic, maybe strictly on reply)
+                  // For now, we rely on 'lastSender' to determine unread status in list
+              } else {
+                  renderMessages([]);
+                  if (userId === currentUser.uid) {
+                      sendMessageToFirestore('Здравствуйте! Чем могу помочь?', 'bot', userId);
+                  }
+              }
+          });
+      }
+
+      function renderMessages(msgs) {
+          chatMessages.innerHTML = '';
+          msgs.forEach(msg => {
+              const msgDiv = document.createElement('div');
+              msgDiv.className = `chat-msg ${msg.sender}`;
+              // Map sender to display name
+              let name = 'User';
+              if (msg.sender === 'user') name = 'Вы';
+              if (msg.sender === 'admin') name = 'Admin';
+              if (msg.sender === 'bot') name = 'Bot';
+
+              // Adjust for Admin view
+              if (currentUser && currentUser.uid === ADMIN_UID) {
+                  if (msg.sender === 'user') name = 'User';
+                  if (msg.sender === 'admin') name = 'Вы';
+              }
+
+              msgDiv.innerHTML = `<div class="chat-msg-header">${name}</div>${msg.text}`;
+              chatMessages.appendChild(msgDiv);
+          });
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+
+      async function handleSend() {
+          const text = chatInput.value.trim();
+          if (!text) return;
+          
+          if (!currentUser) {
+              showToast('Ошибка', 'Войдите в аккаунт');
+              return;
+          }
+
+          chatInput.value = ''; // Clear early
+
+          // Determine target and sender
+          let targetId = currentUser.uid;
+          let senderRole = 'user';
+
+          if (currentUser.uid === ADMIN_UID) {
+              if (!activeChatUserId) return;
+              targetId = activeChatUserId;
+              senderRole = 'admin';
+          }
+
+          await sendMessageToFirestore(text, senderRole, targetId);
+
+          if (senderRole === 'user') {
+              checkForBotReply(text, targetId);
+          }
+      }
+
+      chatSend.addEventListener('click', handleSend);
+      chatInput.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') handleSend();
+      });
+
+      // Suggestions / Chips (Only for User)
+      if (chatSuggestions) {
+          chatSuggestions.querySelectorAll('.chat-chip').forEach(chip => {
+              chip.addEventListener('click', () => {
+                  const text = chip.getAttribute('data-question') || chip.textContent;
+                  if (text === 'resolved') {
+                      sendMessageToFirestore('✅ Вопрос решен. Спасибо!', 'user', currentUser.uid);
+                      // Optional: archive chat or set status resolved
+                  } else {
+                      chatInput.value = text;
+                      handleSend();
+                  }
+              });
+          });
+      }
+
+      async function sendMessageToFirestore(text, sender, targetUid) {
+          const chatRef = doc(db, 'support_chats', targetUid);
+          const msg = {
+              text,
+              sender,
+              timestamp: Date.now()
+          };
+          
+          const updateData = {
+              messages: arrayUnion(msg),
+              lastUpdated: Date.now(),
+              lastSender: sender,
+              status: 'active' // Re-activate if archived
+          };
+
+          // If user is sending, ensure username is set
+          if (sender === 'user' && currentUser) {
+              updateData.userId = currentUser.uid;
+              updateData.username = currentUser.username || 'User';
+          }
+
+          try {
+              await setDoc(chatRef, updateData, { merge: true });
+          } catch (e) {
+              console.error('Chat error:', e);
+              showToast('Ошибка', 'Не удалось отправить сообщение');
+          }
+      }
+
+      function checkForBotReply(userText, targetUid) {
+          const lower = userText.toLowerCase();
+          let reply = '';
+
+          if (lower.includes('бонус') || lower.includes('промокод')) {
+              reply = 'Актуальные бонусы и промокоды можно найти в нашем Telegram канале @Drop_Vins или в разделе "Бонусы".';
+          } else if (lower.includes('вывод') || lower.includes('вывести')) {
+              reply = 'Вывод средств обычно занимает от 5 минут до 24 часов. Проверьте статус заявки в профиле.';
+          } else if (lower.includes('депозит') || lower.includes('пополн')) {
+              reply = 'Если средства не поступили в течение 15 минут, пожалуйста, пришлите скриншот чека и ID транзакции сюда.';
+          } else if (lower.includes('понял') || lower.includes('спасибо')) {
+              reply = 'Рад помочь! Если будут еще вопросы — пишите.';
+          } else if (lower.includes('оператор') || lower.includes('админ')) {
+             // Just let it be, admin will see it in list
+          }
+
+          if (reply) {
+              setTimeout(() => {
+                  sendMessageToFirestore(reply, 'bot', targetUid);
+              }, 1000);
+          }
+      }
+      
+      // Background Listener for Admin Notifications (Simple version)
+       if (currentUser && currentUser.uid === ADMIN_UID) {
+            const q = query(collection(db, 'support_chats'), orderBy('lastUpdated', 'desc'));
+            onSnapshot(q, (snapshot) => {
+                let unreadCount = 0;
+                snapshot.forEach(doc => {
+                    const d = doc.data();
+                    if(d.status !== 'archived' && d.lastSender === 'user') unreadCount++;
+                });
+                
+                const badge = document.querySelector('.admin-chat-btn .badge');
+                if(badge) {
+                    badge.style.display = unreadCount > 0 ? 'block' : 'none';
+                }
+            });
+       }
+  }
+
   function resetAuthUI() {
     document.getElementById('balance').textContent = '0';
     const authBtn = document.getElementById('authBtn');
@@ -540,10 +928,180 @@
     authBtn.onclick = () => location.href = 'register.html';
   }
 
+  // Notification Logic
+  function initNotifications() {
+      const notifyBtn = document.getElementById('notifyBtn');
+      const widget = document.getElementById('notificationWidget');
+      const list = document.getElementById('notifList');
+      const badge = notifyBtn ? notifyBtn.querySelector('.notify-badge') : null;
+      
+      // 1. Toggle Widget
+      if (notifyBtn && widget) {
+          notifyBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              widget.classList.toggle('active');
+              if (widget.classList.contains('active')) {
+                  markAllAsRead();
+              }
+          });
+
+          // Close when clicking outside
+          document.addEventListener('click', (e) => {
+              if (widget.classList.contains('active') && !widget.contains(e.target) && !notifyBtn.contains(e.target)) {
+                  widget.classList.remove('active');
+              }
+          });
+      }
+
+      window.clearNotifications = function() {
+          localStorage.setItem('notifications_cleared_ts', Date.now());
+          renderNotifications([]); // Clear UI
+          updateBadge(0);
+      };
+
+      // 2. Listen for System Broadcasts
+      try {
+          // REMOVED orderBy/limit to avoid "Missing Index" errors on client
+          const sysQ = query(collection(db, 'system_notifications'));
+          onSnapshot(sysQ, (snapshot) => {
+              snapshot.docChanges().forEach(change => {
+                  if (change.type === 'added') {
+                      const data = change.doc.data();
+                      // Ensure clearedTs is treated as a number
+                      const clearedTs = Number(localStorage.getItem('notifications_cleared_ts') || 0);
+                      
+                      // Check if valid timestamp
+                      if (data.timestamp && data.timestamp > clearedTs) {
+                          addLocalNotification({
+                              id: change.doc.id,
+                              text: data.text,
+                              time: data.timestamp,
+                              read: false,
+                              type: 'system',
+                              isHighlighted: data.isHighlighted || false
+                          });
+                      }
+                  }
+              });
+          });
+      } catch (e) { console.log('Notif init error', e); }
+
+      loadLocalNotifications();
+  }
+
+  function addLocalNotification(notif) {
+      let existing = JSON.parse(localStorage.getItem('my_notifications') || '[]');
+      
+      // Dedupe
+      if (existing.find(n => n.id === notif.id)) return;
+      
+      existing.push(notif);
+      
+      // Sort by time DESC
+      existing.sort((a, b) => b.time - a.time);
+      
+      // Limit
+      if (existing.length > 20) existing = existing.slice(0, 20);
+      
+      localStorage.setItem('my_notifications', JSON.stringify(existing));
+      renderNotifications(existing);
+      
+      const unread = existing.filter(n => !n.read).length;
+      updateBadge(unread);
+      
+      // Toast if new and recent (within 5 mins)
+      if (!notif.read && (Date.now() - notif.time < 300000)) {
+           showToast('📢 Уведомление', notif.text);
+      }
+  }
+
+  function loadLocalNotifications() {
+      let existing = JSON.parse(localStorage.getItem('my_notifications') || '[]');
+      // Sort on load too
+      existing.sort((a, b) => b.time - a.time);
+      
+      const clearedTs = Number(localStorage.getItem('notifications_cleared_ts') || 0);
+      const filtered = existing.filter(n => n.time > clearedTs);
+      
+      renderNotifications(filtered);
+      const unread = filtered.filter(n => !n.read).length;
+      updateBadge(unread);
+  }
+
+  function markAllAsRead() {
+      const existing = JSON.parse(localStorage.getItem('my_notifications') || '[]');
+      let changed = false;
+      existing.forEach(n => {
+          if(!n.read) {
+              n.read = true;
+              changed = true;
+          }
+      });
+      if(changed) {
+          localStorage.setItem('my_notifications', JSON.stringify(existing));
+          renderNotifications(existing);
+          updateBadge(0);
+      }
+  }
+
+  function updateBadge(count) {
+      const badge = document.querySelector('#notifyBtn .notify-badge');
+      if (badge) {
+          badge.style.display = count > 0 ? 'block' : 'none';
+      }
+  }
+
+  function renderNotifications(list) {
+      const container = document.getElementById('notifList');
+      if (!container) return;
+      
+      if (list.length === 0) {
+          container.innerHTML = `
+            <div style="text-align:center; padding:40px 20px; color:var(--text-sec); display:flex; flex-direction:column; align-items:center; gap:12px;">
+                <div style="font-size:2.5rem; opacity:0.2;">🔕</div>
+                <div style="font-weight:600;">Уведомлений нет</div>
+                <div style="font-size:0.8rem; opacity:0.6;">Здесь будут появляться важные сообщения</div>
+            </div>`;
+          return;
+      }
+      
+      container.innerHTML = '';
+      list.forEach(n => {
+          const div = document.createElement('div');
+          div.className = `notif-item ${n.read ? '' : 'unread'}`;
+          
+          if (n.isHighlighted) {
+              div.style.border = '1px solid #fbbf24';
+              div.style.background = 'rgba(251, 191, 36, 0.1)';
+              div.style.boxShadow = '0 0 10px rgba(251, 191, 36, 0.2)';
+          }
+          
+          const date = new Date(n.time);
+          const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          
+          let icon = '🔔';
+          if(n.type === 'system' || n.type === 'broadcast') icon = '📢';
+          if(n.type === 'chat') icon = '💬';
+
+          div.innerHTML = `
+              <div style="display:flex; gap:12px; align-items:flex-start;">
+                  <div style="font-size:1.2rem; margin-top:2px;">${icon}</div>
+                  <div style="flex:1;">
+                      <div style="line-height:1.4; margin-bottom:4px;">${n.text}</div>
+                      <div class="notif-time">${timeStr}</div>
+                  </div>
+              </div>
+          `;
+          container.appendChild(div);
+      });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     loadCurrentUser();
     createParticles();
     initSlider();
+    initChat();
+    initNotifications();
   });
 
   function initSlider() {

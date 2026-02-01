@@ -277,6 +277,7 @@
       min-height: 28px;
       font-size: 0.8rem;
       font-size: 0.9rem;
+    }
     .spin-type-btn:hover {
       transform: translateY(-1px);
       background: rgba(99,102,241,0.35);
@@ -370,7 +371,7 @@
         font-size: 1.8rem;
       }
       .mult-row {
-        grid-template-columns: repeat(5, 1fr); /* Keep 5 cols if fits, or 3 */
+        grid-template-columns: repeat(3, 1fr);
         gap: 8px;
         overflow-x: auto; /* Scroll if too tight */
         padding-bottom: 4px;
@@ -379,6 +380,10 @@
         font-size: 1rem;
         padding: 12px 0;
         min-height: 52px;
+      }
+      .spin-type-btn {
+        min-height: 36px;
+        font-size: 1rem;
       }
       .upgrade-btn {
         font-size: 1.2rem;
@@ -391,11 +396,23 @@
         grid-template-columns: repeat(3, 1fr); /* 3 cols on mobile */
         gap: 8px;
       }
+      .selected-list {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .modal-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .modal-controls {
+        width: 100%;
+      }
     }
     @media (max-width: 380px) {
         .inventory-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 380px) {
+      .selected-list { grid-template-columns: repeat(2, 1fr); }
       .ring-wrap {
         width: 120px;
         height: 120px;
@@ -594,6 +611,12 @@
       justify-content: space-between;
       margin-bottom: 10px;
     }
+    .modal-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      width: 60%;
+    }
     .modal-actions .btn {
       padding: 8px 12px;
       border: none;
@@ -749,7 +772,7 @@
       <div class="modal-body">
         <div class="modal-actions">
           <div class="section-title" id="modalTitle">Выберите предмет</div>
-          <div style="display:flex; gap:8px; align-items:center; width: 60%;">
+          <div class="modal-controls">
             <button class="btn" id="sortPriceBtn">Цена ↑</button>
             <div class="modal-search-wrapper">
               <input type="text" id="searchInput" placeholder="Поиск по названию или цене">

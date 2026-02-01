@@ -34,20 +34,23 @@
 
         /* New Battle Card Styles */
         .battle-card {
-            background: #1e1b2e;
-            border-radius: 16px;
+            background: rgba(30, 27, 46, 0.7);
+            border: 1px solid rgba(139, 92, 246, 0.15);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
             padding: 16px;
             margin-bottom: 16px;
             display: flex;
             align-items: center;
             gap: 16px;
-            border: 1px solid rgba(139, 92, 246, 0.2);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
-            contain: paint;
-            will-change: transform;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
-        .battle-card:hover { transform: translateY(-2px); border-color: rgba(139, 92, 246, 0.5); }
+        .battle-card:hover {
+            border-color: #8b5cf6;
+            box-shadow: 0 12px 35px rgba(139, 92, 246, 0.25);
+            transform: translateY(-2px);
+        }
         
         .battle-round {
             display: flex;
@@ -139,6 +142,17 @@
         .battle-action-btn.delete { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
 
         @media (max-width: 480px) {
+            .case-select-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 8px !important;
+            }
+            .case-card .price {
+                font-size: 0.85rem !important;
+                padding: 4px 0 !important;
+            }
+            .case-image-wrap {
+                min-height: 100px !important;
+            }
             .battle-card { flex-wrap: wrap; gap: 12px; }
             .battle-cases { width: 100%; order: 3; margin-top: 5px; justify-content: center; }
             .battle-info-right { flex-direction: row; justify-content: space-between; width: 100%; align-items: center; order: 2; }
@@ -169,18 +183,25 @@
             margin: 20px 0;
         }
         .case-card {
-            background: #1e1b2e;
-            border-radius: 16px;
+            background: rgba(30, 27, 46, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 18px;
             cursor: pointer;
             overflow: hidden;
             box-shadow: 0 4px 18px rgba(0,0,0,0.4);
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
-            border: 1px solid rgba(255,255,255,0.05);
+            border: 1px solid rgba(139, 92, 246, 0.2);
             /* aspect-ratio removed to allow content to dictate height */
             contain: paint;
             will-change: transform;
+        }
+        .case-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: #8b5cf6;
+            box-shadow: 0 12px 30px rgba(139, 92, 246, 0.3);
+            background: rgba(30, 27, 46, 0.8);
         }
         .case-image-wrap {
             flex: 1;
@@ -189,9 +210,9 @@
             align-items: center;
             justify-content: center;
             padding: 0;
-            background: radial-gradient(circle at center, #2d2a4a 0%, #1e1b2e 70%);
+            background: radial-gradient(circle at center, rgba(139, 92, 246, 0.15), transparent 70%);
             overflow: hidden;
-            min-height: 180px; /* Ensure a decent height for the image part */
+            min-height: 140px; /* Ensure a decent height for the image part */
         }
         .case-card img {
             width: 100%;
@@ -203,13 +224,9 @@
             will-change: transform;
             backface-visibility: hidden;
         }
-        .case-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 28px rgba(139, 92, 246, 0.25);
-            border-color: #8b5cf6;
-        }
         .case-card:hover img {
-            transform: scale(1.1) rotate(2deg);
+            transform: scale(1.15) rotate(3deg);
+            filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.5));
         }
         .case-card.selected {
             border: 3px solid #d946ef;
@@ -218,15 +235,13 @@
         }
         .case-info {
             padding: 12px;
-            background: #2a2640; /* Lighter background than #151322 */
+            background: rgba(15, 11, 21, 0.4);
+            border-top: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
             display: flex;
             flex-direction: column;
+            gap: 4px;
             align-items: center;
-            gap: 6px;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            z-index: 2;
-            position: relative; /* Reset position */
-            bottom: auto; left: auto; right: auto;
         }
         .case-card .name {
             font-weight: 700; color: white;
@@ -245,15 +260,15 @@
             backdrop-filter: none;
         }
         .case-card .price {
-            background: #fbbf24;
-            color: #111;
-            padding: 8px 0;
-            border-radius: 10px;
+            background: linear-gradient(135deg, #fbbf24, #d97706);
+            color: #000;
             font-weight: 800;
-            font-size: 1rem;
-            width: 100%;
-            text-align: center;
+            padding: 6px 14px;
+            border-radius: 8px;
+            display: inline-block;
             box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+            font-size: 0.95rem;
+            width: auto;
             margin-top: 4px;
         }
 

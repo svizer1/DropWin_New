@@ -6,13 +6,146 @@
     <title>Баттлы Кейсов | DropWin</title>
     <link rel="stylesheet" href="../style.css">
     <style>
+        /* ... existing styles ... */
         .mode-select {
             display: flex;
             gap: 12px;
             justify-content: center;
             margin: 16px 0;
         }
+        /* Re-added Mode Button Styles */
         .mode-btn {
+            padding: 10px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            background: rgba(139, 92, 246, 0.1);
+            color: #a78bfa;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            transition: all 0.2s ease;
+        }
+        .mode-btn:hover { background: rgba(139, 92, 246, 0.2); color: white; transform: translateY(-2px); }
+        .mode-btn.active {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+        }
+
+        /* New Battle Card Styles */
+        .battle-card {
+            background: #1e1b2e;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+            contain: paint;
+            will-change: transform;
+        }
+        .battle-card:hover { transform: translateY(-2px); border-color: rgba(139, 92, 246, 0.5); }
+        
+        .battle-round {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid #4c1d95;
+            background: rgba(76, 29, 149, 0.3);
+            flex-shrink: 0;
+        }
+        .round-num { font-size: 1.2rem; font-weight: 800; color: #fff; }
+        .round-label { font-size: 0.6rem; color: #a78bfa; text-transform: uppercase; }
+
+        .battle-cases {
+            flex: 1;
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            padding: 4px 0;
+            scrollbar-width: none;
+        }
+        .battle-cases::-webkit-scrollbar { display: none; }
+        
+        .battle-case-img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            transition: transform 0.2s;
+            will-change: transform;
+            backface-visibility: hidden;
+        }
+        .battle-case-img:hover { transform: scale(1.1); }
+
+        .battle-info-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            min-width: 100px;
+        }
+        .battle-price-tag {
+            background: rgba(251, 191, 36, 0.1);
+            color: #fbbf24;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            white-space: nowrap;
+        }
+        .battle-users {
+            display: flex;
+            align-items: center;
+        }
+        .battle-user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid #1e1b2e;
+            background: #2a2640;
+            margin-left: -10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: #ccc;
+            overflow: hidden;
+        }
+        .battle-user-avatar:first-child { margin-left: 0; }
+        .battle-user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+        .battle-action-btn {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transition: all 0.2s;
+            will-change: transform;
+            backface-visibility: hidden;
+        }
+        .battle-action-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5); }
+        .battle-action-btn.delete { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
+
+        @media (max-width: 480px) {
+            .battle-card { flex-wrap: wrap; gap: 12px; }
+            .battle-cases { width: 100%; order: 3; margin-top: 5px; justify-content: center; }
+            .battle-info-right { flex-direction: row; justify-content: space-between; width: 100%; align-items: center; order: 2; }
+            .battle-round { order: 1; }
+        }
+        
+        /* ... existing styles ... */
             padding: 12px 24px;
             border-radius: 12px;
             cursor: pointer;
@@ -46,6 +179,8 @@
             flex-direction: column;
             border: 1px solid rgba(255,255,255,0.05);
             /* aspect-ratio removed to allow content to dictate height */
+            contain: paint;
+            will-change: transform;
         }
         .case-image-wrap {
             flex: 1;
@@ -63,9 +198,10 @@
             height: 100%;
             object-fit: cover;
             transition: transform 0.3s ease;
-            filter: drop-shadow(0 0 10px rgba(255,255,255,0.05));
             position: absolute;
             top: 0; left: 0;
+            will-change: transform;
+            backface-visibility: hidden;
         }
         .case-card:hover {
             transform: translateY(-5px);
@@ -148,14 +284,15 @@
         }
 
         .case-box {
-            width: 95px;
-            height: 95px;
+            width: 110px;
+            height: 110px;
             background-size: cover;
             background-position: center;
             border-radius: 12px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+            border: 2px solid rgba(139, 92, 246, 0.25);
             opacity: 0;
             transform: scale(0.92);
             transition: opacity 0.5s ease, transform 0.5s ease;
@@ -169,19 +306,19 @@
 
         .case-box.revealed {
             transform: scale(1.12);
-            box-shadow: 0 0 28px rgba(168, 85, 247, 0.75);
+            box-shadow: 0 0 32px rgba(168, 85, 247, 0.85);
+            border-color: #8b5cf6;
         }
 
         .case-box.opening {
-            animation: dramaticOpen 2.8s ease-out forwards;
+            animation: dramaticOpen 0.4s ease-out forwards;
+            will-change: transform, opacity, filter;
         }
 
         @keyframes dramaticOpen {
             0%   { transform: scale(0.75) rotate(-10deg); filter: brightness(0.7); }
-            30%  { transform: scale(1.25) rotate(8deg);   filter: brightness(1.5); }
-            55%  { transform: scale(1.05) rotate(-5deg);  filter: brightness(1.25); }
-            80%  { transform: scale(1.12) rotate(4deg);   filter: brightness(1.4);  }
-            100% { transform: scale(1.12) rotate(0deg);   filter: brightness(1.2);  }
+            50%  { transform: scale(1.15) rotate(5deg);   filter: brightness(1.3); }
+            100% { transform: scale(1.1) rotate(0deg);    filter: brightness(1.2);  }
         }
 
         .item-reveal {
@@ -191,20 +328,130 @@
             font-size: 3.6rem;
             opacity: 0;
             text-shadow: 0 0 16px rgba(0,0,0,0.9);
-            animation: popIn 1s ease-out forwards;
-            animation-delay: 0.7s;
+            animation: popIn 0.3s ease-out forwards;
+            animation-delay: 0.2s;
+            z-index: 2;
+        }
+
+        .dim-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            opacity: 0;
+            animation: fadeInDim 0.25s ease forwards;
+            z-index: 1;
         }
 
         @keyframes popIn {
             0%   { transform: translate(-50%, -50%) scale(0.4) rotate(-60deg); opacity: 0; }
-            50%  { transform: translate(-50%, -50%) scale(1.55) rotate(20deg); opacity: 1; }
-            80%  { transform: translate(-50%, -50%) scale(0.95) rotate(-8deg); }
+            70%  { transform: translate(-50%, -50%) scale(1.3) rotate(10deg); opacity: 1; }
             100% { transform: translate(-50%, -50%) scale(1) rotate(0deg);     opacity: 1; }
         }
 
+        @keyframes fadeInDim {
+            100% { opacity: 1; }
+        }
+
+        /* Mobile & Retina Optimizations */
+        @media (min-width: 320px) {
+            html { font-size: 16px; }
+            .btn, .join-btn, .mode-btn, .battle-action-btn {
+                min-height: 48px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                touch-action: manipulation;
+            }
+        }
+
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .case-box { image-rendering: -webkit-optimize-contrast; }
+            .battle-case-img { image-rendering: -webkit-optimize-contrast; }
+        }
+
+        .roulette-wrap {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+        .roulette-strip {
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: flex;
+            gap: 6px;
+            padding: 8px;
+            will-change: transform;
+        }
+        .roulette-item {
+            flex: 0 0 110px;
+            height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.06);
+            border-radius: 10px;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), 0 4px 12px rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 2.4rem;
+            user-select: none;
+        }
+        .roulette-marker {
+            position: absolute;
+            top: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: calc(100% - 12px);
+            background: linear-gradient(180deg, #fbbf24, #d97706);
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.7);
+            border-radius: 2px;
+        }
+
+        /* Result Modal Styles */
+        .result-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        .result-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .result-modal {
+            background: linear-gradient(145deg, #1e1b2e, #2d2a4a);
+            border: 2px solid #8b5cf6;
+            border-radius: 24px;
+            padding: 32px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(139, 92, 246, 0.4);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .result-modal-overlay.active .result-modal {
+            transform: scale(1);
+        }
+        .result-emoji { font-size: 4rem; margin-bottom: 16px; display: block; }
+        .result-title { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; color: white; }
+        .result-prize { font-size: 2.2rem; font-weight: 900; color: #fbbf24; text-shadow: 0 0 20px rgba(251, 191, 36, 0.4); margin-bottom: 24px; }
+        .result-actions { display: flex; flex-direction: column; gap: 12px; }
+
+
         .value-label {
             position: absolute;
-            bottom: 8px; left: 50%;
+            top: 8px; left: 50%;
             transform: translateX(-50%);
             background: rgba(0,0,0,0.85);
             color: #fde047;
@@ -214,6 +461,7 @@
             font-size: 1.1rem;
             display: none;
             box-shadow: 0 2px 8px black;
+            z-index: 3;
         }
         .case-box.revealed .value-label { display: block; }
 
@@ -253,6 +501,8 @@
             font-weight: 700;
             border: none;
             transition: all 0.25s;
+            will-change: transform;
+            backface-visibility: hidden;
         }
         .btn { background: linear-gradient(135deg, #a855f7, #7e22ce); color: white; box-shadow: 0 5px 16px #a855f755; }
         .btn:hover { transform: translateY(-3px); box-shadow: 0 10px 24px #a855f788; }
@@ -349,6 +599,12 @@
             <button class="btn" id="closeChances" style="margin:20px auto 8px; display:block; min-width:140px;">Закрыть</button>
         </div>
     </div>
+    <div id="resultModalOverlay" class="result-modal-overlay">
+        <div class="result-modal" id="resultModal">
+            <div id="resultModalContent"></div>
+            <button class="btn" style="margin-top:16px; width:100%; background: #4b5563;" onclick="closeResultModal()">Закрыть</button>
+        </div>
+    </div>
             <div id="vsBotSection">
                 <div class="case-select-grid" id="botCaseGrid"></div>
                 <div class="selected-cases" id="selectedBotCases"></div>
@@ -390,6 +646,82 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, updateDoc, collection, addDoc, onSnapshot, getDocs, query, where, deleteDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        const ROULETTE_FAIR = true;
+        const ROULETTE_LOCKS = {};
+        const BATTLE_RENDERED = {};
+
+        const audioCtx = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext) ? new (window.AudioContext || window.webkitAudioContext)() : null;
+        function playTick() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.06, audioCtx.currentTime + 0.01);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.09);
+        }
+        function playWinSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.35);
+            gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.08, audioCtx.currentTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.52);
+        }
+        function startTickLoop(ms) {
+            const start = performance.now();
+            const id = setInterval(() => {
+                const elapsed = performance.now() - start;
+                if (elapsed >= ms) { clearInterval(id); return; }
+                playTick();
+            }, 110);
+            return id;
+        }
+
+        async function computeHash(text) {
+            try {
+                if (crypto && crypto.subtle) {
+                    const enc = new TextEncoder();
+                    const buf = await crypto.subtle.digest('SHA-256', enc.encode(text));
+                    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+                }
+            } catch (_) {}
+            let h = 0; for (let i = 0; i < text.length; i++) { h = (h << 5) - h + text.charCodeAt(i); h |= 0; }
+            return String(h);
+        }
+
+        function uniformPick(items) {
+            const idx = Math.floor(Math.random() * items.length);
+            return items[idx];
+        }
+        function weightedPick(items) {
+            const r = Math.random();
+            let sum = 0;
+            for (let it of items) { sum += it.prob; if (r <= sum) return it; }
+            return items[0];
+        }
+        function openCaseUniform(caseType) {
+            const items = cases[caseType].items;
+            return { ...uniformPick(items), caseType };
+        }
+        function getItemVisual(caseType, item) {
+            const img = (item.img) ? item.img : (caseOpenedBackgrounds[caseType] || caseBackgrounds[caseType] || '');
+            const desc = item.desc || `${item.name} из кейса ${caseDisplayNames[caseType] || caseType}`;
+            return { img, desc };
+        }
 
         const firebaseConfig = {
             apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
@@ -733,7 +1065,7 @@ const caseDisplayNames = {
                 card.className = `case-card ${key}`;
                 card.innerHTML = `
                     <div class="case-image-wrap">
-                        <img src="${caseBackgrounds[key]}" alt="${key}">
+                        <img src="${caseBackgrounds[key]}" alt="${key}" loading="lazy" decoding="async">
                     </div>
                     <div class="case-info">
                         <div class="name">${caseDisplayNames[key] || key}</div>
@@ -751,6 +1083,10 @@ const caseDisplayNames = {
 
         function addSelectedCase(section, caseType) {
             const arr = section === 'bot' ? selectedBotCases : selectedPlayerCases;
+            if (arr.length >= 10) {
+                alert('Максимум 10 раундов');
+                return;
+            }
             arr.push(caseType);
             updateSelectedCases(section);
             updateTotalCost(section);
@@ -799,14 +1135,25 @@ const caseDisplayNames = {
             return { ...items[0], caseType };
         }
 
-     async function playVsBot(quick = false) {
+ async function playVsBot(quick = false) {
+    if (botRunInProgress) return;
+    botRunInProgress = true;
+    document.getElementById('playVsBot')?.setAttribute('disabled', 'true');
+    document.getElementById('quickVsBot')?.setAttribute('disabled', 'true');
+    if (!currentUser) {
+        isGuest = true;
+        currentUser = { username: 'Гость', balance: 0, inventory: [] };
+    }
     const totalCost = selectedBotCases.reduce((sum, type) => sum + cases[type].price, 0);
-    if (currentUser.balance < totalCost) {
+    const balance = Number(currentUser?.balance || 0);
+    if (balance < totalCost) {
         alert('Недостаточно баланса');
+        botRunInProgress = false;
         return;
     }
     if (selectedBotCases.length === 0) {
         alert('Выберите хотя бы один кейс');
+        botRunInProgress = false;
         return;
     }
 
@@ -814,10 +1161,11 @@ const caseDisplayNames = {
     await saveUser();
     updateBalance();
 
-        const playerItems = selectedBotCases.map(type => openCase(type));
+        const playerItems = selectedBotCases.map(type => ROULETTE_FAIR ? openCaseUniform(type) : openCase(type));
         const playerTotal = playerItems.reduce((sum, item) => sum + item.value, 0);
-        const botItems    = selectedBotCases.map(type => openCaseWithBotBoost(type));
-        const botTotal    = botItems.reduce((sum, item) => sum + item.value, 0);
+        const botItems    = selectedBotCases.map(type => ROULETTE_FAIR ? openCaseUniform(type) : openCaseWithBotBoost(type));
+        lastPlayerItems = playerItems;
+        lastBotItems = botItems;
 
     const resultsDiv = document.getElementById('botResults');
     if (!resultsDiv) return;
@@ -843,67 +1191,213 @@ const caseDisplayNames = {
     `;
 
     // Запускаем анимацию параллельно
-    await Promise.all([
-        animateBatchedOpenings('playerCases', selectedBotCases, playerItems, playerTotal, 'player', quick),
-        animateBatchedOpenings('botCases', selectedBotCases, botItems, botTotal, 'bot', quick)
-    ]);
+    const dual = await animateDualOpenings('playerCases', selectedBotCases, playerItems, playerTotal, 'botCases', selectedBotCases, botItems, 0, quick);
 
     // Показываем результат только после завершения обеих анимаций
-    showBotResult(playerTotal, botTotal, totalCost);
+    const realPlayerTotal = (dual?.leftResults || []).reduce((s, it) => s + Number(it.value || 0), 0);
+    const realBotTotal = (dual?.rightResults || []).reduce((s, it) => s + Number(it.value || 0), 0);
+    lastPlayerItems = dual?.leftResults || [];
+    lastBotItems = dual?.rightResults || [];
+    showBotResult(realPlayerTotal, realBotTotal, totalCost);
+    botRunInProgress = false;
+    document.getElementById('playVsBot')?.removeAttribute('disabled');
+    document.getElementById('quickVsBot')?.removeAttribute('disabled');
+}
+
+function buildRouletteSequence(caseType, targetItem) {
+    const src = cases[caseType].items;
+    const pick = () => src[Math.floor(Math.random() * src.length)];
+    const seq = [];
+    for (let i = 0; i < 20; i++) seq.push(pick());
+    seq.push(targetItem);
+    for (let i = 0; i < 4; i++) seq.push(pick());
+    return seq;
+}
+
+function renderRoulette(box, caseType, targetItem) {
+    const wrap = document.createElement('div');
+    wrap.className = 'roulette-wrap';
+    const strip = document.createElement('div');
+    strip.className = 'roulette-strip';
+    const marker = document.createElement('div');
+    marker.className = 'roulette-marker';
+    const seq = buildRouletteSequence(caseType, targetItem);
+    {
+        const frag = document.createDocumentFragment();
+        for (let i = 0; i < seq.length; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'roulette-item';
+            cell.textContent = seq[i].emoji;
+            frag.appendChild(cell);
+        }
+        strip.appendChild(frag);
+    }
+    wrap.appendChild(strip);
+    wrap.appendChild(marker);
+    box.innerHTML = '';
+    box.appendChild(wrap);
+    const val = document.createElement('div');
+    val.className = 'value-label';
+    val.textContent = '';
+    box.appendChild(val);
+    box.dataset.itemEmoji = targetItem.emoji || '';
+    box.dataset.itemName = targetItem.name || '';
+    box.dataset.itemValue = String(targetItem.value || 0);
+    box._seq = seq;
+    box._valEl = val;
+    box._padLeft = parseFloat(getComputedStyle(strip).paddingLeft) || 0;
+    const items = strip.children;
+    let step = 92;
+    if (items.length >= 2) {
+        const a = items[0].getBoundingClientRect();
+        const b = items[1].getBoundingClientRect();
+        step = Math.abs(b.left - a.left);
+    }
+    const targetIndex = seq.findIndex(s => s === targetItem);
+    box._step = step;
+    return { strip, step, targetIndex };
+}
+
+function spinRoulette(box, strip, step, targetIndex, quick) {
+    return new Promise(resolve => {
+        const boxRect = box.getBoundingClientRect();
+        const paddingLeft = box._padLeft || 0;
+        const finalX = -((paddingLeft) + (targetIndex * step) + (step / 2) - (boxRect.width / 2));
+        const duration = quick ? 800 : 2800;
+        strip.style.transition = `transform ${duration/1000}s cubic-bezier(0.15, 0.85, 0.35, 1)`;
+        const tickId = startTickLoop(duration);
+        requestAnimationFrame(() => {
+            strip.style.transform = `translate3d(${finalX}px,0,0)`;
+        });
+        strip.addEventListener('transitionend', () => {
+            box.classList.add('revealed');
+            playWinSound();
+            const selIndex = Math.max(0, Math.min((box._seq ? box._seq.length - 1 : 0),
+                Math.round((boxRect.width / 2 - finalX - paddingLeft - (step / 2)) / step)
+            ));
+            const selectedItem = box._seq ? box._seq[selIndex] : { emoji: box.dataset.itemEmoji || '❓', value: Number(box.dataset.itemValue || 0) };
+            const dim = document.createElement('div');
+            dim.className = 'dim-overlay';
+            const emoji = document.createElement('div');
+            emoji.className = 'item-reveal';
+            emoji.textContent = selectedItem.emoji || '❓';
+            if (box._valEl) box._valEl.textContent = `${Number(selectedItem.value || 0)}₽`;
+            box.appendChild(dim);
+            box.appendChild(emoji);
+            clearInterval(tickId);
+            resolve(selectedItem);
+        }, { once: true });
+    });
 }
 
 async function animateBatchedOpenings(containerId, caseTypes, items, total, side, quick = false) {
     const container = document.getElementById(containerId);
     if (!container) return;
-
+    if (ROULETTE_LOCKS[containerId]) return;
+    ROULETTE_LOCKS[containerId] = true;
     container.innerHTML = '';
-
     const totalEl = document.getElementById(containerId === 'playerCases' ? 'playerTotal' : 'botTotal');
-    if (totalEl) totalEl.textContent = `Итого: ${total}₽`;
-
-    // Создаём все кейсы сразу
+    if (totalEl) totalEl.textContent = `Итого: 0₽`;
+    const boxes = [];
     caseTypes.forEach((type, index) => {
         const item = items[index];
         const box = document.createElement('div');
         box.className = `case-box ${type}`;
         box.dataset.type = type;
         box.style.backgroundImage = `url('${caseBackgrounds[type] || ''}')`;
-        box.innerHTML = `
-            <div class="item-reveal">${item.emoji}</div>
-            <div class="value-label">${item.value}₽</div>
-        `;
         container.appendChild(box);
-
-        // Плавное появление
-        setTimeout(() => box.classList.add('visible'), index * 80 + 100);
+        const { strip, step, targetIndex } = renderRoulette(box, type, item);
+        boxes.push({ box, strip, step, targetIndex });
+        setTimeout(() => box.classList.add('visible'), index * 60 + 80);
     });
-
+    let results = [];
     if (quick) {
-        // Быстрое открытие — всё почти одновременно
-        setTimeout(() => {
-            container.querySelectorAll('.case-box').forEach(box => {
-                const type = box.dataset.type;
-                const opened = caseOpenedBackgrounds[type];
-                if (opened) box.style.backgroundImage = `url('${opened}')`;
-                box.classList.add('opening', 'revealed');
-            });
-        }, 600);
+        results = await Promise.all(boxes.map(b => spinRoulette(b.box, b.strip, b.step, b.targetIndex, true)));
     } else {
-        // Нормальная анимация — по одному с задержкой
-        for (let i = 0; i < caseTypes.length; i++) {
-            await new Promise(resolve => setTimeout(resolve, 700));
-            const box = container.children[i];
-            if (!box) continue;
-            const type = box.dataset.type;
-            const opened = caseOpenedBackgrounds[type];
-            if (opened) box.style.backgroundImage = `url('${opened}')`;
-            box.classList.add('opening');
-            setTimeout(() => box.classList.add('revealed'), 1400);
+        for (let i = 0; i < boxes.length; i += 2) {
+            const p = [spinRoulette(boxes[i].box, boxes[i].strip, boxes[i].step, boxes[i].targetIndex, false)];
+            if (boxes[i + 1]) p.push(spinRoulette(boxes[i + 1].box, boxes[i + 1].strip, boxes[i + 1].step, boxes[i + 1].targetIndex, false));
+            const batch = await Promise.all(p);
+            results.push(...batch);
         }
     }
+    ROULETTE_LOCKS[containerId] = false;
+    const newTotal = results.reduce((s, it) => s + Number(it.value || 0), 0);
+    if (totalEl) totalEl.textContent = `Итого: ${newTotal}₽`;
+    return results;
 }
 
+async function animateDualOpenings(leftId, leftTypes, leftItems, leftTotal, rightId, rightTypes, rightItems, rightTotal, quick = false) {
+    const left = document.getElementById(leftId);
+    const right = document.getElementById(rightId);
+    if (!left || !right) return;
+    if (ROULETTE_LOCKS[leftId] || ROULETTE_LOCKS[rightId]) return;
+    ROULETTE_LOCKS[leftId] = true;
+    ROULETTE_LOCKS[rightId] = true;
+    left.innerHTML = '';
+    right.innerHTML = '';
+    const lTotalEl = document.getElementById((leftId === 'playerCases' || leftId === 'myBattleCases') ? 'playerTotal' : 'botTotal');
+    const rTotalEl = document.getElementById((rightId === 'botCases' || rightId === 'oppBattleCases') ? 'botTotal' : 'playerTotal');
+    if (lTotalEl) lTotalEl.textContent = `Итого: 0₽`;
+    if (rTotalEl) rTotalEl.textContent = `Итого: 0₽`;
+    const leftBoxes = [];
+    const rightBoxes = [];
+    leftTypes.forEach((type, index) => {
+        const item = leftItems[index];
+        const box = document.createElement('div');
+        box.className = `case-box ${type}`;
+        box.dataset.type = type;
+        box.style.backgroundImage = `url('${caseBackgrounds[type] || ''}')`;
+        left.appendChild(box);
+        const { strip, step, targetIndex } = renderRoulette(box, type, item);
+        leftBoxes.push({ box, strip, step, targetIndex });
+        setTimeout(() => box.classList.add('visible'), index * 60 + 80);
+    });
+    rightTypes.forEach((type, index) => {
+        const item = rightItems[index];
+        const box = document.createElement('div');
+        box.className = `case-box ${type}`;
+        box.dataset.type = type;
+        box.style.backgroundImage = `url('${caseBackgrounds[type] || ''}')`;
+        right.appendChild(box);
+        const { strip, step, targetIndex } = renderRoulette(box, type, item);
+        rightBoxes.push({ box, strip, step, targetIndex });
+        setTimeout(() => box.classList.add('visible'), index * 60 + 80);
+    });
+    let leftResults = [];
+    let rightResults = [];
+    if (quick) {
+        [leftResults, rightResults] = await Promise.all([
+            Promise.all(leftBoxes.map(b => spinRoulette(b.box, b.strip, b.step, b.targetIndex, true))),
+            Promise.all(rightBoxes.map(b => spinRoulette(b.box, b.strip, b.step, b.targetIndex, true)))
+        ]);
+    } else {
+        const maxLen = Math.max(leftBoxes.length, rightBoxes.length);
+        for (let i = 0; i < maxLen; i += 2) {
+            const tasks = [];
+            if (leftBoxes[i]) tasks.push(spinRoulette(leftBoxes[i].box, leftBoxes[i].strip, leftBoxes[i].step, leftBoxes[i].targetIndex, false));
+            if (leftBoxes[i + 1]) tasks.push(spinRoulette(leftBoxes[i + 1].box, leftBoxes[i + 1].strip, leftBoxes[i + 1].step, leftBoxes[i + 1].targetIndex, false));
+            if (rightBoxes[i]) tasks.push(spinRoulette(rightBoxes[i].box, rightBoxes[i].strip, rightBoxes[i].step, rightBoxes[i].targetIndex, false));
+            if (rightBoxes[i + 1]) tasks.push(spinRoulette(rightBoxes[i + 1].box, rightBoxes[i + 1].strip, rightBoxes[i + 1].step, rightBoxes[i + 1].targetIndex, false));
+            const batch = await Promise.all(tasks);
+            const leftCountInBatch = (leftBoxes[i] ? 1 : 0) + (leftBoxes[i + 1] ? 1 : 0);
+            leftResults.push(...batch.slice(0, leftCountInBatch));
+            rightResults.push(...batch.slice(leftCountInBatch));
+        }
+    }
+    ROULETTE_LOCKS[leftId] = false;
+    ROULETTE_LOCKS[rightId] = false;
+    const lTotal = leftResults.reduce((s, it) => s + Number(it.value || 0), 0);
+    const rTotal = rightResults.reduce((s, it) => s + Number(it.value || 0), 0);
+    if (lTotalEl) lTotalEl.textContent = `Итого: ${lTotal}₽`;
+    if (rTotalEl) rTotalEl.textContent = `Итого: ${rTotal}₽`;
+    return { leftResults, rightResults };
+}
 let lastBotRun = null;
+let lastPlayerItems = [];
+let lastBotItems = [];
+let botRunInProgress = false;
+let botRunCompleted = false;
 function showBotResult(playerTotal, botTotal, totalCost) {
     const resultTextEl = document.getElementById('resultText');
     if (!resultTextEl) return;
@@ -957,11 +1451,10 @@ function showBotResult(playerTotal, botTotal, totalCost) {
             if (lastBotRun.processed) return;
             sellBtn.disabled = true;
             stashBtn.disabled = true;
+            openResultModal({ emoji: '🎁', title: 'Отложено', prize: lastBotRun.prize });
             if (isGuest) {
-                const playerBoxes = document.querySelectorAll('#playerCases .case-box');
-                const botBoxes = document.querySelectorAll('#botCases .case-box');
-                const myItems = Array.from(playerBoxes).map(b => ({ emoji: b.querySelector('.item-reveal')?.textContent || '❓', name: 'Предмет', value: Number(b.querySelector('.value-label')?.textContent.replace('₽','')) || 0 }));
-                const oppItems = Array.from(botBoxes).map(b => ({ emoji: b.querySelector('.item-reveal')?.textContent || '❓', name: 'Предмет', value: Number(b.querySelector('.value-label')?.textContent.replace('₽','')) || 0 }));
+                const myItems = lastPlayerItems.map(it => ({ emoji: it.emoji, name: it.name, value: it.value }));
+                const oppItems = lastBotItems.map(it => ({ emoji: it.emoji, name: it.name, value: it.value }));
                 const saveBoth = playerTotal > botTotal;
                 const itemsToSave = saveBoth ? myItems.concat(oppItems) : myItems;
                 let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
@@ -985,10 +1478,8 @@ function showBotResult(playerTotal, botTotal, totalCost) {
                 lastBotRun.processed = true;
                 return;
             }
-            const playerBoxes = document.querySelectorAll('#playerCases .case-box');
-            const botBoxes = document.querySelectorAll('#botCases .case-box');
-            const myItems = Array.from(playerBoxes).map(b => ({ emoji: b.querySelector('.item-reveal')?.textContent || '❓', name: 'Предмет', value: Number(b.querySelector('.value-label')?.textContent.replace('₽','')) || 0 }));
-            const oppItems = Array.from(botBoxes).map(b => ({ emoji: b.querySelector('.item-reveal')?.textContent || '❓', name: 'Предмет', value: Number(b.querySelector('.value-label')?.textContent.replace('₽','')) || 0 }));
+            const myItems = lastPlayerItems.map(it => ({ emoji: it.emoji, name: it.name, value: it.value }));
+            const oppItems = lastBotItems.map(it => ({ emoji: it.emoji, name: it.name, value: it.value }));
             const saveBoth = playerTotal > botTotal;
             const itemsToSave = saveBoth ? myItems.concat(oppItems) : myItems;
             const userSnap = await getDoc(doc(db, 'users', userId));
@@ -1003,14 +1494,118 @@ function showBotResult(playerTotal, botTotal, totalCost) {
                 botRunId: lastBotRun.runId,
                 timestamp: Date.now()
             }));
-            const updatedInv = inventory.concat(newItems);
-            await updateDoc(doc(db, 'users', userId), { inventory: updatedInv });
-            currentUser.inventory = updatedInv;
-            resultTextEl.innerHTML += `<br><div style="text-align:center; padding:12px; color:#a78bfa;">Отложено: ${newItems.length} предметов</div>`;
-            lastBotRun.processed = true;
+            try {
+                const updatedInv = inventory.concat(newItems);
+                await updateDoc(doc(db, 'users', userId), { inventory: updatedInv });
+                currentUser.inventory = updatedInv;
+                resultTextEl.innerHTML += `<br><div style="text-align:center; padding:12px; color:#a78bfa;">Отложено: ${newItems.length} предметов</div>`;
+                lastBotRun.processed = true;
+            } catch (e) {
+                let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+                const idx = users.findIndex(u => u.username === currentUser.username);
+                let entry = idx !== -1 ? users[idx] : { username: currentUser.username, balance: currentUser.balance || 0, inventory: [] };
+                entry.inventory = (Array.isArray(entry.inventory) ? entry.inventory : []).concat(newItems);
+                if (idx !== -1) users[idx] = entry; else users.push(entry);
+                localStorage.setItem('dropwin_users', JSON.stringify(users));
+                currentUser.inventory = entry.inventory;
+                resultTextEl.innerHTML += `<br><div style="text-align:center; padding:12px; color:#fbbf24;">Сохранено локально: ${newItems.length} предметов</div>`;
+                lastBotRun.processed = true;
+            }
         };
     }
 }
+
+function openResultModal(opts) {
+    const overlay = document.getElementById('resultModalOverlay');
+    const content = document.getElementById('resultModalContent');
+    if (!overlay || !content) return;
+    const emoji = opts.emoji || '🎉';
+    const title = opts.title || 'Результат';
+    const prize = typeof opts.prize === 'number' ? opts.prize : 0;
+    content.innerHTML = `
+        <span class="result-emoji">${emoji}</span>
+        <div class="result-title">${title}</div>
+        <div class="result-prize">${prize}₽</div>
+        <div class="result-actions">
+            <button class="btn" style="width:100%;">Окей</button>
+        </div>
+    `;
+    overlay.classList.add('active');
+}
+function closeResultModal() {
+    const overlay = document.getElementById('resultModalOverlay');
+    if (overlay) overlay.classList.remove('active');
+}
+window.closeResultModal = closeResultModal;
+
+function autoSaveBotRun() {
+    try {
+        if (!lastBotRun || lastBotRun.processed) return;
+        const saveBoth = (lastBotRun.playerTotal || 0) > (lastBotRun.botTotal || 0);
+        const myItems = (lastPlayerItems || []).map(it => ({ emoji: it.emoji, name: it.name, value: it.value }));
+        const oppItems = (lastBotItems || []).map(it => ({ emoji: it.emoji, name: it.name, value: it.value }));
+        const itemsToSave = saveBoth ? myItems.concat(oppItems) : myItems;
+        if (isGuest) {
+            let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+            const idx = users.findIndex(u => u.username === 'Гость');
+            let guest = idx !== -1 ? users[idx] : { username: 'Гость', balance: 0, inventory: [] };
+            const inventory = Array.isArray(guest.inventory) ? guest.inventory : [];
+            const newItems = itemsToSave.map(it => ({
+                id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(16).slice(2)),
+                emoji: it.emoji,
+                name: it.name,
+                value: it.value,
+                source: 'Баттл:Бот',
+                botRunId: lastBotRun.runId,
+                timestamp: Date.now()
+            }));
+            guest.inventory = inventory.concat(newItems);
+            if (idx !== -1) users[idx] = guest; else users.push(guest);
+            localStorage.setItem('dropwin_users', JSON.stringify(users));
+            currentUser = guest;
+            lastBotRun.processed = true;
+        } else if (userId) {
+            // Быстрая попытка синхронного сохранения — запускаем без ожидания
+            (async () => {
+                try {
+                    const userSnap = await getDoc(doc(db, 'users', userId));
+                    const userData = userSnap.exists() ? userSnap.data() : {};
+                    const inventory = Array.isArray(userData.inventory) ? userData.inventory : [];
+                    const newItems = itemsToSave.filter(it => !inventory.some(e => e.botRunId === lastBotRun.runId && e.name === it.name && e.value === it.value && e.source === 'Баттл:Бот')).map(it => ({
+                        id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(16).slice(2)),
+                        emoji: it.emoji,
+                        name: it.name,
+                        value: it.value,
+                        source: 'Баттл:Бот',
+                        botRunId: lastBotRun.runId,
+                        timestamp: Date.now()
+                    }));
+                    const updatedInv = inventory.concat(newItems);
+                    try {
+                        await updateDoc(doc(db, 'users', userId), { inventory: updatedInv });
+                        currentUser.inventory = updatedInv;
+                        lastBotRun.processed = true;
+                    } catch (e) {
+                        let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+                        const idx = users.findIndex(u => u.username === currentUser.username);
+                        let entry = idx !== -1 ? users[idx] : { username: currentUser.username, balance: currentUser.balance || 0, inventory: [] };
+                        entry.inventory = (Array.isArray(entry.inventory) ? entry.inventory : []).concat(newItems);
+                        if (idx !== -1) users[idx] = entry; else users.push(entry);
+                        localStorage.setItem('dropwin_users', JSON.stringify(users));
+                        currentUser.inventory = entry.inventory;
+                        lastBotRun.processed = true;
+                    }
+                } catch (e) {}
+            })();
+        }
+    } catch (e) {}
+}
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') autoSaveBotRun();
+});
+window.addEventListener('beforeunload', () => {
+    autoSaveBotRun();
+});
 
         async function saveUser() {
             try {
@@ -1088,6 +1683,7 @@ function showBotResult(playerTotal, botTotal, totalCost) {
                 const battleDoc = await addDoc(collection(db, 'battles'), {
                     creator: userId,
                     creatorName: currentUser.username,
+                    creatorAvatar: currentUser.avatarUrl || null,
                     caseTypes: selectedPlayerCases,
                     totalCost: singleCost,          // стоимость одного игрока
                     isCharity: isCharityMode,
@@ -1164,6 +1760,7 @@ function showBotResult(playerTotal, botTotal, totalCost) {
                             } catch (e) {}
                         }
                     } else if (data.status === 'finished') {
+                        if (BATTLE_RENDERED[battleId]) return;
                         const p1Total = data.player1Total;
                         const p2Total = data.player2Total;
                         let winner = null;
@@ -1213,8 +1810,8 @@ function showBotResult(playerTotal, botTotal, totalCost) {
                             </div>
                         `;
 
-                        await animateBatchedOpenings('myBattleCases', data.caseTypes, myItems, myTotal, 'my', false);
-                        await animateBatchedOpenings('oppBattleCases', data.caseTypes, oppItems, oppTotal, 'opp', false);
+                        await animateDualOpenings('myBattleCases', data.caseTypes, myItems, myTotal, 'oppBattleCases', data.caseTypes, oppItems, oppTotal, false);
+                        BATTLE_RENDERED[battleId] = true;
 
                         const sellBtn = document.getElementById('sellItemsBtn');
                         const stashBtn = document.getElementById('stashItemsBtn');
@@ -1269,6 +1866,8 @@ function showBotResult(playerTotal, botTotal, totalCost) {
                                 sellBtn.disabled = true;
                                 const claimedField = isPlayer1 ? 'player1Claimed' : 'player2Claimed';
                                 const savedFlagField = isPlayer1 ? 'player1Saved' : 'player2Saved';
+                                const modalPrize = winner === userId ? (myTotal + oppTotal) : (!winner ? myTotal : myTotal);
+                                openResultModal({ emoji: '🎁', title: 'Отложено', prize: modalPrize });
                                 try {
                                     await runTransaction(db, async (tx) => {
                                         const freshBattle = await tx.get(snap.ref);
@@ -1345,50 +1944,85 @@ function showBotResult(playerTotal, botTotal, totalCost) {
             });
         }
 
+        let battlesUnsubscribe = null;
+
         async function loadBattles() {
             try {
+                if (battlesUnsubscribe) {
+                    battlesUnsubscribe();
+                    battlesUnsubscribe = null;
+                }
+                
                 const q = query(collection(db, 'battles'), where('status', '==', 'open'));
-                onSnapshot(q, (querySnap) => {
+                battlesUnsubscribe = onSnapshot(q, (querySnap) => {
                     const listDiv = document.getElementById('battleList');
+                    if (!listDiv) return;
                     listDiv.innerHTML = '';
                     if (querySnap.empty) {
-                        listDiv.innerHTML = '<div>Пока нет открытых баттлов</div>';
+                        listDiv.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:20px;">Пока нет открытых баттлов</div>';
                         return;
                     }
                     querySnap.forEach(snap => {
                         const data = snap.data();
-                        const priceText = data.isCharity
-                            ? '<span class="battle-price free">Бесплатно</span>'
-                            : `<span class="battle-price paid">${data.totalCost}₽</span>`;
-
-                        const charityBadge = data.isCharity
-                            ? '<span class="charity-label">Благотворительный</span>'
-                            : '';
-
+                        const rounds = data.caseTypes ? data.caseTypes.length : 0;
+                        const price = data.isCharity ? 'Бесплатно' : `${data.totalCost}₽`;
+                        
                         const div = document.createElement('div');
-                        div.className = 'battle-item';
-                        div.innerHTML = `
-                            <div>Создатель: <span class="nickname">${data.creatorName || '???'}</span> ${charityBadge}</div>
-                            <div>Кейсы: ${data.caseTypes.map(t => `${caseDisplayNames[t] || t} (${cases[t]?.price || '?'}₽)`).join(', ')}</div>
-                            <div>${priceText}</div>
-                            <button class="join-btn" data-battle-id="${snap.id}">Присоединиться</button>
-                        `;
-                        if (data.creator === userId) {
-                            const delBtn = document.createElement('button');
-                            delBtn.className = 'delete-battle-btn';
-                            delBtn.innerHTML = '🗑️ Удалить';
-                            delBtn.onclick = () => deleteBattle(snap.id);
-                            div.appendChild(delBtn);
+                        div.className = 'battle-card';
+                        
+                        // Case Images
+                        let casesHtml = '';
+                        if (data.caseTypes) {
+                            data.caseTypes.forEach(t => {
+                                casesHtml += `<img src="${caseBackgrounds[t] || ''}" class="battle-case-img" title="${caseDisplayNames[t] || t}" loading="lazy" decoding="async">`;
+                            });
                         }
+
+                        // Creator Avatar
+                        const creatorLetter = (data.creatorName || '?').charAt(0).toUpperCase();
+                        let avatarHtml = '';
+                        if (data.creatorAvatar) {
+                            avatarHtml = `<img src="${data.creatorAvatar}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" decoding="async">`;
+                        } else {
+                            avatarHtml = `<span>${creatorLetter}</span>`;
+                        }
+                        
+                        // Action Button
+                        let actionBtn = '';
+                        if (data.creator === userId) {
+                            actionBtn = `<button class="battle-action-btn delete" onclick="deleteBattle('${snap.id}')">Удалить</button>`;
+                        } else {
+                            actionBtn = `<button class="battle-action-btn" onclick="joinBattle('${snap.id}')">Смотреть / Войти</button>`;
+                        }
+
+                        div.innerHTML = `
+                            <div class="battle-round">
+                                <span class="round-num">${rounds}</span>
+                                <span class="round-label">Раундов</span>
+                            </div>
+                            <div class="battle-cases">
+                                ${casesHtml}
+                            </div>
+                            <div class="battle-info-right">
+                                <div class="battle-price-tag">${price}</div>
+                                <div class="battle-users">
+                                    <div class="battle-user-avatar" title="${data.creatorName}">
+                                        ${avatarHtml}
+                                    </div>
+                                    <div class="battle-user-avatar" style="border-style:dashed; opacity:0.5;">
+                                        <span>+</span>
+                                    </div>
+                                </div>
+                                ${actionBtn}
+                            </div>
+                        `;
                         listDiv.appendChild(div);
-                    });
-                    document.querySelectorAll('.join-btn').forEach(btn => {
-                        btn.addEventListener('click', () => joinBattle(btn.dataset.battleId));
                     });
                 });
             } catch (err) {
                 console.error("Ошибка загрузки списка баттлов:", err);
-                document.getElementById('battleList').innerHTML = "Ошибка загрузки баттлов.";
+                const listDiv = document.getElementById('battleList');
+                if (listDiv) listDiv.innerHTML = "Ошибка загрузки баттлов.";
             }
         }
 
@@ -1425,12 +2059,18 @@ function showBotResult(playerTotal, botTotal, totalCost) {
             }
         }
 
+        // Expose functions to window for onclick handlers
+        window.joinBattle = joinBattle;
+        window.deleteBattle = deleteBattle;
+
         async function awardPendingForUser() {
             try {
                 if (!userId || isGuest) return;
                 const myBattles1 = query(collection(db, 'battles'), where('player1', '==', userId), where('status', '==', 'finished'));
                 const myBattles2 = query(collection(db, 'battles'), where('player2', '==', userId), where('status', '==', 'finished'));
                 const [snap1, snap2] = await Promise.all([getDocs(myBattles1), getDocs(myBattles2)]);
+                let savedCount = 0;
+
                 const processBattle = async (snap) => {
                     const data = snap.data();
                     if (!data) return;
@@ -1466,29 +2106,61 @@ function showBotResult(playerTotal, botTotal, totalCost) {
                         tx.update(userRef, { inventory: updatedInv });
                         tx.update(doc(db, 'battles', snap.id), { [isP1 ? 'player1Saved' : 'player2Saved']: true });
                         currentUser.inventory = updatedInv;
+                        savedCount += newItems.length;
                     });
                 };
                 const promises = [];
                 snap1.forEach(s => promises.push(processBattle(s)));
                 snap2.forEach(s => promises.push(processBattle(s)));
                 await Promise.all(promises);
+
+                if (savedCount > 0) {
+                    const toast = document.createElement('div');
+                    toast.style.position = 'fixed';
+                    toast.style.bottom = '20px';
+                    toast.style.left = '50%';
+                    toast.style.transform = 'translateX(-50%)';
+                    toast.style.background = '#10b981';
+                    toast.style.color = 'white';
+                    toast.style.padding = '12px 24px';
+                    toast.style.borderRadius = '12px';
+                    toast.style.zIndex = '9999';
+                    toast.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4)';
+                    toast.style.fontWeight = 'bold';
+                    toast.innerHTML = `✅ Автоматически сохранено предметов: ${savedCount}`;
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 4000);
+                }
             } catch (e) {}
         }
 
         async function deleteBattle(battleId) {
             try {
                 const battleRef = doc(db, 'battles', battleId);
-                const battleSnap = await getDoc(battleRef);
-                const data = battleSnap.data();
-                if (!data || data.creator !== userId || data.status !== 'open') {
-                    throw new Error('Нельзя удалить этот баттл');
-                }
-                const refund = data.creatorPaid || data.totalCost;
-                currentUser.balance += refund;
-                await saveUser();
+                await runTransaction(db, async (tx) => {
+                    const battleSnap = await tx.get(battleRef);
+                    const data = battleSnap.data();
+                    if (!data) throw new Error('Баттл не найден');
+                    if (data.creator !== userId) throw new Error('Нельзя удалить этот баттл');
+                    if (data.status !== 'open') throw new Error('Баттл уже начался или завершен');
+
+                    const refund = data.creatorPaid || data.totalCost;
+                    const userRef = doc(db, 'users', userId);
+                    const userSnap = await tx.get(userRef);
+                    if (!userSnap.exists()) throw new Error('Пользователь не найден');
+                    
+                    const currentBalance = userSnap.data().balance || 0;
+                    const newBalance = currentBalance + refund;
+
+                    tx.update(userRef, { balance: newBalance });
+                    tx.delete(battleRef);
+                    
+                    // Update local state only after successful transaction
+                    currentUser.balance = newBalance;
+                });
+                
                 updateBalance();
-                await deleteDoc(battleRef);
-                alert(`Баттл удалён, возвращено ${refund}₽`);
+                alert(`Баттл удалён, средства возвращены`);
             } catch (err) {
                 console.error("Ошибка удаления:", err);
                 alert(err.message || "Ошибка удаления баттла");
@@ -1540,12 +2212,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const cleanPlay = playBtn.cloneNode(true);
         playBtn.parentNode.replaceChild(cleanPlay, playBtn);
         cleanPlay.addEventListener('click', () => playVsBot(false));
+        cleanPlay.addEventListener('touchstart', (e) => { e.preventDefault(); cleanPlay.click(); }, { passive: false });
     }
 
     if (quickBtn) {
         const cleanQuick = quickBtn.cloneNode(true);
         quickBtn.parentNode.replaceChild(cleanQuick, quickBtn);
         cleanQuick.addEventListener('click', () => playVsBot(true));
+        cleanQuick.addEventListener('touchstart', (e) => { e.preventDefault(); cleanQuick.click(); }, { passive: false });
     }
 
     // остальные слушатели

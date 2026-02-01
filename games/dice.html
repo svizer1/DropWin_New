@@ -130,6 +130,14 @@
   let isGuest = false;
   let userId = null;
 
+  function sanitizeData(obj) {
+    const out = {};
+    Object.entries(obj).forEach(([k, v]) => {
+      if (v !== undefined) out[k] = v;
+    });
+    return out;
+  }
+
   // ────────────────────────────────────────────────
   //  Загрузка пользователя (Firebase или Гость)
   // ────────────────────────────────────────────────
@@ -189,7 +197,7 @@
       }
       localStorage.setItem('dropwin_users', JSON.stringify(users));
     } else if (userId) {
-      updateDoc(doc(db, 'users', userId), currentUser)
+      updateDoc(doc(db, 'users', userId), sanitizeData(currentUser))
         .catch(err => console.error("Ошибка сохранения в Firestore:", err));
     }
   }

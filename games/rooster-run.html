@@ -1018,6 +1018,10 @@
         };
 
         async function startGame() {
+            if (!currentUser) {
+                alert('Профиль не загружен. Попробуйте позже или войдите.');
+                return;
+            }
             let bet = 0;
             let itemsToRemove = [];
 

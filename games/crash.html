@@ -178,6 +178,14 @@
     location.href = '../register.html';
   }
 
+  function sanitizeData(obj) {
+    const out = {};
+    Object.entries(obj).forEach(([k, v]) => {
+      if (v !== undefined) out[k] = v;
+    });
+    return out;
+  }
+
   function saveUser() {
     if (!currentUser) return;
 
@@ -191,7 +199,7 @@
       }
       localStorage.setItem('dropwin_users', JSON.stringify(users));
     } else if (userId) {
-      updateDoc(doc(db, 'users', userId), currentUser)
+      updateDoc(doc(db, 'users', userId), sanitizeData(currentUser))
         .catch(err => console.error("Firestore save error:", err));
     }
   }

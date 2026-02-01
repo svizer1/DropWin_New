@@ -86,6 +86,14 @@
   let currentUser = null;
   let userId = null;
 
+  function sanitizeData(obj) {
+    const out = {};
+    Object.entries(obj).forEach(([k, v]) => {
+      if (v !== undefined) out[k] = v;
+    });
+    return out;
+  }
+
   function loadCurrentUser() {
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -124,7 +132,7 @@
 
   async function saveUser() {
     if (userId) {
-      await updateDoc(doc(db, 'users', userId), currentUser);
+      await updateDoc(doc(db, 'users', userId), sanitizeData(currentUser));
     } else if (currentUser.isGuest) {
       let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
       const idx = users.findIndex(u => u.username === currentUser.username);

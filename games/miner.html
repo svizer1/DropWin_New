@@ -218,11 +218,19 @@
     document.getElementById('authBtn').onclick = () => location.href = '../profile.html';
   }
 
+  function sanitizeData(obj) {
+    const out = {};
+    Object.entries(obj).forEach(([k, v]) => {
+      if (v !== undefined) out[k] = v;
+    });
+    return out;
+  }
+
   // Сохранение
   async function saveUser() {
     if (!currentUser) return;
     if (!isGuest && userId) {
-      await updateDoc(doc(db, 'users', userId), currentUser).catch(console.error);
+      await updateDoc(doc(db, 'users', userId), sanitizeData(currentUser)).catch(console.error);
     } else if (isGuest) {
       let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
       const idx = users.findIndex(u => u.username === 'Гость');

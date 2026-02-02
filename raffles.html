@@ -821,6 +821,7 @@
                 const joinUpdate = {};
                 joinUpdate[`raffleJoins.${slotId}`] = Date.now();
                 joinUpdate['raffles'] = arrayUnion(slotId);
+                joinUpdate['lastRaffleJoinTime'] = Date.now(); // Update last join time to require new deposit for next join
                 
                 await updateDoc(userRef, joinUpdate);
 

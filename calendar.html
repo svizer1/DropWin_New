@@ -466,10 +466,7 @@
                 }
                 
                 // Reset daily bet logic
-                let totalBet = currentUser.totalBet || 0;
-                // If lastBetDate is not today, reset displayed bet to 0 (assuming totalBet is lifetime, we need dailyBet)
-                // Since we don't have dailyBet in DB yet, let's use a workaround or check lastBetTime
-                // Better approach: Use 'dailyBet' field if exists, else 0 if day changed
+                let totalBet = 0;
                 
                 // Check if we need to reset daily stats in DB (lazy reset)
                 const todayStr = new Date().toDateString();
@@ -477,8 +474,6 @@
                     // It's a new day, so daily stats are 0
                     totalBet = 0;
                     // We don't update DB here to avoid write spam, just display 0
-                    // But if user makes a bet, backend/game logic should handle reset. 
-                    // Here we just visualize.
                 } else {
                     totalBet = currentUser.dailyBet || 0;
                 }

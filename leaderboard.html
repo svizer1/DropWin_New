@@ -424,7 +424,7 @@
             container.innerHTML = '';
 
             const sortedUsers = users.sort((a, b) => b[sortField] - a[sortField]);
-            const top5 = sortedUsers.slice(0, 5);
+            const top5 = sortedUsers; // Show all users
 
             if (top5.length === 0) {
                 container.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8;">Пусто...</div>';

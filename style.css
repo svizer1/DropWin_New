@@ -50,7 +50,7 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* ─── LIVE FEED (Top Bar) ─────────────────────────────────────────────────── */
 .live-feed {
-    height: 90px; /* Increased height */
+    height: 110px; /* Taller for bigger images */
     background: #0f0f11;
     border-bottom: 1px solid var(--border);
     display: flex;
@@ -77,8 +77,8 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 .live-item {
-    min-width: 130px; /* Bigger width */
-    height: 70px;     /* Bigger height */
+    min-width: 150px; /* Wider cells */
+    height: 90px;     /* Taller cells */
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 12px; /* Slightly more rounded */
@@ -87,7 +87,7 @@ img { max-width: 100%; height: auto; display: block; }
     justify-content: center;
     position: relative;
     padding: 6px;
-    margin-right: 16px; /* Bigger gap */
+    margin-right: 16px;
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, border-color 0.3s ease;
     cursor: pointer;
 }
@@ -100,8 +100,8 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 .live-item img {
-    max-height: 55px; /* Bigger image */
-    max-width: 85%;
+    max-height: 90px; /* Bigger image */
+    max-width: 90%;
     object-fit: contain;
     transition: transform 0.3s ease;
 }
@@ -223,8 +223,8 @@ img { max-width: 100%; height: auto; display: block; }
     flex-direction: column;
     justify-content: center;
     min-height: 280px;
-    border-radius: 0; /* Changed from 16px to 0 to fill container */
-    box-shadow: none; /* Remove shadow to avoid gaps */
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
 }
 
 .hero-banner::before {
@@ -277,11 +277,11 @@ img { max-width: 100%; height: auto; display: block; }
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 16px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 120px;
+    min-height: 160px;
     position: relative;
     overflow: hidden;
 }
@@ -321,11 +321,15 @@ img { max-width: 100%; height: auto; display: block; }
     transform: rotate(0deg) scale(1.1) translateY(-5px);
 }
 
+.arrow-btn {
+    display: none;
+}
+
 .promo-banner-img {
     position: absolute;
     right: -25px; /* Adjusted position */
     bottom: -25px;
-    width: 160px; /* Increased from 150px */
+    width: 150px;
     height: auto;
     object-fit: contain;
     transform: rotate(-5deg);
@@ -386,7 +390,7 @@ img { max-width: 100%; height: auto; display: block; }
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 12px;
+    padding: 0;
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
@@ -395,7 +399,7 @@ img { max-width: 100%; height: auto; display: block; }
     flex-direction: column;
     align-items: center;
     text-align: center;
-    aspect-ratio: 1/1; /* Square cards */
+    aspect-ratio: 2/3;
     box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
 
@@ -407,48 +411,129 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 .image-container {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: absolute;
+    inset: 0;
     width: 100%;
+    height: 100%;
+    z-index: 0;
+    display: block;
 }
 
 .game-icon img {
-    max-width: 95%;
-    max-height: 145px;
-    object-fit: contain;
-    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.6));
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    max-width: none;
+    max-height: none;
+    filter: none;
     transition: transform 0.3s ease;
 }
 
 .game-icon:hover img {
-    transform: scale(1.15);
+    transform: scale(1.1);
 }
 
 .game-icon-name {
-    margin-top: 8px;
-    font-weight: 700;
-    font-size: 1rem;
-    z-index: 1;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    display: none;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 2;
+    margin-top: 0;
 }
 
 /* Large card variations */
 .game-icon.featured {
     grid-column: span 2;
     background: linear-gradient(to bottom right, #2e2e36, #1b1b1f);
-    aspect-ratio: 2/1;
-    flex-direction: row;
-    padding: 0 24px;
-    text-align: left;
-}
-.game-icon.featured .image-container {
+    min-height: 170px;
+    display: flex;
+    flex-direction: column;
     justify-content: flex-end;
+    padding: 20px;
+    text-align: left;
+    position: relative;
 }
+
+.game-icon.featured .image-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.game-icon.featured .image-container img {
+    object-fit: cover;
+    object-position: center;
+}
+
 .game-icon.featured .game-icon-name {
-    font-size: 1.4rem;
-    margin-top: 0;
+    display: block;
+    position: relative;
+    z-index: 2;
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 4px;
+    text-shadow: 0 4px 12px rgba(0,0,0,0.8);
+    background: none;
+    padding: 0;
+}
+
+.game-icon.featured::after {
+    content: 'Сражайся и побеждай!';
+    display: block;
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.8);
+    position: relative;
+    z-index: 2;
+    margin-top: 4px;
+}
+
+/* Live Feed Updates */
+.live-item {
+    min-width: 140px;
+    height: 100px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 8px;
+    margin-right: 12px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.live-user-avatar {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.2);
+    object-fit: cover;
+    z-index: 5;
+    background: #0f0b15;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+.live-item:hover .live-user-avatar {
+    border-color: var(--primary);
+    transform: scale(1.1);
+}
+@media (min-width: 768px) {
+    .game-icon.featured { grid-column: span 3; }
+}
+
+/* Special image override for specific icons */
+.game-icon img.contain {
+    object-fit: contain;
 }
 
 /* ─── BOTTOM NAVIGATION (Mobile) ──────────────────────────────────────────── */
@@ -1276,6 +1361,38 @@ input:focus { outline: none; border-color: var(--primary); }
     border-radius: 12px;
     cursor: pointer;
     font-size: 1rem;
+}
+
+.case-image-wrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 0;
+    background: radial-gradient(circle at center, rgba(139, 92, 246, 0.15), transparent 70%);
+    overflow: hidden;
+    min-height: 115px; /* Slightly taller than original 100px */
+}
+
+.case-card img {
+    width: 75%; /* Reduced from 85% to look less stretched */
+    height: auto;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+    position: static;
+    will-change: transform;
+    backface-visibility: hidden;
+}
+
+/* Recoil Animation */
+@keyframes recoil {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(-10px); }
+    100% { transform: translateX(0); }
+}
+.recoil {
+    animation: recoil 0.1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ─── MOBILE BATTLES 2-COL ─── */

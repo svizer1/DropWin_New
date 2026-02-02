@@ -461,6 +461,15 @@
     isSpinning = true;
     currentUser.balance -= bet;
     currentUser.totalBet = (currentUser.totalBet || 0) + bet;
+
+    // Calendar Daily Bet Logic
+    const todayStr = new Date().toDateString();
+    if (currentUser.lastDailyReset !== todayStr) {
+        currentUser.dailyBet = 0;
+        currentUser.lastDailyReset = todayStr;
+    }
+    currentUser.dailyBet = (currentUser.dailyBet || 0) + bet;
+
     currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
     await saveUser();
     document.getElementById('balance').textContent = currentUser.balance;

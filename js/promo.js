@@ -79,9 +79,7 @@ export async function redeemPromoCode(db, userId, codeInput) {
         const GLOBAL_PROMOS = {
             'PROMOCODE_DAY_670': { val: 50, type: 'money' },
             'WELCOME': { val: 100, type: 'money' },
-            'DROPWIN2026': { val: 200, type: 'money' },
-            'KAVEXS': { val: 1000, type: 'money' },
-            'KAVEXS2026': { val: 5000, type: 'money' }
+            'DROPWIN2026': { val: 200, type: 'money' }
         };
         
         if (GLOBAL_PROMOS[code]) {

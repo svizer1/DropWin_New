@@ -1867,12 +1867,18 @@
                     gameState.score += reward;
                     gameState.coins += reward;
                     
-                    // Sync balance to Firestore
+                    // Sync balance to Firestore (transaction to avoid permission issues)
                     if (currentUser) {
-                         const userRef = doc(db, 'users', currentUser.uid);
-                         updateDoc(userRef, {
-                             balance: increment(reward)
-                         }).catch(console.error);
+                        const userRef = doc(db, 'users', currentUser.uid);
+                        try {
+                            await runTransaction(db, async (tx) => {
+                                const snap = await tx.get(userRef);
+                                if (!snap.exists()) return;
+                                tx.update(userRef, { balance: increment(reward) });
+                            });
+                        } catch (e) {
+                            console.warn('Crismos: balance increment failed', e);
+                        }
                     }
 
                     gameState.xp += 10;

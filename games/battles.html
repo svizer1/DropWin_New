@@ -748,6 +748,28 @@
             for (let it of items) { sum += it.prob; if (r <= sum) return it; }
             return items[0];
         }
+        function normalizeProbs(items) {
+            const total = items.reduce((s, it) => s + (it.prob || 0), 0) || 1;
+            return items.map(it => ({ ...it, prob: Math.max(0, (it.prob || 0) / total) }));
+        }
+        function adjustItemsForPlayer(items) {
+            const adjusted = items.map((it, i) => {
+                const decreaseFactor = 1 - Math.min(0.08 * i, 0.35);
+                const newProb = (it.prob || 0) * decreaseFactor;
+                const newVal = Math.round((it.value || 0) * 0.85);
+                return { ...it, prob: newProb, value: newVal };
+            });
+            return normalizeProbs(adjusted);
+        }
+        function adjustItemsForBot(items) {
+            const adjusted = items.map((it, i) => {
+                const boostFactor = 1 + Math.min(0.22 * i, 0.6);
+                const newProb = (it.prob || 0) * boostFactor;
+                const newVal = Math.round((it.value || 0) * 0.92);
+                return { ...it, prob: newProb, value: newVal };
+            });
+            return normalizeProbs(adjusted);
+        }
         function openCaseUniform(caseType) {
             const items = cases[caseType].items;
             return { ...uniformPick(items), caseType };
@@ -806,19 +828,9 @@
             }
         }
 function openCaseWithBotBoost(caseType) {
-        const items = cases[caseType].items;
-        const r = Math.random();
-        let sum = 0;
-
-        // даём боту ~4–6% буст на более высокие предметы
-        for (let i = 0; i < items.length; i++) {
-            let adjustedProb = items[i].prob;
-            // увеличиваем шанс на каждый следующий предмет примерно на 4–7%
-            if (i > 0) adjustedProb += 0.004 * (i + 1);
-            sum += adjustedProb;
-            if (r <= sum) return { ...items[i], caseType };
-        }
-        return { ...items[0], caseType };
+        const base = cases[caseType].items;
+        const items = adjustItemsForBot(base);
+        return { ...weightedPick(items), caseType };
     }
         let currentUser = null;
         let userId = null;
@@ -1243,14 +1255,9 @@ const caseDisplayNames = {
         }
 
         function openCase(caseType) {
-            const items = cases[caseType].items;
-            const r = Math.random();
-            let sum = 0;
-            for (let it of items) {
-                sum += it.prob;
-                if (r <= sum) return { ...it, caseType };
-            }
-            return { ...items[0], caseType };
+            const base = cases[caseType].items;
+            const items = adjustItemsForPlayer(base);
+            return { ...weightedPick(items), caseType };
         }
 
  async function playVsBot(quick = false) {

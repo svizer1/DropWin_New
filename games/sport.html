@@ -1135,7 +1135,7 @@
     </div>
 
     <script>
-        let balance = 1000;
+        let balance = window.balance ?? 1000;
         let currentSport = 'football';
         let selectedBet = null;
         let isPlaying = false;
@@ -1478,6 +1478,58 @@
             if (ball) ball.className = 'ball';
             if (basketball) basketball.className = 'basketball';
         }
+    </script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, runTransaction, increment } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+            authDomain: "dropwin-8d94b.firebaseapp.com",
+            projectId: "dropwin-8d94b",
+            storageBucket: "dropwin-8d94b.firebasestorage.app",
+            messagingSenderId: "988974289403",
+            appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+            measurementId: "G-BK010MHN8N"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        function setBalanceUI(val) {
+            window.balance = val;
+            const el = document.getElementById('balance');
+            if (el) el.textContent = String(val);
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            try {
+                if (!user) return;
+                const snap = await getDoc(doc(db, 'users', user.uid));
+                const data = snap.exists() ? snap.data() : {};
+                const val = Number(data.balance || 0);
+                setBalanceUI(val);
+            } catch (e) {
+                console.error('Sport: balance fetch error', e);
+            }
+        });
+
+        window.__sportUpdateBalance = async function(amount) {
+            const user = auth.currentUser;
+            if (!user) return;
+            const userRef = doc(db, 'users', user.uid);
+            try {
+                await runTransaction(db, async (tx) => {
+                    const snap = await tx.get(userRef);
+                    if (!snap.exists()) return;
+                    tx.update(userRef, { balance: increment(amount) });
+                });
+            } catch (e) {
+                console.warn('Sport: increment failed', e);
+            }
+        };
     </script>
 </body>
 </html>

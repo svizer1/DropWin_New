@@ -209,22 +209,23 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 6px 0;
+            padding: 0;
             background: radial-gradient(circle at center, rgba(139, 92, 246, 0.15), transparent 70%);
             overflow: hidden;
-            min-height: 150px; /* Slightly taller to avoid squeeze */
+            min-height: 140px; /* Ensure a decent height for the image part */
         }
         .case-card img {
-            width: 85%;
-            height: auto;
-            object-fit: contain;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
             transition: transform 0.3s ease;
-            position: static;
+            position: absolute;
+            top: 0; left: 0;
             will-change: transform;
             backface-visibility: hidden;
         }
         .case-card:hover img {
-            transform: scale(1.08) rotate(2deg);
+            transform: scale(1.15) rotate(3deg);
             filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.5));
         }
         .case-card.selected {
@@ -748,28 +749,6 @@
             for (let it of items) { sum += it.prob; if (r <= sum) return it; }
             return items[0];
         }
-        function normalizeProbs(items) {
-            const total = items.reduce((s, it) => s + (it.prob || 0), 0) || 1;
-            return items.map(it => ({ ...it, prob: Math.max(0, (it.prob || 0) / total) }));
-        }
-        function adjustItemsForPlayer(items) {
-            const adjusted = items.map((it, i) => {
-                const decreaseFactor = 1 - Math.min(0.08 * i, 0.35);
-                const newProb = (it.prob || 0) * decreaseFactor;
-                const newVal = Math.round((it.value || 0) * 0.85);
-                return { ...it, prob: newProb, value: newVal };
-            });
-            return normalizeProbs(adjusted);
-        }
-        function adjustItemsForBot(items) {
-            const adjusted = items.map((it, i) => {
-                const boostFactor = 1 + Math.min(0.22 * i, 0.6);
-                const newProb = (it.prob || 0) * boostFactor;
-                const newVal = Math.round((it.value || 0) * 0.92);
-                return { ...it, prob: newProb, value: newVal };
-            });
-            return normalizeProbs(adjusted);
-        }
         function openCaseUniform(caseType) {
             const items = cases[caseType].items;
             return { ...uniformPick(items), caseType };
@@ -828,9 +807,19 @@
             }
         }
 function openCaseWithBotBoost(caseType) {
-        const base = cases[caseType].items;
-        const items = adjustItemsForBot(base);
-        return { ...weightedPick(items), caseType };
+        const items = cases[caseType].items;
+        const r = Math.random();
+        let sum = 0;
+
+        // даём боту ~4–6% буст на более высокие предметы
+        for (let i = 0; i < items.length; i++) {
+            let adjustedProb = items[i].prob;
+            // увеличиваем шанс на каждый следующий предмет примерно на 4–7%
+            if (i > 0) adjustedProb += 0.004 * (i + 1);
+            sum += adjustedProb;
+            if (r <= sum) return { ...items[i], caseType };
+        }
+        return { ...items[0], caseType };
     }
         let currentUser = null;
         let userId = null;
@@ -838,87 +827,17 @@ function openCaseWithBotBoost(caseType) {
         let isCharityMode = false;
 
 const cases = {
-    agent: {
-        price: 159,
-        items: [
-            {emoji: '🎅', name: 'Санта', value: 50, prob: 0.5},
-            {emoji: '🎄', name: 'Ёлка', value: 100, prob: 0.25},
-            {emoji: '⛄', name: 'Снеговик', value: 125, prob: 0.15},
-            {emoji: '🎁', name: 'Подарок', value: 250, prob: 0.08},
-            {emoji: '🦌', name: 'Олень', value: 500, prob: 0.02}
-        ],
-        color: '#374151',
-        icon: '🧑‍🎄'
-    },
-    weapon_skin: {
-        price: 199,
-        items: [
-            {emoji: '🔫', name: 'Стандарт', value: 50, prob: 0.5},
-            {emoji: '🎨', name: 'Граффити', value: 150, prob: 0.25},
-            {emoji: '✨', name: 'Снежный', value: 250, prob: 0.15},
-            {emoji: '🌟', name: 'Золотой', value: 750, prob: 0.1}
-        ],
-        color: '#4ade80',
-        icon: '🔫'
-    },
-    background: {
-        price: 139,
-        items: [
-            {emoji: '🌌', name: 'Ночь', value: 50, prob: 0.5},
-            {emoji: '🌨️', name: 'Снегопад', value: 150, prob: 0.3},
-            {emoji: '🌅', name: 'Закат', value: 250, prob: 0.15},
-            {emoji: '🤖', name: 'Киберпанк', value: 500, prob: 0.05}
-        ],
-        color: '#6366f1',
-        icon: '🖼️'
-    },
-    keychain: {
-        price: 79,
-        items: [
-            {emoji: '🔑', name: 'Брелок-ключ', value: 15, prob: 0.50},
-            {emoji: '🐾', name: 'Брелок лапка', value: 30, prob: 0.25},
-            {emoji: '🎖️', name: 'Коллекционный брелок', value: 75, prob: 0.18},
-            {emoji: '💎', name: 'Редкий брелок', value: 200, prob: 0.06},
-            {emoji: '🌟', name: 'Легендарный брелок', value: 600, prob: 0.01}
-        ],
-        color: '#f59e0b',
-        icon: '🔑'
-    },
-    weapon: {
-        price: 239,
-        items: [
-            {emoji: '🔫', name: 'Пистолет I', value: 60, prob: 0.5},
-            {emoji: '🗡️', name: 'Нож I', value: 110, prob: 0.25},
-            {emoji: '🛡️', name: 'Щит I', value: 175, prob: 0.15},
-            {emoji: '🧨', name: 'Граната', value: 350, prob: 0.08},
-            {emoji: '🏹', name: 'Легендарное оружие', value: 800, prob: 0.02}
-        ],
-        color: '#ef4444',
-        icon: '🔫'
-    },
-    skin: {
-        price: 399,
-        items: [
-            {emoji: '🧍', name: 'Скин Человек I', value: 90, prob: 0.55},
-            {emoji: '🧑‍🎤', name: 'Скин Артист', value: 175, prob: 0.25},
-            {emoji: '🥷', name: 'Скин Ниндзя', value: 350, prob: 0.12},
-            {emoji: '👑', name: 'Эпичный скин', value: 750, prob: 0.06},
-            {emoji: '🌌', name: 'Легендарный скин', value: 2000, prob: 0.02}
-        ],
-        color: '#8b5cf6',
-        icon: '🎭'
-    },
     bomj: {
-        price: 9,
+        price: 6,
         items: [
-            {emoji: '🧦', name: 'Дырявый носок',      value: 1,   prob: 0.60},
-            {emoji: '🍞', name: 'Чёрствый хлеб',       value: 2,   prob: 0.20},
-            {emoji: '🗑️', name: 'Мусорный пакет',      value: 4,   prob: 0.12},
-            {emoji: '🍺', name: 'Тёплое пиво 0.5',     value: 6,  prob: 0.05},
-            {emoji: '🪙', name: 'Горстка мелочи',      value: 12,  prob: 0.02},
-            {emoji: '🧥', name: 'Старая куртка',       value: 25,  prob: 0.008},
-            {emoji: '📱', name: 'Сломанный Nokia',     value: 50, prob: 0.002},
-            {emoji: '💸', name: 'Заначка под матрасом',value: 90, prob: 0.0005},
+            {emoji: '🧦', name: 'Дырявый носок',      value: 1,   prob: 0.58},
+            {emoji: '🍞', name: 'Чёрствый хлеб',       value: 3,   prob: 0.22},
+            {emoji: '🗑️', name: 'Мусорный пакет',      value: 7,   prob: 0.11},
+            {emoji: '🍺', name: 'Тёплое пиво 0.5',     value: 12,  prob: 0.05},
+            {emoji: '🪙', name: 'Горстка мелочи',      value: 25,  prob: 0.025},
+            {emoji: '🧥', name: 'Старая куртка',       value: 50,  prob: 0.012},
+            {emoji: '📱', name: 'Сломанный Nokia',     value: 100, prob: 0.003},
+            {emoji: '💸', name: 'Заначка под матрасом',value: 180, prob: 0.0005},
         ],
         color: '#6b7280',
         icon: '🗑️'
@@ -926,90 +845,90 @@ const cases = {
     vibe: {
         price: 29,
         items: [
-            {emoji: '💖', name: 'Сердце',          value: 8,  prob: 0.60},
-            {emoji: '🌹', name: 'Роза',            value: 12,  prob: 0.25},
-            {emoji: '🚀', name: 'Ракета',          value: 25,  prob: 0.08},
-            {emoji: '💐', name: 'Цветы',           value: 25,  prob: 0.05},
-            {emoji: '💍', name: 'Кольцо',          value: 50, prob: 0.01},
-            {emoji: '💎', name: 'Алмаз',           value: 50, prob: 0.005},
-            {emoji: '🍭', name: 'Лол-поп',         value: 160, prob: 0.003},
-            {emoji: '🐶', name: 'Суп Дог',         value: 210, prob: 0.001},
-            {emoji: '🤡', name: 'Шапка шута',      value: 250, prob: 0.0005},
-            {emoji: '⭐', name: 'Звезда',           value: 100, prob: 0.0005},
+            {emoji: '💖', name: 'Сердце',          value: 15,  prob: 0.60},
+            {emoji: '🌹', name: 'Роза',            value: 25,  prob: 0.25},
+            {emoji: '🚀', name: 'Ракета',          value: 50,  prob: 0.08},
+            {emoji: '💐', name: 'Цветы',           value: 50,  prob: 0.05},
+            {emoji: '💍', name: 'Кольцо',          value: 100, prob: 0.01},
+            {emoji: '💎', name: 'Алмаз',           value: 100, prob: 0.005},
+            {emoji: '🍭', name: 'Лол-поп',         value: 325, prob: 0.003},
+            {emoji: '🐶', name: 'Суп Дог',         value: 425, prob: 0.001},
+            {emoji: '🤡', name: 'Шапка шута',      value: 500, prob: 0.0005},
+            {emoji: '⭐', name: 'Звезда',           value: 200, prob: 0.0005},
         ],
         color: '#ec4899',
         icon: '💖'
     },
     santa: {
-        price: 99,
+        price: 114,
         items: [
-            {emoji: '🍪', name: 'Печенье', value: 15, prob: 0.50},
-            {emoji: '🥛', name: 'Молоко', value: 30, prob: 0.30},
-            {emoji: '🎅', name: 'Колпак', value: 60, prob: 0.15},
-            {emoji: '🦌', name: 'Олень', value: 150, prob: 0.04},
-            {emoji: '🎁', name: 'Большой подарок', value: 500, prob: 0.01},
+            {emoji: '🍪', name: 'Печенье', value: 30, prob: 0.50},
+            {emoji: '🥛', name: 'Молоко', value: 60, prob: 0.30},
+            {emoji: '🎅', name: 'Колпак', value: 120, prob: 0.15},
+            {emoji: '🦌', name: 'Олень', value: 300, prob: 0.04},
+            {emoji: '🎁', name: 'Большой подарок', value: 1000, prob: 0.01},
         ],
         color: '#dc2626',
         icon: '🎅'
     },
     c2024: {
-        price: 999,
+        price: 1199,
         items: [
-            {emoji: '🐉', name: 'Дракон', value: 150, prob: 0.45},
-            {emoji: '🍾', name: 'Шампанское', value: 300, prob: 0.3},
-            {emoji: '🎁', name: 'Подарок 2024', value: 600, prob: 0.15},
-            {emoji: '👑', name: 'Корона', value: 1250, prob: 0.07},
-            {emoji: '💎', name: 'Алмаз', value: 2500, prob: 0.02},
-            {emoji: '🏰', name: 'Замок', value: 7500, prob: 0.01}
+            {emoji: '🐉', name: 'Дракон', value: 300, prob: 0.4},
+            {emoji: '🍾', name: 'Шампанское', value: 600, prob: 0.3},
+            {emoji: '🎁', name: 'Подарок 2024', value: 1200, prob: 0.15},
+            {emoji: '👑', name: 'Корона', value: 2500, prob: 0.08},
+            {emoji: '💎', name: 'Алмаз', value: 5000, prob: 0.05},
+            {emoji: '🏰', name: 'Замок', value: 15000, prob: 0.02}
         ],
         color: '#facc15',
         icon: '🐉'
     },
     c2025: {
-        price: 599,
+        price: 799,
         items: [
-            {emoji: '🐍', name: 'Змея', value: 100, prob: 0.5},
-            {emoji: '🎊', name: 'Хлопушка', value: 200, prob: 0.3},
-            {emoji: '🎫', name: 'Билет 2025', value: 400, prob: 0.14},
-            {emoji: '🤖', name: 'Кибер-Змея', value: 1000, prob: 0.05},
-            {emoji: '🚀', name: 'Ракета', value: 2000, prob: 0.01}
+            {emoji: '🐍', name: 'Змея', value: 200, prob: 0.45},
+            {emoji: '🎊', name: 'Хлопушка', value: 400, prob: 0.3},
+            {emoji: '🎫', name: 'Билет 2025', value: 800, prob: 0.15},
+            {emoji: '🤖', name: 'Кибер-Змея', value: 2000, prob: 0.07},
+            {emoji: '🚀', name: 'Ракета', value: 4000, prob: 0.03}
         ],
         color: '#22d3ee',
         icon: '🐍'
     },
     battle: {
-        price: 179,
+        price: 189,
         items: [
-            {emoji: '🛡️', name: 'Щит', value: 25, prob: 0.5},
-            {emoji: '⚔️', name: 'Меч', value: 50, prob: 0.30},
-            {emoji: '💊', name: 'Аптечка', value: 100, prob: 0.13},
-            {emoji: '🔫', name: 'Пистолет', value: 200, prob: 0.06},
-            {emoji: '💣', name: 'Граната', value: 400, prob: 0.009},
-            {emoji: '🚁', name: 'Вертолет', value: 1000, prob: 0.001},
+            {emoji: '🛡️', name: 'Щит', value: 50, prob: 0.45},
+            {emoji: '⚔️', name: 'Меч', value: 100, prob: 0.30},
+            {emoji: '💊', name: 'Аптечка', value: 200, prob: 0.15},
+            {emoji: '🔫', name: 'Пистолет', value: 400, prob: 0.07},
+            {emoji: '💣', name: 'Граната', value: 800, prob: 0.025},
+            {emoji: '🚁', name: 'Вертолет', value: 2000, prob: 0.005},
         ],
         color: '#ef4444',
         icon: '⚔️'
     },
     dvornik: {
-        price: 19,
+        price: 29,
         items: [
-            {emoji: '🧹', name: 'Метла', value: 2, prob: 0.35},
-            {emoji: '🪣', name: 'Ведро', value: 5, prob: 0.30},
-            {emoji: '🧼', name: 'Мыло', value: 7, prob: 0.20},
-            {emoji: '🪓', name: 'Топор старый', value: 17, prob: 0.10},
-            {emoji: '🧤', name: 'Перчатки рабочие', value: 25, prob: 0.04},
-            {emoji: '⛏️', name: 'Лопата', value: 40, prob: 0.009},
-            {emoji: '🛠️', name: 'Набор инструментов', value: 75, prob: 0.0009},
-            {emoji: '🚲', name: 'Велосипед б/у', value: 200, prob: 0.0001},
+            {emoji: '🧹', name: 'Метла', value: 5, prob: 0.30},
+            {emoji: '🪣', name: 'Ведро', value: 10, prob: 0.25},
+            {emoji: '🧼', name: 'Мыло', value: 15, prob: 0.18},
+            {emoji: '🪓', name: 'Топор старый', value: 35, prob: 0.12},
+            {emoji: '🧤', name: 'Перчатки рабочие', value: 50, prob: 0.08},
+            {emoji: '⛏️', name: 'Лопата', value: 80, prob: 0.04},
+            {emoji: '🛠️', name: 'Набор инструментов', value: 150, prob: 0.025},
+            {emoji: '🚲', name: 'Велосипед б/у', value: 400, prob: 0.005},
         ],
         color: '#eab308',
         icon: '🧹'
     },
     schoolboy: {
-        price: 179,
+        price: 259,
         items: [
-            {emoji: '📚', name: 'Учебник', value: 40, prob: 0.50},
-            {emoji: '🎒', name: 'Рюкзак', value: 75, prob: 0.25},
+            {emoji: '📚', name: 'Учебник', value: 80, prob: 0.50},
+            {emoji: '🎒', name: 'Рюкзак', value: 150, prob: 0.25},
             {emoji: '📱', name: 'Смартфон', value: 400, prob: 0.12},
             {emoji: '💻', name: 'Ноутбук', value: 700, prob: 0.07},
             {emoji: '🎮', name: 'PlayStation', value: 1000, prob: 0.03},
@@ -1074,15 +993,15 @@ const cases = {
         icon: '💚'
     },
     maldives: {
-        price: 1999,
+        price: 2599,
         items: [
-            {emoji: '🐚', name: 'Ракушка', value: 700, prob: 0.65},
-            {emoji: '🥥', name: 'Кокос', value: 1600, prob: 0.25},
-            {emoji: '🍹', name: 'Коктейль', value: 2500, prob: 0.07},
-            {emoji: '🌴', name: 'Пальма', value: 4000, prob: 0.02},
-            {emoji: '🚤', name: 'Гидроцикл', value: 7500, prob: 0.008},
-            {emoji: '🏠', name: 'Бунгало', value: 18000, prob: 0.0015},
-            {emoji: '🏝️', name: 'Личный остров', value: 65000, prob: 0.0005},
+            {emoji: '🐚', name: 'Ракушка', value: 700, prob: 0.60},
+            {emoji: '🥥', name: 'Кокос', value: 1600, prob: 0.28},
+            {emoji: '🍹', name: 'Коктейль', value: 2500, prob: 0.08},
+            {emoji: '🌴', name: 'Пальма', value: 4000, prob: 0.025},
+            {emoji: '🚤', name: 'Гидроцикл', value: 7500, prob: 0.01},
+            {emoji: '🏠', name: 'Бунгало', value: 18000, prob: 0.004},
+            {emoji: '🏝️', name: 'Личный остров', value: 65000, prob: 0.001},
         ],
         color: '#0ea5e9',
         icon: '🏝️'
@@ -1118,10 +1037,6 @@ const cases = {
 };
 
 const caseBackgrounds = {
-    keychain:  '../images/keychain.png',
-    weapon:    '../images/weapon.png',
-    skin:      '../images/skin.png',
-    agent:    '../images/agent.png',
     bomj:     '../images/bomj.png',
     vibe:     '../images/vibe.png',
     dvornik:  '../images/dvornik.png',
@@ -1154,19 +1069,10 @@ const caseOpenedBackgrounds = {
     grinch:   '../images/grinch.png',
     santa:    '../images/Santa.png',
     c2024:    '../images/2024.png',
-    c2025:    '../images/keychain.png',
-    agent:    '../images/agent.png',
-    weapon_skin:    '../images/weapon_skin.png',
-    background:    '../images/background.png'
+    c2025:    '../images/2025.png'
 };
 
 const caseDisplayNames = {
-    agent:    "Агент",
-    weapon_skin: "Скин Оружия",
-    background: "Фон",
-    keychain: "Брелок",
-    weapon:   "Оружие",
-    skin:     "Скин",
     bomj:     "Бомж",
     vibe:     "Vibe",
     dvornik:  "Дворник",
@@ -1255,9 +1161,14 @@ const caseDisplayNames = {
         }
 
         function openCase(caseType) {
-            const base = cases[caseType].items;
-            const items = adjustItemsForPlayer(base);
-            return { ...weightedPick(items), caseType };
+            const items = cases[caseType].items;
+            const r = Math.random();
+            let sum = 0;
+            for (let it of items) {
+                sum += it.prob;
+                if (r <= sum) return { ...it, caseType };
+            }
+            return { ...items[0], caseType };
         }
 
  async function playVsBot(quick = false) {
@@ -1283,16 +1194,6 @@ const caseDisplayNames = {
     }
 
     currentUser.balance -= totalCost;
-
-    // Calendar Bet Tracking
-    const todayStr = new Date().toDateString();
-    if (currentUser.lastDailyReset !== todayStr) {
-        currentUser.dailyBet = 0;
-        currentUser.lastDailyReset = todayStr;
-    }
-    currentUser.dailyBet = (currentUser.dailyBet || 0) + totalCost;
-    currentUser.totalBet = (currentUser.totalBet || 0) + totalCost;
-
     await saveUser();
     updateBalance();
 
@@ -1812,16 +1713,6 @@ window.addEventListener('beforeunload', () => {
                 if (!existingSnap.empty) throw new Error('У вас уже есть открытый баттл. Удалите его сначала.');
 
                 currentUser.balance -= costToPay;
-
-                // Calendar Bet Tracking
-                const todayStr = new Date().toDateString();
-                if (currentUser.lastDailyReset !== todayStr) {
-                    currentUser.dailyBet = 0;
-                    currentUser.lastDailyReset = todayStr;
-                }
-                currentUser.dailyBet = (currentUser.dailyBet || 0) + costToPay;
-                currentUser.totalBet = (currentUser.totalBet || 0) + costToPay;
-
                 await saveUser();
                 updateBalance();
 
@@ -2187,19 +2078,7 @@ window.addEventListener('beforeunload', () => {
                         const uData = uSnap.data() || {};
                         const totalCost = data.totalCost;
                         if ((uData.balance || 0) < totalCost) throw new Error('Недостаточно средств');
-                        
-                        // Bet tracking logic
-                        const updates = { balance: (uData.balance || 0) - totalCost };
-                        const todayStr = new Date().toDateString();
-                        if (uData.lastDailyReset !== todayStr) {
-                            updates.dailyBet = totalCost;
-                            updates.lastDailyReset = todayStr;
-                        } else {
-                            updates.dailyBet = (uData.dailyBet || 0) + totalCost;
-                        }
-                        updates.totalBet = (uData.totalBet || 0) + totalCost;
-                        
-                        tx.update(userRef, updates);
+                        tx.update(userRef, { balance: (uData.balance || 0) - totalCost });
                         currentUser.balance = (uData.balance || 0) - totalCost;
                         updateBalance();
                     }

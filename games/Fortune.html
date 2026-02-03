@@ -1,0 +1,1229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fortune Wheel 🎰</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f0b15;
+            --bg-card: #1a1625;
+            --bg-hover: #252033;
+            --primary: #8b5cf6;
+            --primary-hover: #a78bfa;
+            --accent: #f59e0b;
+            --text-main: #ffffff;
+            --text-sec: #94a3b8;
+            --border: rgba(139, 92, 246, 0.2);
+            --gradient-main: linear-gradient(135deg, #7c3aed, #db2777);
+            --gradient-gold: linear-gradient(135deg, #f59e0b, #fbbf24);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 15% 25%, rgba(124, 58, 237, 0.15) 0%, transparent 45%),
+                radial-gradient(circle at 85% 75%, rgba(219, 39, 119, 0.1) 0%, transparent 45%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 3rem;
+            font-weight: 900;
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-sec);
+        }
+
+        .balance-display {
+            background: var(--bg-card);
+            border: 2px solid #34d399;
+            padding: 15px 30px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #34d399;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 450px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .wheel-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+        }
+
+        .wheel-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .wheel-pointer {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-top: 50px solid #ef4444;
+            z-index: 100;
+            filter: drop-shadow(0 5px 15px rgba(239, 68, 68, 0.8));
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            transition: transform 8s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            box-shadow: 
+                0 0 0 15px rgba(139, 92, 246, 0.4),
+                0 0 0 30px rgba(139, 92, 246, 0.2),
+                0 15px 60px rgba(0, 0, 0, 0.6);
+        }
+
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            background: var(--gradient-gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            z-index: 50;
+            box-shadow: 
+                0 5px 25px rgba(245, 158, 11, 0.6),
+                0 0 0 10px var(--bg-dark);
+            border: 6px solid var(--bg-dark);
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+
+        .betting-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .game-info {
+            background: rgba(245, 158, 11, 0.1);
+            border: 2px solid rgba(245, 158, 11, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .game-info-title {
+            font-size: 0.9rem;
+            color: var(--text-sec);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .total-pot {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--accent);
+            margin: 10px 0;
+        }
+
+        .commission-info {
+            font-size: 0.85rem;
+            color: var(--text-sec);
+            margin-top: 8px;
+        }
+
+        .participants-count {
+            background: var(--primary);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .bet-input-group {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .bet-label {
+            font-size: 0.9rem;
+            color: var(--text-sec);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .bet-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            color: var(--text-main);
+            font-size: 1.3rem;
+            font-weight: 700;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .bet-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .quick-bets {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .quick-bet-btn {
+            background: rgba(139, 92, 246, 0.15);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            color: var(--text-main);
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-bet-btn:hover {
+            background: rgba(139, 92, 246, 0.3);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .spin-btn {
+            width: 100%;
+            padding: 18px;
+            background: var(--gradient-gold);
+            color: #000;
+            font-size: 1.3rem;
+            font-weight: 900;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(245, 158, 11, 0.4);
+            text-transform: uppercase;
+        }
+
+        .spin-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(245, 158, 11, 0.6);
+        }
+
+        .spin-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .players-list {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .players-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .players-count-badge {
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(219, 39, 119, 0.05));
+            border-radius: 12px;
+            margin-bottom: 12px;
+            border: 2px solid rgba(139, 92, 246, 0.2);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .player-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background: var(--primary);
+        }
+
+        .player-item:hover {
+            transform: translateX(5px);
+            border-color: var(--primary);
+            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.3);
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .player-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            background: var(--gradient-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        .player-details {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .player-name {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .player-bet {
+            color: var(--accent);
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        .player-chance {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .history-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 30px;
+        }
+
+        .history-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .history-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .history-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .winner-name {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .win-amount {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #34d399;
+        }
+
+        .win-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: var(--bg-card);
+            border: 3px solid var(--accent);
+            border-radius: 30px;
+            padding: 50px;
+            z-index: 2000;
+            text-align: center;
+            box-shadow: 0 0 100px rgba(245, 158, 11, 0.5);
+            max-width: 90%;
+            width: 450px;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .win-popup.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .win-icon {
+            font-size: 6rem;
+            margin-bottom: 20px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .win-title {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .win-close-btn {
+            width: 100%;
+            padding: 18px;
+            background: var(--gradient-gold);
+            color: #000;
+            font-weight: 900;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .wheel-container {
+                width: 400px;
+                height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .wheel-container {
+                width: 350px;
+                height: 350px;
+            }
+
+            .title {
+                font-size: 2rem;
+            }
+        }
+
+        .glow {
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                box-shadow: 
+                    0 0 0 15px rgba(139, 92, 246, 0.4),
+                    0 0 0 30px rgba(139, 92, 246, 0.2),
+                    0 15px 60px rgba(0, 0, 0, 0.6);
+            }
+            50% {
+                box-shadow: 
+                    0 0 0 15px rgba(245, 158, 11, 0.6),
+                    0 0 0 30px rgba(245, 158, 11, 0.4),
+                    0 15px 70px rgba(245, 158, 11, 0.5);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo" onclick="location.href='../index.html'" style="cursor: pointer; font-size: 2rem; font-weight: 900; margin-bottom: 20px;">
+                💎 DROP<span style="color: var(--primary);">WIN</span>
+            </div>
+            <h1 class="title">🎰 Fortune Wheel</h1>
+            <p class="subtitle">Делайте ставки и испытайте удачу!</p>
+            <div class="balance-display">
+                💰 Баланс: <span id="balance">10000</span> ₽
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="wheel-section">
+                <div class="wheel-container">
+                    <div class="wheel-wrapper">
+                        <div class="wheel-pointer"></div>
+                        <div class="wheel" id="wheelDiv">
+                            <canvas id="wheel"></canvas>
+                        </div>
+                        <div class="wheel-center">🎯</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="betting-panel">
+                <h2 class="panel-title">💸 Сделать ставку</h2>
+                
+                <div class="game-info">
+                    <div class="game-info-title">💰 Общий банк</div>
+                    <div class="total-pot" id="totalPot">0₽</div>
+                    <div class="commission-info">
+                        🏦 Комиссия: <span id="commissionAmount">0₽</span> (10%)
+                    </div>
+                    <div class="commission-info">
+                        🎁 Призовой фонд: <span id="prizePot">0₽</span>
+                    </div>
+                    <div class="participants-count" id="participantsCount">
+                        👥 Участников: 0
+                    </div>
+                </div>
+                
+                <div class="bet-input-group">
+                    <div class="bet-label">Ваша ставка (₽)</div>
+                    <input type="number" id="betAmount" class="bet-input" placeholder="100" min="10" value="100">
+                    <div class="quick-bets">
+                        <button class="quick-bet-btn" onclick="setBet(100)">100₽</button>
+                        <button class="quick-bet-btn" onclick="setBet(500)">500₽</button>
+                        <button class="quick-bet-btn" onclick="setBet(1000)">1000₽</button>
+                        <button class="quick-bet-btn" onclick="setBet(2500)">2500₽</button>
+                        <button class="quick-bet-btn" onclick="setBet(5000)">5000₽</button>
+                        <button class="quick-bet-btn" onclick="setMaxBet()">MAX</button>
+                    </div>
+                </div>
+
+                <button class="spin-btn" id="spinBtn" onclick="handleSpinClick()">
+                    🎲 Сделать ставку
+                </button>
+
+                <div class="players-list">
+                    <div class="players-header">
+                        <div class="bet-label" style="margin: 0;">Участники раунда:</div>
+                        <div class="players-count-badge" id="playersCountBadge">0</div>
+                    </div>
+                    <div id="playersList"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="history-section">
+            <h2 class="history-title">🏆 История побед</h2>
+            <div class="history-list" id="historyList"></div>
+        </div>
+    </div>
+
+    <div class="win-popup" id="winPopup">
+        <div class="win-icon">🎉</div>
+        <div class="win-title">ПОБЕДА!</div>
+        <div id="winnerText"></div>
+        <div id="winAmountDisplay"></div>
+        <button class="win-close-btn" onclick="closeWinPopup()">Продолжить</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc, onSnapshot, runTransaction, arrayUnion, increment, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+            authDomain: "dropwin-8d94b.firebaseapp.com",
+            projectId: "dropwin-8d94b",
+            storageBucket: "dropwin-8d94b.firebasestorage.app",
+            messagingSenderId: "988974289403",
+            appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+            measurementId: "G-BK010MHN8N"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let players = [];
+        let isSpinning = false;
+        let isBetting = false;
+        let timerInterval = null;
+        let history = [];
+        const COMMISSION_RATE = 0.10;
+        const colors = ['#8b5cf6', '#f59e0b', '#ef4444', '#10b981', '#3b82f6', '#ec4899', '#14b8a6', '#f97316'];
+        const avatarEmojis = ['👤', '🎮', '🎯', '🎲', '🎰', '🎪', '🎭', '🎨', '🎬', '🎤'];
+        
+        // Game Document ID (Single Room for simplicity)
+        const GAME_DOC_ID = 'fortune_room_main';
+
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.offsetWidth;
+            canvas.height = container.offsetHeight;
+            drawWheel();
+        }
+
+        function drawWheel() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 10;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (players.length === 0) {
+                ctx.fillStyle = '#1a1625';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                ctx.fill();
+
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = 'bold 20px Inter';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('Ожидание ставок...', centerX, centerY);
+                return;
+            }
+
+            let startAngle = -Math.PI / 2;
+            const totalBets = players.reduce((sum, p) => sum + p.bet, 0);
+
+            players.forEach((player, i) => {
+                const sliceAngle = (player.bet / totalBets) * 2 * Math.PI;
+                const endAngle = startAngle + sliceAngle;
+                const midAngle = startAngle + sliceAngle / 2;
+
+                // Рисуем сегмент
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fill();
+
+                // Граница сегмента
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // Текст
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(midAngle);
+                ctx.textAlign = 'center';
+                ctx.fillStyle = 'white';
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+                ctx.shadowBlur = 5;
+                
+                // Adjust text position based on slice size? 
+                // For small slices, maybe hide text or scale it?
+                // For now, keep as is but maybe move out slightly if slice is tiny?
+                const dist = radius * 0.75;
+
+                // Аватар
+                ctx.font = 'bold 30px Arial';
+                ctx.fillText(avatarEmojis[i % avatarEmojis.length], dist, -35);
+
+                // Имя
+                ctx.font = 'bold 16px Inter';
+                const displayName = player.name.length > 8 ? player.name.substring(0, 8) + '..' : player.name;
+                ctx.fillText(displayName, dist, -10);
+
+                // Шанс
+                ctx.font = 'bold 20px Inter';
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillText(player.chance + '%', dist, 15);
+
+                // Ставка
+                ctx.font = 'bold 14px Inter';
+                ctx.fillStyle = '#34d399';
+                ctx.fillText(player.bet.toLocaleString('ru-RU') + '₽', dist, 35);
+
+                ctx.restore();
+                
+                startAngle = endAngle;
+            });
+        }
+
+        function updateBalance() {
+            if (currentUser) {
+                 document.getElementById('balance').textContent = (currentUser.balance || 0).toLocaleString('ru-RU');
+            } else {
+                 document.getElementById('balance').textContent = '0';
+            }
+        }
+
+        window.setBet = function(amount) {
+            document.getElementById('betAmount').value = amount;
+        }
+
+        window.setMaxBet = function() {
+            if (currentUser) {
+                document.getElementById('betAmount').value = currentUser.balance || 0;
+            }
+        }
+
+        function calculateChances() {
+            const total = players.reduce((sum, p) => sum + p.bet, 0);
+            players.forEach(p => {
+                p.chance = total > 0 ? (p.bet / total * 100).toFixed(1) : 0;
+            });
+        }
+
+        function updateGameInfo() {
+            const totalPot = players.reduce((sum, p) => sum + p.bet, 0);
+            const commission = Math.floor(totalPot * COMMISSION_RATE);
+            const prizePot = totalPot - commission;
+            
+            document.getElementById('totalPot').textContent = totalPot.toLocaleString('ru-RU') + '₽';
+            document.getElementById('commissionAmount').textContent = commission.toLocaleString('ru-RU') + '₽';
+            document.getElementById('prizePot').textContent = prizePot.toLocaleString('ru-RU') + '₽';
+            document.getElementById('participantsCount').textContent = `👥 Участников: ${players.length}`;
+            document.getElementById('playersCountBadge').textContent = players.length;
+        }
+
+        function updatePlayersList() {
+            const list = document.getElementById('playersList');
+            if (players.length === 0) {
+                list.innerHTML = '<div style="text-align: center; color: var(--text-sec); padding: 30px;">Нет участников<br><span style="font-size: 0.85rem;">Сделайте ставку!</span></div>';
+                return;
+            }
+
+            calculateChances();
+            list.innerHTML = players.map((p, index) => {
+                const avatarContent = p.avatarUrl 
+                    ? `<img src="${p.avatarUrl}" style="width:100%; height:100%; border-radius:12px; object-fit:cover;">`
+                    : avatarEmojis[index % avatarEmojis.length];
+                
+                return `
+                <div class="player-item">
+                    <div class="player-info">
+                        <div class="player-avatar">${avatarContent}</div>
+                        <div class="player-details">
+                            <div class="player-name">${p.name}</div>
+                            <div class="player-bet">💰 ${p.bet.toLocaleString('ru-RU')}₽</div>
+                        </div>
+                    </div>
+                    <div class="player-chance">🎯 ${p.chance}%</div>
+                </div>
+            `}).join('');
+        }
+
+        // --- Firebase Logic ---
+
+        window.handleSpinClick = async function() {
+            if (!currentUser) { alert("Войдите в аккаунт!"); return; }
+            if (isSpinning) return;
+            if (isBetting) return;
+            
+            const betAmount = parseInt(document.getElementById('betAmount').value);
+            if (isNaN(betAmount) || betAmount < 10) {
+                alert('⚠️ Минимальная ставка 10₽');
+                return;
+            }
+            if (betAmount > (currentUser.balance || 0)) {
+                alert('⚠️ Недостаточно средств!');
+                return;
+            }
+            
+            try {
+                isBetting = true;
+                document.getElementById('spinBtn').disabled = true;
+                document.getElementById('spinBtn').textContent = 'Обработка...';
+
+                await runTransaction(db, async (t) => {
+                    const gameRef = doc(db, 'games', GAME_DOC_ID);
+                    const userRef = doc(db, 'users', currentUser.uid);
+                    
+                    const gameSnap = await t.get(gameRef);
+                    const userSnap = await t.get(userRef);
+                    
+                    if (!gameSnap.exists()) {
+                        throw "Game doc does not exist (init required)";
+                    }
+                    
+                    const gameData = gameSnap.data();
+                    if (gameData.status === 'spinning') {
+                        throw "Игра уже идет, подождите следующего раунда";
+                    }
+                    
+                    const newBal = (userSnap.data().balance || 0) - betAmount;
+                    if (newBal < 0) throw "Недостаточно средств";
+                    
+                    t.update(userRef, { balance: newBal });
+                    
+                    // Logic to sum bets if player already exists
+                    let participants = gameData.participants || [];
+                    const existingIdx = participants.findIndex(p => p.uid === currentUser.uid);
+                    
+                    if (existingIdx !== -1) {
+                        // Update existing player
+                        participants[existingIdx].bet += betAmount;
+                        // Keep original timestamp or update? Usually keep original join time for fairness in sorting, 
+                        // but maybe update for activity? Let's keep original.
+                    } else {
+                        // Add new player
+                        participants.push({
+                            uid: currentUser.uid,
+                            name: currentUser.username || 'Игрок',
+                            avatarUrl: currentUser.avatarUrl || null, // Store avatar
+                            bet: betAmount,
+                            timestamp: Date.now(),
+                            chance: 0 
+                        });
+                    }
+                    
+                    t.update(gameRef, {
+                        participants: participants,
+                        status: 'open', // Ensure open
+                        lastActivity: Date.now()
+                    });
+                });
+                
+                // Update local (optimistic)
+                currentUser.balance -= betAmount;
+                // Update Daily Bet
+                const todayStr = new Date().toDateString();
+                if (currentUser.lastDailyReset !== todayStr) {
+                    currentUser.dailyBet = 0;
+                    currentUser.lastDailyReset = todayStr;
+                }
+                currentUser.dailyBet = (currentUser.dailyBet || 0) + betAmount;
+                currentUser.totalBet = (currentUser.totalBet || 0) + betAmount; // Lifetime
+                
+                // Save user stats (important for Calendar)
+                updateDoc(doc(db, 'users', currentUser.uid), {
+                    balance: currentUser.balance,
+                    dailyBet: currentUser.dailyBet,
+                    totalBet: currentUser.totalBet,
+                    lastDailyReset: todayStr
+                });
+
+                updateBalance();
+                document.getElementById('spinBtn').disabled = false;
+                document.getElementById('spinBtn').innerHTML = '🎲 Сделать ставку';
+                
+            } catch (e) {
+                console.error(e);
+                alert("Ошибка: " + e);
+                document.getElementById('spinBtn').disabled = false;
+                document.getElementById('spinBtn').innerHTML = '🎲 Сделать ставку';
+            } finally {
+                isBetting = false;
+            }
+        };
+
+        // Listen to Game State
+        onSnapshot(doc(db, 'games', GAME_DOC_ID), (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                
+                players = data.participants || [];
+                
+                updatePlayersList();
+                updateGameInfo();
+                drawWheel();
+                
+                // Check status
+                if (data.status === 'spinning' && !isSpinning) {
+                    startSpinAnimation(data.winnerIndex, data.seed);
+                }
+                
+                // Update History
+                if (data.history) {
+                    history = data.history.reverse();
+                    updateHistory();
+                }
+
+                // Auto-start logic with visual countdown
+                const startDelay = 15000; // 15 seconds
+                const center = document.querySelector('.wheel-center');
+                
+                if (timerInterval) clearInterval(timerInterval);
+
+                if (data.status === 'open' && players.length >= 2) {
+                     const updateTimer = () => {
+                         const timePassed = Date.now() - (data.lastActivity || 0);
+                         const timeLeft = Math.max(0, Math.ceil((startDelay - timePassed) / 1000));
+                         
+                         if (timeLeft > 0) {
+                             center.textContent = timeLeft;
+                             center.style.fontSize = '4rem';
+                             center.style.color = '#fbbf24';
+                         } else {
+                             center.textContent = '0';
+                             // Try to start
+                             if (Date.now() - (data.lastActivity || 0) > startDelay + 1000) {
+                                 tryStartSpin(data);
+                             }
+                             if (timerInterval) clearInterval(timerInterval);
+                         }
+                     };
+                     
+                     updateTimer(); // Initial call
+                     timerInterval = setInterval(updateTimer, 1000);
+
+                } else if (data.status === 'open') {
+                    center.textContent = '🎯';
+                    center.style.fontSize = '3rem';
+                    center.style.color = 'white';
+                }
+            } else {
+                setDoc(doc(db, 'games', GAME_DOC_ID), {
+                    status: 'open',
+                    participants: [],
+                    history: [],
+                    lastActivity: Date.now()
+                });
+            }
+        });
+        
+        async function tryStartSpin(gameData) {
+            // Transaction to set status 'spinning' and pick winner
+            try {
+                await runTransaction(db, async (t) => {
+                    const ref = doc(db, 'games', GAME_DOC_ID);
+                    const snap = await t.get(ref);
+                    const d = snap.data();
+                    
+                    if (d.status !== 'open') return; // Already spinning
+                    if (d.participants.length < 2) return; // Strict 2 players min
+                    
+                    // Pick winner logic (Server-side simulation)
+                    const totalBet = d.participants.reduce((s, p) => s + p.bet, 0);
+                    let random = Math.random() * totalBet;
+                    let winnerIdx = 0;
+                    let currentSum = 0;
+                    
+                    for (let i = 0; i < d.participants.length; i++) {
+                        currentSum += d.participants[i].bet;
+                        if (random <= currentSum) {
+                            winnerIdx = i;
+                            break;
+                        }
+                    }
+                    
+                    t.update(ref, {
+                        status: 'spinning',
+                        winnerIndex: winnerIdx,
+                        seed: Math.random(), // For animation variation
+                        spinStartTime: Date.now()
+                    });
+                });
+            } catch (e) {
+                // Ignore contention errors
+                console.log("Spin start contention", e);
+            }
+        }
+
+        async function startSpinAnimation(winnerIndex, seed) {
+            isSpinning = true;
+            document.getElementById('spinBtn').disabled = true;
+            document.getElementById('spinBtn').innerHTML = '⏱️ Приготовьтесь...';
+            
+            // Fix freeze by clearing timer interval
+            if (timerInterval) clearInterval(timerInterval);
+
+            // Countdown
+            const center = document.querySelector('.wheel-center');
+            const originalText = center.textContent;
+            
+            // Restore 3-second white countdown
+            for(let i=3; i>0; i--) {
+                center.textContent = i;
+                center.style.color = 'white';
+                center.style.fontSize = '4rem';
+                await new Promise(r => setTimeout(r, 1000));
+            }
+            center.textContent = originalText;
+            center.style.fontSize = '3rem';
+
+            document.getElementById('spinBtn').innerHTML = '🎲 Вращение...';
+
+            const winner = players[winnerIndex];
+            if (!winner) return; // Error safety
+
+            const segmentAngle = 360 / players.length;
+            const winnerAngle = winnerIndex * segmentAngle + segmentAngle / 2;
+            const spins = 8 + Math.floor((seed || Math.random()) * 4); 
+            const finalAngle = 360 * spins + (360 - winnerAngle) + 90;
+            
+            const wheelDiv = document.getElementById('wheelDiv');
+            wheelDiv.classList.add('glow');
+            wheelDiv.style.transform = `rotate(${finalAngle}deg)`;
+            
+            // Wait for animation
+            setTimeout(() => {
+                wheelDiv.classList.remove('glow');
+                showWinner(winner);
+                
+                // After showing winner, reset game (Only one client needs to do this, but safe if multiple try)
+                if (currentUser) { // Only logged in users try to reset
+                    setTimeout(() => finishRound(winner), 3000);
+                }
+            }, 8500);
+        }
+        
+        async function finishRound(winner) {
+            // Distribute winnings and reset
+            // We need to be careful not to pay double.
+            // Best way: Transaction that checks status 'spinning' -> 'open'
+            // and moves money.
+            
+            try {
+                await runTransaction(db, async (t) => {
+                    const gameRef = doc(db, 'games', GAME_DOC_ID);
+                    const gSnap = await t.get(gameRef);
+                    const gData = gSnap.data();
+                    
+                    if (gData.status !== 'spinning') return; // Already reset
+                    
+                    // Calculate Prize
+                    const totalPot = gData.participants.reduce((sum, p) => sum + p.bet, 0);
+                    const commission = Math.floor(totalPot * COMMISSION_RATE);
+                    const prizePot = totalPot - commission;
+                    
+                    // Update Winner Balance
+                    const winnerRef = doc(db, 'users', winner.uid);
+                    const wSnap = await t.get(winnerRef);
+                    if (wSnap.exists()) {
+                        const newBal = (wSnap.data().balance || 0) + prizePot;
+                        t.update(winnerRef, { balance: newBal });
+                    }
+                    
+                    // Add to history
+                    const historyItem = {
+                        winner: winner.name,
+                        amount: prizePot,
+                        totalBet: totalPot,
+                        commission: commission,
+                        time: new Date().toLocaleTimeString('ru-RU')
+                    };
+                    
+                    // Reset Game
+                    t.update(gameRef, {
+                        status: 'open',
+                        participants: [],
+                        history: arrayUnion(historyItem),
+                        lastActivity: Date.now()
+                    });
+                });
+                
+                // Reset local UI
+                const wheelDiv = document.getElementById('wheelDiv');
+                wheelDiv.style.transform = 'rotate(0deg)';
+                isSpinning = false;
+                document.getElementById('spinBtn').disabled = false;
+                document.getElementById('spinBtn').innerHTML = '🎲 Сделать ставку';
+                closeWinPopup();
+                
+                // Refresh my balance
+                if (currentUser) {
+                    const u = await getDoc(doc(db, 'users', currentUser.uid));
+                    currentUser.balance = u.data().balance;
+                    updateBalance();
+                }
+                
+            } catch (e) {
+                console.log("Round finish contention", e);
+            }
+        }
+
+        function showWinner(winner) {
+            const popup = document.getElementById('winPopup');
+            const winnerIdx = players.findIndex(p => p.uid === winner.uid); // use uid
+            
+            // Calc pot again for display
+            const totalPot = players.reduce((sum, p) => sum + p.bet, 0);
+            const commission = Math.floor(totalPot * COMMISSION_RATE);
+            const prizePot = totalPot - commission;
+            
+            const isMe = currentUser && winner.uid === currentUser.uid;
+            
+            document.getElementById('winnerText').innerHTML = `
+                <div style="font-size: 1.5rem; margin-bottom: 10px;">${isMe ? '🎉' : '💀'} ${avatarEmojis[winnerIdx % avatarEmojis.length]}</div>
+                <div style="font-size: 1.2rem;"><strong>${winner.name}</strong> ${isMe ? 'побеждает!' : 'забирает банк!'}</div>
+                <div style="font-size: 0.9rem; color: var(--text-sec); margin-top: 10px;">
+                    Со ставкой ${winner.bet.toLocaleString('ru-RU')}₽
+                </div>
+            `;
+            
+            if (isMe) {
+                document.getElementById('winAmountDisplay').innerHTML = `
+                    <div style="font-size: 3rem; color: #34d399; font-weight: 900;">+${prizePot.toLocaleString('ru-RU')}₽</div>
+                    <div style="font-size: 0.9rem; color: var(--text-sec); margin-top: 10px;">
+                        🏦 Комиссия: -${commission.toLocaleString('ru-RU')}₽
+                    </div>
+                `;
+                document.querySelector('.win-title').textContent = "ПОБЕДА!";
+                document.querySelector('.win-title').style.backgroundImage = 'var(--gradient-gold)';
+            } else {
+                 document.getElementById('winAmountDisplay').innerHTML = `
+                    <div style="font-size: 1.5rem; color: #ef4444; font-weight: 800; margin-top: 20px;">Повезет в следующий раз!</div>
+                `;
+                document.querySelector('.win-title').textContent = "Раунд завершен";
+                document.querySelector('.win-title').style.background = '#94a3b8';
+                document.querySelector('.win-title').style.webkitBackgroundClip = 'text';
+            }
+            
+            popup.classList.add('active');
+        }
+
+        window.closeWinPopup = function() {
+            document.getElementById('winPopup').classList.remove('active');
+        }
+
+        function updateHistory() {
+            const list = document.getElementById('historyList');
+            if (history.length === 0) {
+                list.innerHTML = '<div style="text-align: center; color: var(--text-sec); padding: 30px;">📜 История пуста</div>';
+                return;
+            }
+            
+            // Take last 10
+            const recent = history.slice(Math.max(history.length - 10, 0)).reverse();
+            
+            list.innerHTML = recent.map(h => `
+                <div class="history-item">
+                    <div>
+                        <div class="winner-name">🏆 ${h.winner}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-sec); margin-top: 4px;">
+                            Банк: ${h.totalBet.toLocaleString('ru-RU')}₽ | Комиссия: ${h.commission.toLocaleString('ru-RU')}₽
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-sec); margin-top: 4px;">${h.time}</div>
+                    </div>
+                    <div class="win-amount">+${h.amount.toLocaleString('ru-RU')}₽</div>
+                </div>
+            `).join('');
+        }
+
+        // --- Init ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const docSnap = await getDoc(doc(db, 'users', user.uid));
+                if (docSnap.exists()) {
+                    currentUser = docSnap.data();
+                    currentUser.uid = user.uid;
+                    updateBalance();
+                }
+            }
+        });
+        
+        // Ensure game doc exists (Optimistic init)
+        getDoc(doc(db, 'games', GAME_DOC_ID)).then(s => {
+            if(!s.exists()) {
+                 setDoc(doc(db, 'games', GAME_DOC_ID), {
+                    status: 'open',
+                    participants: [],
+                    history: [],
+                    lastActivity: Date.now()
+                });
+            }
+        });
+
+        window.addEventListener('load', () => {
+            resizeCanvas();
+            updateBalance();
+            updatePlayersList();
+            updateGameInfo();
+        });
+
+        window.addEventListener('resize', resizeCanvas);
+    </script>
+</body>
+</html>

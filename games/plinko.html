@@ -181,12 +181,35 @@
       to { opacity: 0; transform: scale(0.3); }
     }
 
-    @media (max-width: 520px) {
+  @media (max-width: 520px) {
+      .plinko-board {
+        height: 400px; /* Smaller height for mobile */
+      }
+      .pin {
+        width: 6px;
+        height: 6px; /* Smaller pins */
+      }
+      .ball {
+        width: 14px;
+        height: 14px; /* Smaller ball */
+      }
       .ball {
         box-shadow:
           0 0 14px rgba(250,204,21,0.7),
           0 3px 6px rgba(0,0,0,0.35);
       }
+    }
+
+    @media (min-width: 1024px) {
+        .plinko-board {
+            width: 800px;
+            height: 600px;
+            margin: 0 auto;
+        }
+        .bucket {
+            width: 7%;
+            height: 70px;
+        }
     }
 
     .info-text {
@@ -388,11 +411,21 @@
 
     // Снимаем общую ставку сразу
     currentUser.balance = (currentUser.balance || 0) - totalBet;
+    
+    // Daily Bet Logic
+    const todayStr = new Date().toDateString();
+    if (currentUser.lastDailyReset !== todayStr) {
+        currentUser.dailyBet = 0;
+        currentUser.lastDailyReset = todayStr;
+    }
+    currentUser.dailyBet = (currentUser.dailyBet || 0) + totalBet;
     currentUser.totalBet = (currentUser.totalBet || 0) + totalBet;
     currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + ballCount;
 
     saveUser({
       balance: currentUser.balance,
+      dailyBet: currentUser.dailyBet, // Save daily bet
+      lastDailyReset: todayStr,
       totalBet: currentUser.totalBet,
       gamesPlayed: currentUser.gamesPlayed
     });
@@ -437,24 +470,24 @@
     if (activeDrops === 1) {
       board.innerHTML = '';
 
-      // Pins расположение - пирамида для направления к центру
-      const rows = 13;
-      const pinsPerRow = 11;
+      // Pins расположение - пирамида (Triangle Shape)
+      const rows = 14; 
       const boardWidth = board.clientWidth;
       const boardHeight = board.clientHeight;
+      const spacing = boardWidth / (rows + 2); // Dynamic spacing
 
       const pinsDiv = document.createElement('div');
       pinsDiv.className = 'pins';
       pinsDiv.id = 'pinsContainer';
 
       for (let row = 0; row < rows; row++) {
-        const cols = pinsPerRow;
-        const spacing = boardWidth / (cols + 1);
-        const offset = (row % 2) * (spacing / 2);
-
+        const cols = row + 3; // Pyramid: 3, 4, 5...
+        const rowWidth = (cols - 1) * spacing;
+        const startX = (boardWidth - rowWidth) / 2;
+        
         for (let col = 0; col < cols; col++) {
-          const x = spacing * (col + 1) + offset;
-          const y = (boardHeight / (rows + 3)) * (row + 2);
+          const x = startX + col * spacing;
+          const y = (boardHeight / (rows + 2)) * (row + 1); // Start a bit lower
 
           const pin = document.createElement('div');
           pin.className = 'pin';

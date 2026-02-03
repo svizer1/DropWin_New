@@ -682,6 +682,7 @@
 
   <div class="header">
     <div class="logo" onclick="location.href='index.html'" style="cursor: pointer;">💎 DROPWIN</div>
+    <button class="hamburger" id="hamburgerBtn"><span class="bar"></span><span class="bar"></span><span class="bar"></span></button>
     <div class="balance-container">
       <div class="balance">💰 <span id="balance">0</span>₽</div>
       <button class="auth-btn" id="authBtn">Аккаунт</button>
@@ -810,6 +811,15 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+
+    const hb = document.getElementById('hamburgerBtn');
+    const overlay = document.getElementById('mobileMenuOverlay');
+    function toggleDrawer() {
+        document.body.classList.toggle('drawer-open');
+        hb && hb.classList.toggle('active');
+    }
+    if(hb) hb.addEventListener('click', toggleDrawer);
+    if(overlay) overlay.addEventListener('click', toggleDrawer);
 
     let currentUser = null;
     let userId = null;
@@ -958,122 +968,180 @@
     }
 
     const cases = {
-      bomj: { price: 6, items: [
+      agent: {
+        price: 69,
+        items: [
+            {emoji: '🧔', name: 'Бомж', value: 10},
+            {emoji: '👦', name: 'Пацан', value: 60},
+            {emoji: '🧑', name: 'Человек', value: 150},
+            {emoji: '🧙‍♂️', name: 'Гном', value: 300}
+        ]
+      },
+      background: {
+        price: 49,
+        items: [
+            {emoji: '🏙️', name: 'Город', value: 25},
+            {emoji: '🌨️', name: 'Снег', value: 50},
+            {emoji: '🏜️', name: 'Пустыня', value: 100},
+            {emoji: '🌲', name: 'Лес', value: 250}
+        ]
+      },
+      keychain: {
+        price: 29,
+        items: [
+            {emoji: '🔑', name: 'Брелок-ключ', value: 10},
+            {emoji: '🐾', name: 'Брелок лапка', value: 20},
+            {emoji: '🎖️', name: 'Коллекционный брелок', value: 50},
+            {emoji: '💎', name: 'Редкий брелок', value: 120},
+            {emoji: '🌟', name: 'Легендарный брелок', value: 400}
+        ]
+      },
+      skin: {
+        price: 99,
+        items: [
+            {emoji: '🔫', name: 'Стандарт', value: 30},
+            {emoji: '🎨', name: 'Граффити', value: 100},
+            {emoji: '✨', name: 'Снежный', value: 180},
+            {emoji: '🌟', name: 'Золотой', value: 500}
+        ]
+      },
+      bomj: { price: 3, items: [
         {emoji:'🧦',name:'Дырявый носок',value:1},
-        {emoji:'🍞',name:'Чёрствый хлеб',value:3},
-        {emoji:'🗑️',name:'Мусорный пакет',value:7},
-        {emoji:'🍺',name:'Тёплое пиво 0.5',value:12},
-        {emoji:'🪙',name:'Горстка мелочи',value:25},
-        {emoji:'🧥',name:'Старая куртка',value:50},
-        {emoji:'📱',name:'Сломанный Nokia',value:100},
-        {emoji:'💸',name:'Заначка под матрасом',value:180},
+        {emoji:'🍞',name:'Чёрствый хлеб',value:2},
+        {emoji:'🗑️',name:'Мусорный пакет',value:3},
+        {emoji:'🍺',name:'Тёплое пиво 0.5',value:5},
+        {emoji:'🪙',name:'Горстка мелочи',value:10},
+        {emoji:'🧥',name:'Старая куртка',value:20},
+        {emoji:'📱',name:'Сломанный Nokia',value:40},
+        {emoji:'💸',name:'Заначка под матрасом',value:80},
       ]},
-      vibe: { price: 49, items: [
-        {emoji:'💖',name:'Сердце',value:15},
-        {emoji:'🌹',name:'Роза',value:25},
-        {emoji:'🚀',name:'Ракета',value:50},
-        {emoji:'💐',name:'Цветы',value:50},
-        {emoji:'💍',name:'Кольцо',value:100},
-        {emoji:'💎',name:'Алмаз',value:100},
-        {emoji:'🍭',name:'Лол-поп',value:325},
-        {emoji:'🐶',name:'Суп Дог',value:425},
-        {emoji:'🤡',name:'Шапка шута',value:500},
-        {emoji:'⭐',name:'Звезда',value:200},
+      vibe: { price: 19, items: [
+        {emoji:'💖',name:'Сердце',value:6},
+        {emoji:'🌹',name:'Роза',value:10},
+        {emoji:'🚀',name:'Ракета',value:20},
+        {emoji:'💐',name:'Цветы',value:20},
+        {emoji:'💍',name:'Кольцо',value:40},
+        {emoji:'💎',name:'Алмаз',value:40},
+        {emoji:'🍭',name:'Лол-поп',value:120},
+        {emoji:'🐶',name:'Суп Дог',value:180},
+        {emoji:'🤡',name:'Шапка шута',value:200},
+        {emoji:'⭐',name:'Звезда',value:80},
       ]},
-      santa: { price: 114, items: [
-        {emoji:'🍪',name:'Печенье',value:30},
-        {emoji:'🥛',name:'Молоко',value:60},
-        {emoji:'🎅',name:'Колпак',value:120},
-        {emoji:'🦌',name:'Олень',value:300},
-        {emoji:'🎁',name:'Большой подарок',value:1000},
+      santa: { price: 49, items: [
+        {emoji:'🍪',name:'Печенье',value:10},
+        {emoji:'🥛',name:'Молоко',value:25},
+        {emoji:'🎅',name:'Колпак',value:50},
+        {emoji:'🦌',name:'Олень',value:120},
+        {emoji:'🎁',name:'Большой подарок',value:400},
       ]},
-      battle: { price: 189, items: [
-        {emoji:'🛡️',name:'Щит',value:50},
-        {emoji:'⚔️',name:'Меч',value:100},
-        {emoji:'💊',name:'Аптечка',value:200},
-        {emoji:'🔫',name:'Пистолет',value:400},
-        {emoji:'💣',name:'Граната',value:800},
-        {emoji:'🚁',name:'Вертолет',value:2000},
+      c2024: {
+        price: 599,
+        items: [
+            {emoji: '🐉', name: 'Дракон', value: 120},
+            {emoji: '🍾', name: 'Шампанское', value: 250},
+            {emoji: '🎁', name: 'Подарок 2024', value: 500},
+            {emoji: '👑', name: 'Корона', value: 1000},
+            {emoji: '💎', name: 'Алмаз', value: 2000},
+            {emoji: '🏰', name: 'Замок', value: 6000}
+        ]
+      },
+      c2025: {
+        price: 399,
+        items: [
+            {emoji: '🐍', name: 'Змея', value: 80},
+            {emoji: '🎊', name: 'Хлопушка', value: 150},
+            {emoji: '🎫', name: 'Билет 2025', value: 300},
+            {emoji: '🤖', name: 'Кибер-Змея', value: 800},
+            {emoji: '🚀', name: 'Ракета', value: 1500}
+        ]
+      },
+      battle: { price: 99, items: [
+        {emoji:'🛡️',name:'Щит',value:20},
+        {emoji:'⚔️',name:'Меч',value:40},
+        {emoji:'💊',name:'Аптечка',value:80},
+        {emoji:'🔫',name:'Пистолет',value:150},
+        {emoji:'💣',name:'Граната',value:300},
+        {emoji:'🚁',name:'Вертолет',value:800},
       ]},
-      dvornik:{ price:29, items:[
-        {emoji:'🧹',name:'Метла',value:5},
-        {emoji:'🪣',name:'Ведро',value:10},
-        {emoji:'🧼',name:'Мыло',value:15},
-        {emoji:'🪓',name:'Топор старый',value:35},
-        {emoji:'🧤',name:'Перчатки рабочие',value:50},
-        {emoji:'⛏️',name:'Лопата',value:80},
-        {emoji:'🛠️',name:'Набор инструментов',value:150},
-        {emoji:'🚲',name:'Велосипед б/у',value:400},
+      dvornik:{ price:9, items:[
+        {emoji:'🧹',name:'Метла',value:2},
+        {emoji:'🪣',name:'Ведро',value:4},
+        {emoji:'🧼',name:'Мыло',value:6},
+        {emoji:'🪓',name:'Топор старый',value:12},
+        {emoji:'🧤',name:'Перчатки рабочие',value:20},
+        {emoji:'⛏️',name:'Лопата',value:30},
+        {emoji:'🛠️',name:'Набор инструментов',value:60},
+        {emoji:'🚲',name:'Велосипед б/у',value:150},
       ]},
-      schoolboy:{ price:259, items:[
-        {emoji:'📚',name:'Учебник',value:80},
-        {emoji:'🎒',name:'Рюкзак',value:150},
-        {emoji:'📱',name:'Смартфон',value:400},
-        {emoji:'💻',name:'Ноутбук',value:700},
-        {emoji:'🎮',name:'PlayStation',value:1000},
-        {emoji:'🚗',name:'Машинка',value:1300},
-        {emoji:'🏠',name:'Квартира',value:4000},
+      schoolboy:{ price:99, items:[
+        {emoji:'📚',name:'Учебник',value:30},
+        {emoji:'🎒',name:'Рюкзак',value:60},
+        {emoji:'📱',name:'Смартфон',value:300},
+        {emoji:'💻',name:'Ноутбук',value:500},
+        {emoji:'🎮',name:'PlayStation',value:800},
+        {emoji:'🚗',name:'Машинка',value:1000},
+        {emoji:'🏠',name:'Квартира',value:3000},
       ]},
-      event:{ price:519, items:[
-        {emoji:'🎉',name:'Конфетти',value:150},
-        {emoji:'🎁',name:'Подарок',value:300},
-        {emoji:'🎈',name:'Воздушный шар',value:400},
-        {emoji:'🍾',name:'Шампанское',value:600},
-        {emoji:'🎤',name:'Микрофон',value:900},
-        {emoji:'🎬',name:'Кино',value:1500},
-        {emoji:'✈️',name:'Путешествие',value:3000},
+      event:{ price:199, items:[
+        {emoji:'🎉',name:'Конфетти',value:80},
+        {emoji:'🎁',name:'Подарок',value:150},
+        {emoji:'🎈',name:'Воздушный шар',value:250},
+        {emoji:'🍾',name:'Шампанское',value:400},
+        {emoji:'🎤',name:'Микрофон',value:600},
+        {emoji:'🎬',name:'Кино',value:1000},
+        {emoji:'✈️',name:'Путешествие',value:2000},
       ]},
-      milioner: { price: 1000, items: [
-        {emoji: '💵', name: 'Деньги', value: 300},
-        {emoji: '🏦', name: 'Банк', value: 600},
-        {emoji: '💰', name: 'Мешок денег', value: 1200},
-        {emoji: '📈', name: 'График роста', value: 2000},
-        {emoji: '🤑', name: 'Миллионер', value: 3000},
-        {emoji: '🚀', name: 'Ракета', value: 6000},
-        {emoji: '🏰', name: 'Дворец', value: 25000},
+      milioner: { price: 590, items: [
+        {emoji: '💵', name: 'Деньги', value: 150},
+        {emoji: '🏦', name: 'Банк', value: 350},
+        {emoji: '💰', name: 'Мешок денег', value: 700},
+        {emoji: '📈', name: 'График роста', value: 1200},
+        {emoji: '🤑', name: 'Миллионер', value: 2000},
+        {emoji: '🚀', name: 'Ракета', value: 4000},
+        {emoji: '🏰', name: 'Дворец', value: 12000},
       ]},
-      neoprime: { price: 1555, items: [
-        {emoji: '💡', name: 'Неоновая лампа', value: 450},
-        {emoji: '💾', name: 'Кибер-чип', value: 1000},
-        {emoji: '🥽', name: 'VR-очки', value: 1600},
-        {emoji: '🚁', name: 'Дрон', value: 2200},
-        {emoji: '🤖', name: 'Робот', value: 3500},
-        {emoji: '🚚', name: 'Кибер-трак', value: 7000},
-        {emoji: '🌌', name: 'Neo Prime', value: 30000},
+      neoprime: { price: 990, items: [
+        {emoji: '💡', name: 'Неоновая лампа', value: 300},
+        {emoji: '💾', name: 'Кибер-чип', value: 600},
+        {emoji: '🥽', name: 'VR-очки', value: 1000},
+        {emoji: '🚁', name: 'Дрон', value: 1500},
+        {emoji: '🤖', name: 'Робот', value: 2500},
+        {emoji: '🚚', name: 'Кибер-трак', value: 5000},
+        {emoji: '🌌', name: 'Neo Prime', value: 15000},
       ]},
-      grinch: { price: 2555, items: [
-        {emoji: '🧅', name: 'Лук', value: 500},
-        {emoji: '🐕', name: 'Макс', value: 1500},
-        {emoji: '🎄', name: 'Украденная елка', value: 3000},
-        {emoji: '🎁', name: 'Чужие подарки', value: 5000},
-        {emoji: '💚', name: 'Сердце Гринча', value: 15000},
+      grinch: { price: 750, items: [
+        {emoji: '🧅', name: 'Лук', value: 150},
+        {emoji: '🐕', name: 'Макс', value: 400},
+        {emoji: '🎄', name: 'Украденная елка', value: 750},
+        {emoji: '🎁', name: 'Чужие подарки', value: 1500},
+        {emoji: '💚', name: 'Сердце Гринча', value: 4000},
       ]},
-      maldives: { price: 2599, items: [
-        {emoji: '🐚', name: 'Ракушка', value: 700},
-        {emoji: '🥥', name: 'Кокос', value: 1600},
-        {emoji: '🍹', name: 'Коктейль', value: 2500},
-        {emoji: '🌴', name: 'Пальма', value: 4000},
-        {emoji: '🚤', name: 'Гидроцикл', value: 7500},
-        {emoji: '🏠', name: 'Бунгало', value: 18000},
-        {emoji: '🏝️', name: 'Личный остров', value: 65000},
+      maldives: { price: 1290, items: [
+        {emoji: '🐚', name: 'Ракушка', value: 350},
+        {emoji: '🥥', name: 'Кокос', value: 800},
+        {emoji: '🍹', name: 'Коктейль', value: 1200},
+        {emoji: '🌴', name: 'Пальма', value: 2000},
+        {emoji: '🚤', name: 'Гидроцикл', value: 4000},
+        {emoji: '🏠', name: 'Бунгало', value: 8000},
+        {emoji: '🏝️', name: 'Личный остров', value: 25000},
       ]},
-      elka: { price: 299, items: [
-        {emoji: '❄️', name: 'Снежинка', value: 50},
-        {emoji: '🍬', name: 'Леденец', value: 100},
-        {emoji: '🎄', name: 'Гирлянда', value: 200},
-        {emoji: '⭐', name: 'Звезда', value: 400},
-        {emoji: '🎅', name: 'Шапка Санты', value: 800},
-        {emoji: '🍾', name: 'Шампанское', value: 1500},
-        {emoji: '🎆', name: 'Фейерверк', value: 5000},
+      elka: { price: 150, items: [
+        {emoji: '❄️', name: 'Снежинка', value: 20},
+        {emoji: '🍬', name: 'Леденец', value: 40},
+        {emoji: '🎄', name: 'Гирлянда', value: 90},
+        {emoji: '⭐', name: 'Звезда', value: 180},
+        {emoji: '🎅', name: 'Шапка Санты', value: 350},
+        {emoji: '🍾', name: 'Шампанское', value: 600},
+        {emoji: '🎆', name: 'Фейерверк', value: 2000},
       ]},
-      snowman: { price: 1999, items: [
-        {emoji: '🥕', name: 'Морковка', value: 400},
-        {emoji: '🧣', name: 'Шарф', value: 800},
-        {emoji: '🛷', name: 'Санки', value: 1500},
-        {emoji: '⛸️', name: 'Коньки', value: 3000},
-        {emoji: '🌨️', name: 'Снегоход', value: 7000},
-        {emoji: '🧊', name: 'Ледяной трон', value: 15000},
-        {emoji: '🏰', name: 'Ледяной дворец', value: 50000},
+      snowman: { price: 1290, items: [
+        {emoji: '🥕', name: 'Морковка', value: 180},
+        {emoji: '🧣', name: 'Шарф', value: 350},
+        {emoji: '🛷', name: 'Санки', value: 600},
+        {emoji: '⛸️', name: 'Коньки', value: 1250},
+        {emoji: '🌨️', name: 'Снегоход', value: 3000},
+        {emoji: '🧊', name: 'Ледяной трон', value: 6000},
+        {emoji: '🏰', name: 'Ледяной дворец', value: 20000},
       ]},
     };
 

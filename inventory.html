@@ -540,6 +540,31 @@
             transform: translateY(-3px);
             box-shadow: 0 6px 24px rgba(139, 92, 246, 0.6);
         }
+
+        /* Background Card Styles */
+        .bg-city {
+            background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
+            position: relative; overflow: hidden;
+        }
+        .bg-city::after { content: '🏙️'; position: absolute; bottom: 5px; right: 5px; font-size: 3rem; opacity: 0.5; filter: grayscale(1); }
+        
+        .bg-snow {
+            background: radial-gradient(circle at 50% 100%, #e0f2fe 0%, #bae6fd 40%, #7dd3fc 100%);
+            position: relative; overflow: hidden;
+        }
+        .bg-snow::before { content: '❄️'; position: absolute; top: 10px; left: 10px; font-size: 1.5rem; opacity: 0.7; }
+
+        .bg-desert {
+            background: linear-gradient(to bottom, #451a03 0%, #7c2d12 40%, #f97316 100%);
+            position: relative; overflow: hidden;
+        }
+        .bg-desert::after { content: '🏜️'; position: absolute; bottom: 5px; right: 5px; font-size: 3rem; opacity: 0.5; }
+
+        .bg-forest {
+            background: linear-gradient(to bottom, #022c22 0%, #064e3b 50%, #065f46 100%);
+            position: relative; overflow: hidden;
+        }
+        .bg-forest::before { content: '🌲'; position: absolute; bottom: 5px; left: 5px; font-size: 3rem; opacity: 0.5; }
     </style>
 </head>
 <body>
@@ -580,6 +605,7 @@
                 <button class="filter-btn" data-filter="high">Дорогие (100+₽)</button>
                 <button class="filter-btn" data-filter="medium">Средние (20-100₽)</button>
                 <button class="filter-btn" data-filter="low">Дешевые (<20₽)</button>
+                <button class="filter-btn" data-filter="game">🎮 Игровые</button>
             </div>
 
             <div class="buttons-row">
@@ -674,6 +700,8 @@
                 filtered = inventory.filter(item => item.value >= 20 && item.value < 100);
             } else if (currentFilter === 'low') {
                 filtered = inventory.filter(item => item.value < 20);
+            } else if (currentFilter === 'game') {
+                filtered = inventory.filter(item => item.type === 'bg' || item.type === 'skin');
             }
 
             if (filtered.length === 0) {
@@ -699,12 +727,26 @@
                 const date = new Date(item.timestamp || Date.now());
                 const dateStr = date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
 
+                const isGameItem = item.type === 'bg' || item.type === 'skin' || item.type === 'agent';
+                
+                let visual = `<div class="item-emoji">${item.emoji || '❓'}</div>`;
+                
+                // Handle CSS Backgrounds (bg-city, etc)
+                if (item.image && item.image.startsWith('bg-')) {
+                     visual = `<div class="item-image ${item.image}" style="width: 100%; height: 80px; border-radius: 8px; margin: 10px auto; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);"></div>`;
+                }
+                // Handle Image URLs
+                else if (item.img || item.image) {
+                    visual = `<div class="item-image" style="background-image: url('${item.img || item.image}'); width: 80px; height: 80px; background-size: contain; background-repeat: no-repeat; background-position: center; margin: 10px auto;"></div>`;
+                }
+
                 div.innerHTML = `
-                    <div class="item-emoji">${item.emoji || '❓'}</div>
+                    ${visual}
                     <div class="item-name">${item.name || 'Предмет'}</div>
                     <div class="item-value">${item.value || 0}₽</div>
                     <div class="item-source">${item.source || 'Неизвестно'}</div>
                     <div class="item-date">${dateStr}</div>
+                    ${isGameItem ? `<button class="equip-btn" style="margin-top:8px; width:100%; background:linear-gradient(135deg, #8b5cf6, #6366f1); border:none; border-radius:6px; color:white; padding:6px; cursor:pointer; font-weight:700; font-size:0.9rem; z-index:10; position:relative;" onclick="event.stopPropagation(); window.equipItem(${actualIndex})">Надеть</button>` : ''}
                 `;
 
                 div.addEventListener('click', () => toggleSelection(actualIndex));
@@ -799,7 +841,32 @@
 
             let totalValue = 0;
             itemsToSell.forEach(idx => {
-                totalValue += inventory[idx]?.value || 0;
+                const item = inventory[idx];
+                totalValue += item?.value || 0;
+                
+                // Reset equipped items if sold
+                if (currentUser.gameSettings?.crismos) {
+                    const s = currentUser.gameSettings.crismos;
+                    // Check Agent
+                    if (item.type === 'agent' && (s.agent === item.name || (s.agent === 'bomj' && item.name === 'Бомж'))) {
+                         // Don't reset bomj as it is default, but if they sold a custom agent:
+                         if (s.agent === item.name) s.agent = 'bomj';
+                    }
+                    // Check Background
+                    if (item.type === 'bg' && (s.bg === item.name || s.bg === item.image)) {
+                        s.bg = 'default';
+                    }
+                    // Check Weapon
+                    if ((item.type === 'weapon' || item.type === 'skin') && s.weapon === item.name) {
+                        s.weapon = 'default';
+                    }
+                    // Check Charm
+                    if (item.type === 'charm' && s.charm === item.name) {
+                        s.charm = null;
+                        s.charmEmoji = null;
+                    }
+                }
+                
                 inventory.splice(idx, 1);
             });
 
@@ -852,6 +919,46 @@
             document.getElementById('authBtn').textContent = isGuest ? 'Гость' : (currentUser ? currentUser.username : 'Войти');
             document.getElementById('authBtn').onclick = () => location.href = 'profile.html';
         }
+
+        window.equipItem = async function(index) {
+            if (!currentUser || !currentUser.inventory) return;
+            const item = currentUser.inventory[index];
+            if (!item) return;
+
+            if (!currentUser.gameSettings) currentUser.gameSettings = {};
+            if (!currentUser.gameSettings.crismos) currentUser.gameSettings.crismos = {};
+
+            // Mapping for Crismos Shoot
+            const NAME_TO_KEY = {
+                'Бомж': 'bomj',
+                'Пацан': 'boy',
+                'Человек': 'people',
+                'Гном': 'gnom',
+                'Город': 'bg-city',
+                'Снег': 'bg-snow',
+                'Пустыня': 'bg-desert',
+                'Лес': 'bg-forest'
+            };
+
+            if (item.type === 'bg') {
+                const key = NAME_TO_KEY[item.name] || item.image || item.name;
+                currentUser.gameSettings.crismos.bg = key; 
+                alert(`✅ Фон "${item.name}" установлен!`);
+            } else if (item.type === 'agent') {
+                const key = NAME_TO_KEY[item.name] || 'bomj';
+                currentUser.gameSettings.crismos.agent = key;
+                alert(`✅ Агент "${item.name}" выбран!`);
+            } else if (item.type === 'weapon' || item.type === 'skin') {
+                currentUser.gameSettings.crismos.weapon = item.name;
+                alert(`✅ Оружие/Скин "${item.name}" выбрано!`);
+            } else if (item.type === 'charm') {
+                currentUser.gameSettings.crismos.charm = item.name;
+                currentUser.gameSettings.crismos.charmEmoji = item.emoji;
+                alert(`✅ Брелок "${item.name}" надет!`);
+            }
+            
+            await saveUser();
+        };
 
         function loadCurrentUser() {
             onAuthStateChanged(auth, async (user) => {

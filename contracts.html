@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Контракты | DropWin</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/x-icon" href="logo.ico">
+  <style>
+    /* Specific Styles for Contracts */
+    .contracts-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .contracts-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .page-title {
+        font-size: 2rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .help-btn {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 8px 16px;
+        border-radius: 8px;
+        color: #cbd5e1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+    .help-btn:hover { background: rgba(255, 255, 255, 0.2); color: white; }
+
+    /* Main Contract Area */
+    .contract-workspace {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 30px;
+        margin-bottom: 40px;
+    }
+
+    .circle-container {
+        position: relative;
+        height: 500px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        /* background: radial-gradient(circle at center, rgba(139, 92, 246, 0.1) 0%, transparent 70%); */
+    }
+
+    .center-image {
+        width: 200px;
+        height: 200px;
+        position: relative;
+        z-index: 10;
+    }
+    .center-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.5));
+    }
+
+    .contract-slot {
+        position: absolute;
+        width: 70px;
+        height: 70px;
+        background: #1a1625;
+        border: 2px dashed rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        overflow: hidden;
+    }
+    
+    .contract-slot.filled {
+        border-style: solid;
+        border-color: var(--primary);
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+    }
+    
+    .contract-slot img {
+        width: 80%;
+        height: 80%;
+        object-fit: contain;
+    }
+
+    /* Item Visuals (Emoji support) */
+    .item-visual {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .item-visual img {
+        width: 80%;
+        height: 80%;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+    }
+    .item-visual .emoji {
+        font-size: 2.5rem;
+        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+    }
+    
+    .contract-slot .item-visual .emoji {
+        font-size: 2rem;
+    }
+
+    .roulette-card .item-visual {
+        height: 80px;
+        margin-bottom: 15px;
+    }
+    .roulette-card .item-visual .emoji {
+        font-size: 3rem;
+    }
+
+    .inv-item .item-visual {
+        height: 60px;
+        margin-bottom: 10px;
+    }
+    .inv-item .item-visual .emoji {
+        font-size: 2.5rem;
+    }
+
+    /* Win Modal Visuals */
+    .win-item-visual {
+        width: 180px;
+        height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 20px auto;
+        animation: float 3s ease-in-out infinite;
+    }
+    .win-item-visual img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.6));
+    }
+    .win-item-visual .emoji {
+        font-size: 5rem;
+        filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.6));
+    }
+
+    /* Right Panel */
+    .contract-info-panel {
+        background: #1a1625;
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: 20px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: fit-content;
+        align-self: center;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .info-box h3 {
+        font-size: 0.9rem;
+        color: #94a3b8;
+        margin-bottom: 5px;
+    }
+    .info-box .val {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: white;
+    }
+
+    .create-btn {
+        background: linear-gradient(135deg, #8b5cf6, #db2777);
+        border: none;
+        padding: 16px;
+        border-radius: 12px;
+        color: white;
+        font-weight: 800;
+        font-size: 1.1rem;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 10px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .create-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
+    }
+    .create-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+        background: #334155;
+    }
+
+    .min-items-hint {
+        text-align: center;
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-top: 10px;
+    }
+
+    /* Inventory Section */
+    .inventory-section {
+        background: #1a1625;
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: 20px;
+        padding: 20px;
+        min-height: 400px;
+    }
+
+    .inv-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .inv-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .inv-controls {
+        display: flex;
+        gap: 10px;
+    }
+
+    .inv-search {
+        background: rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.1);
+        padding: 8px 12px;
+        border-radius: 8px;
+        color: white;
+        width: 200px;
+    }
+
+    .inv-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 12px;
+        max-height: 500px;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .inv-item {
+        background: rgba(30, 30, 40, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+    }
+    .inv-item:hover {
+        background: rgba(139, 92, 246, 0.1);
+        border-color: rgba(139, 92, 246, 0.3);
+    }
+    .inv-item.selected {
+        background: rgba(139, 92, 246, 0.2);
+        border-color: #8b5cf6;
+    }
+
+    .inv-item img {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+        margin-bottom: 10px;
+    }
+
+    .inv-item-price {
+        font-weight: 700;
+        color: #fbbf24;
+    }
+    .inv-item-name {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        text-align: center;
+        margin-bottom: 5px;
+    }
+
+    /* Win Modal */
+    .win-modal-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.9);
+        z-index: 3000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(15px);
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .win-modal {
+        background: radial-gradient(circle at center, #2e1065, #0f0b15);
+        border: 2px solid #fbbf24;
+        border-radius: 24px;
+        padding: 40px;
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+        position: relative;
+        box-shadow: 0 0 80px rgba(251, 191, 36, 0.4);
+        transform: scale(0.9);
+        animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    
+    @keyframes popIn {
+        to { transform: scale(1); }
+    }
+    
+    .win-light-bg {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 300px; height: 300px;
+        background: radial-gradient(circle, rgba(251, 191, 36, 0.3) 0%, transparent 70%);
+        pointer-events: none;
+    }
+    
+    .win-title {
+        font-size: 2rem;
+        font-weight: 900;
+        color: #fff;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    
+    .win-item-img {
+        width: 180px;
+        height: 140px;
+        object-fit: contain;
+        margin: 20px auto;
+        filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.6));
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    .win-item-name {
+        font-size: 1.2rem;
+        color: #fbbf24;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+    
+    .win-item-price {
+        font-size: 1rem;
+        color: #94a3b8;
+        margin-bottom: 30px;
+    }
+    
+    .claim-btn {
+        background: linear-gradient(135deg, #fbbf24, #d97706);
+        color: #000;
+        border: none;
+        padding: 16px 40px;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        cursor: pointer;
+        text-transform: uppercase;
+        box-shadow: 0 10px 25px rgba(251, 191, 36, 0.4);
+        transition: transform 0.2s;
+    }
+    .claim-btn:hover { transform: translateY(-3px); }
+
+    /* Animation Overlay */
+    .animation-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(15, 11, 21, 0.98);
+        z-index: 2000;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(20px);
+    }
+    .roulette-container {
+        width: 100%;
+        max-width: 800px; /* Wider */
+        height: 220px; /* Taller */
+        background: radial-gradient(circle at center, #2d2a3d, #1a1625);
+        border: 1px solid #8b5cf6;
+        box-shadow: 0 0 50px rgba(139, 92, 246, 0.3);
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+    .roulette-track {
+        display: flex;
+        height: 100%;
+        align-items: center;
+        will-change: transform; /* Performance */
+    }
+    .roulette-card {
+        min-width: 160px; /* Wider cards */
+        height: 180px;
+        background: #252233;
+        margin: 0 6px;
+        border-radius: 4px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border-bottom: 4px solid #333;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        transition: transform 0.2s;
+    }
+    .roulette-card img {
+        width: 110px;
+        height: 80px;
+        object-fit: contain;
+        margin-bottom: 15px;
+        z-index: 2;
+        filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+    }
+    .roulette-card .item-name {
+        font-size: 0.8rem;
+        color: #e2e8f0;
+        text-align: center;
+        padding: 0 10px;
+        z-index: 2;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+    .roulette-card .item-price {
+        font-size: 0.9rem;
+        color: #fbbf24;
+        font-weight: 700;
+        margin-top: 4px;
+        z-index: 2;
+    }
+    .roulette-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: radial-gradient(circle at center, rgba(255,255,255,0.05), transparent);
+        z-index: 1;
+    }
+    
+    /* Rarity Colors */
+    .rarity-blue { border-bottom-color: #3b82f6 !important; }
+    .rarity-purple { border-bottom-color: #8b5cf6 !important; }
+    .rarity-pink { border-bottom-color: #ec4899 !important; }
+    .rarity-red { border-bottom-color: #ef4444 !important; }
+    .rarity-gold { border-bottom-color: #fbbf24 !important; }
+
+    /* Background Gradients based on rarity */
+    .rarity-blue::after { content:''; position:absolute; inset:0; background: linear-gradient(to top, rgba(59,130,246,0.15), transparent 60%); pointer-events:none; }
+    .rarity-purple::after { content:''; position:absolute; inset:0; background: linear-gradient(to top, rgba(139,92,246,0.15), transparent 60%); pointer-events:none; }
+    .rarity-pink::after { content:''; position:absolute; inset:0; background: linear-gradient(to top, rgba(236,72,153,0.15), transparent 60%); pointer-events:none; }
+    .rarity-red::after { content:''; position:absolute; inset:0; background: linear-gradient(to top, rgba(239,68,68,0.15), transparent 60%); pointer-events:none; }
+    .rarity-gold::after { content:''; position:absolute; inset:0; background: linear-gradient(to top, rgba(251,191,36,0.15), transparent 60%); pointer-events:none; }
+
+    .roulette-marker {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 100%;
+        background: #fbbf24;
+        z-index: 100;
+        box-shadow: 0 0 10px #fbbf24;
+    }
+    
+    .center-image {
+        width: 260px;
+        height: 260px;
+        position: relative;
+        z-index: 10;
+        transition: transform 0.3s;
+    }
+    .center-image:hover { transform: scale(1.05); }
+    .center-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        filter: drop-shadow(0 0 30px rgba(139, 92, 246, 0.6));
+    }
+  </style>
+</head>
+<body>
+
+<!-- Age Verification Modal -->
+<div class="age-modal-overlay" id="ageModalOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(10px);">
+    <div class="age-modal" style="background: #1e1b2e; padding: 30px; border-radius: 20px; border: 1px solid rgba(139, 92, 246, 0.3); max-width: 400px; width: 90%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
+        <div style="font-size: 4rem; margin-bottom: 20px;">🔞</div>
+        <h2 style="color: white; margin-bottom: 15px; font-weight: 800;">Вам есть 18 лет?</h2>
+        <p style="color: #cbd5e1; margin-bottom: 25px; line-height: 1.5;">
+            Для доступа к сайту вы должны быть старше 18 лет и принять условия <a href="#" style="color: #8b5cf6; text-decoration: underline;">лицензионного соглашения</a>.
+        </p>
+        <button onclick="acceptAge()" style="background: linear-gradient(135deg, #8b5cf6, #db2777); color: white; border: none; padding: 12px 30px; border-radius: 12px; font-weight: 700; font-size: 1.1rem; cursor: pointer; width: 100%; transition: transform 0.2s;">
+            Да, мне есть 18 лет
+        </button>
+    </div>
+</div>
+
+<script>
+    // Check Age Verification
+    document.addEventListener('DOMContentLoaded', () => {
+        if (!localStorage.getItem('ageVerified')) {
+            document.getElementById('ageModalOverlay').style.display = 'flex';
+        }
+    });
+
+    function acceptAge() {
+        localStorage.setItem('ageVerified', 'true');
+        document.getElementById('ageModalOverlay').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('ageModalOverlay').style.display = 'none';
+        }, 300);
+    }
+</script>
+
+<!-- Header (Same as index) -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo" onclick="location.href='index.html'" style="cursor: pointer;">💎 DROP<span>WIN</span></div>
+    <button class="hamburger" id="hamburgerBtn">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+    </button>
+    <nav class="main-nav">
+      <a href="inventory.html"><span class="nav-icon">🎒</span> ИНВЕНТАРЬ</a>
+      <a href="contracts.html" class="active"><span class="nav-icon">📜</span> КОНТРАКТЫ</a>
+      <a href="leaderboard.html"><span class="nav-icon">🏆</span> ТОП ИГРОКОВ</a>
+      <a href="raffles.html"><span class="nav-icon">🎁</span> РОЗЫГРЫШИ</a>
+      <a href="freebet.html" class="nav-bonus-btn"><span class="nav-icon">⚡</span> БОНУСЫ</a>
+      <a href="https://t.me/DropWinHelp_bot" target="_blank"><span class="nav-icon">💬</span> ПОДДЕРЖКА</a>
+    </nav>
+  </div>
+  
+  <div class="header-right">
+    <div class="balance-box">
+      <span id="balance">0</span> ₽
+      <button class="add-funds-btn" onclick="location.href='dep.html'">+</button>
+    </div>
+    <div class="user-avatar" style="width: 36px; height: 36px; background: #333; border-radius: 50%; overflow: hidden;">
+        <img src="images/games/shoot.png" style="width: 100%; height: 100%; object-fit: cover;">
+    </div>
+  </div>
+</header>
+
+<div class="mobile-drawer" id="mobileDrawer">
+  <a href="inventory.html"><span>🎒</span> Инвентарь</a>
+  <a href="contracts.html"><span>📜</span> Контракты</a>
+  <a href="leaderboard.html"><span>🏆</span> Топ игроков</a>
+  <a href="raffles.html"><span>🎁</span> Розыгрыши</a>
+  <a href="freebet.html"><span>⚡</span> Бонусы</a>
+  <a href="profile.html"><span>👤</span> Профиль</a>
+</div>
+
+<div class="contracts-container">
+    <div class="contracts-header">
+        <div class="page-title"><span>📜</span> Контракты</div>
+        <button class="help-btn" onclick="alert('Выберите от 3 до 10 предметов. Вы получите один предмет, стоимость которого может быть выше или ниже общей суммы.')">
+            <span>❓</span> Как это работает?
+        </button>
+    </div>
+
+    <div class="contract-workspace">
+        <!-- Circle Area -->
+        <div class="circle-container" id="circleContainer">
+            <div class="center-image">
+                <img src="images/games/boy.png" alt="Boy" onerror="this.src='images/agent.png'">
+            </div>
+            <!-- Slots will be generated by JS -->
+        </div>
+
+        <!-- Right Panel -->
+        <div class="contract-info-panel">
+            <div class="info-row">
+                <div class="info-box">
+                    <h3>Предметов</h3>
+                    <div class="val"><span id="itemsCount">0</span>/10</div>
+                </div>
+                <div class="info-box" style="text-align: right;">
+                    <h3>Сумма</h3>
+                    <div class="val"><span id="totalValue">0.00</span> ₽</div>
+                </div>
+            </div>
+            
+            <div class="info-box" style="margin-bottom: 25px;">
+                <h3>Стоимость предмета (прогноз)</h3>
+                <div class="val" style="color: #fbbf24;">
+                    <span id="minWin">0</span> - <span id="maxWin">0</span> ₽
+                </div>
+            </div>
+
+            <button class="create-btn" id="createContractBtn" disabled onclick="startContract()">Создать контракт</button>
+            <div class="min-items-hint">Добавьте не меньше 3 предметов</div>
+        </div>
+    </div>
+
+    <!-- Inventory -->
+    <div class="inventory-section">
+        <div class="inv-header">
+            <div class="inv-title"><span>🎒</span> Инвентарь</div>
+            <div class="inv-controls">
+                <input type="text" class="inv-search" placeholder="Поиск по названию..." id="invSearch">
+            </div>
+        </div>
+        
+        <div class="inv-grid" id="invGrid">
+            <!-- Items will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Animation Overlay -->
+<div class="animation-overlay" id="animOverlay">
+    <div class="roulette-container">
+        <div class="roulette-marker"></div>
+        <div class="roulette-track" id="rouletteTrack">
+            <!-- Animation items -->
+        </div>
+    </div>
+    <h2 style="color: white; margin-top: 20px;">Создание контракта...</h2>
+</div>
+
+<!-- Win Modal -->
+<div class="win-modal-overlay" id="winModalOverlay">
+    <div class="win-modal">
+        <div class="win-light-bg"></div>
+        <div class="win-title">Контракт<br>Успешен!</div>
+        <div id="winItemVisual" class="win-item-visual"></div>
+        <div class="win-item-name" id="winItemName">Item Name</div>
+        <div class="win-item-price" id="winItemPrice">0 ₽</div>
+        <button class="claim-btn" onclick="closeWinModal()">Забрать</button>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer style="background: #0f0b15; border-top: 1px solid rgba(255,255,255,0.05); padding: 40px 20px 100px 20px; margin-top: 60px;">
+    <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
+        <div class="logo" style="justify-content: center; margin-bottom: 20px; opacity: 0.7;">💎 DROP<span>WIN</span></div>
+        <p style="color: #64748b; font-size: 0.8rem; line-height: 1.6; max-width: 600px; margin: 0 auto;">
+            DropWin.gg &copy; 2026. Все права защищены.
+        </p>
+    </div>
+</footer>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, updateDoc, runTransaction, arrayUnion, arrayRemove, increment } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBVra2JN-C7-1b_Qa4cU8--XvJ83lymiM8",
+        authDomain: "dropwin-8d94b.firebaseapp.com",
+        projectId: "dropwin-8d94b",
+        storageBucket: "dropwin-8d94b.firebasestorage.app",
+        messagingSenderId: "988974289403",
+        appId: "1:988974289403:web:886d34e6f65920a105fb5e",
+        measurementId: "G-BK010MHN8N"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let userId = null;
+    let inventory = [];
+    let selectedIndices = new Set();
+    const MAX_ITEMS = 10;
+    const MIN_ITEMS = 3;
+
+    // Potential Rewards Pool (Client-side definition for demo purposes)
+    const REWARD_POOL = [
+        { name: 'AK-47 | Asiimov', value: 2500, img: 'images/games/shoot.png', rarity: 'pink' },
+        { name: 'AWP | Fade', value: 8000, img: 'images/games/shoot.png', rarity: 'red' },
+        { name: 'M4A4 | Howl', value: 15000, img: 'images/games/shoot.png', rarity: 'gold' },
+        { name: 'Glock-18 | Vogue', value: 400, img: 'images/games/shoot.png', rarity: 'purple' },
+        { name: 'USP-S | Cortex', value: 600, img: 'images/games/shoot.png', rarity: 'pink' },
+        { name: 'Desert Eagle | Mecha', value: 900, img: 'images/games/shoot.png', rarity: 'pink' },
+        { name: 'Knife | Doppler', value: 25000, img: 'images/games/shoot.png', rarity: 'gold' },
+        { name: 'Gloves | Vice', value: 45000, img: 'images/games/shoot.png', rarity: 'gold' },
+        { name: 'P250 | See Ya Later', value: 300, img: 'images/games/shoot.png', rarity: 'purple' },
+        { name: 'Agent | Sir Bloody', value: 800, img: 'images/games/shoot.png', rarity: 'pink' },
+        { name: 'Agent | Miami', value: 1200, img: 'images/games/shoot.png', rarity: 'pink' },
+        { name: 'Charm | Diamond', value: 5000, img: 'images/games/shoot.png', rarity: 'red' },
+        { name: 'AWP | Dragon Lore', value: 150000, img: 'images/games/shoot.png', rarity: 'gold' },
+        { name: 'M4A1-S | Blue Phosphor', value: 18000, img: 'images/games/shoot.png', rarity: 'red' }
+    ];
+
+    // Audio Context
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    window.playTick = function() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(1200, audioCtx.currentTime); // Higher pitch click
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.03);
+    }
+    
+    window.playWinSound = function() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        // Fanfare chord
+        [400, 500, 600, 800].forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            
+            gain.gain.setValueAtTime(0.0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
+            
+            osc.start(audioCtx.currentTime + i * 0.05);
+            osc.stop(audioCtx.currentTime + 1.5);
+        });
+    }
+
+    // --- INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', () => {
+        initSlots();
+        
+        // Mobile Drawer
+        const hb = document.getElementById('hamburgerBtn');
+        const drawer = document.getElementById('mobileDrawer');
+        if(hb) {
+            hb.addEventListener('click', () => {
+                document.body.classList.toggle('drawer-open');
+                hb.classList.toggle('active');
+                if (drawer.style.display === 'flex') {
+                    drawer.style.display = 'none';
+                } else {
+                    drawer.style.display = 'flex';
+                }
+            });
+        }
+        
+        // Start Contract Button
+        document.getElementById('createContractBtn').onclick = startContract;
+    });
+
+    // Auth State Listener
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            userId = user.uid;
+            await loadInventory();
+            document.getElementById('balance').innerText = currentUser.balance || 0;
+        } else {
+            // Guest mode or redirect
+             document.getElementById('invGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8;">Войдите, чтобы видеть инвентарь</div>';
+        }
+    });
+
+    async function loadInventory() {
+        try {
+            const snap = await getDoc(doc(db, 'users', userId));
+            if (snap.exists()) {
+                currentUser = snap.data();
+                inventory = currentUser.inventory || [];
+                // Sort by value desc
+                inventory.sort((a,b) => (b.value || 0) - (a.value || 0));
+                renderInventory();
+            }
+        } catch (e) {
+            console.error("Error loading inventory:", e);
+        }
+    }
+
+    // --- SLOTS LOGIC ---
+    function initSlots() {
+        const container = document.getElementById('circleContainer');
+        const radius = 160; 
+        const totalSlots = 10;
+        
+        // Clear existing except center image
+        const img = container.querySelector('.center-image');
+        container.innerHTML = '';
+        container.appendChild(img);
+        
+        for (let i = 0; i < totalSlots; i++) {
+            const angle = (i / totalSlots) * 2 * Math.PI - (Math.PI / 2);
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+            
+            const slot = document.createElement('div');
+            slot.className = 'contract-slot';
+            slot.id = `slot-${i}`;
+            slot.style.transform = `translate(${x}px, ${y}px)`;
+            container.appendChild(slot);
+        }
+    }
+
+    // --- INVENTORY LOGIC ---
+    function renderInventory() {
+        const grid = document.getElementById('invGrid');
+        grid.innerHTML = '';
+        
+        if(inventory.length === 0) {
+             grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#94a3b8;">Инвентарь пуст</div>';
+             return;
+        }
+        
+        inventory.forEach((item, index) => {
+            const isSelected = selectedIndices.has(index);
+            const el = document.createElement('div');
+            el.className = `inv-item ${isSelected ? 'selected' : ''}`;
+            
+            // Determine visual based on type
+            let visualHtml = '';
+            if (item.emoji) {
+                visualHtml = `<div class="item-visual"><div class="emoji">${item.emoji}</div></div>`;
+            } else {
+                let imgSrc = item.img || item.image || 'images/games/shoot.png';
+                // Fallbacks for known items if no image provided but name matches
+                if (item.type === 'agent') imgSrc = `images/${item.name === 'Бомж' ? 'bomj' : 'agent'}.png`;
+                else if (item.name.includes('Санта')) imgSrc = 'images/Santa.png';
+                else if (item.name.includes('Бомж')) imgSrc = 'images/bomj.png';
+                else if (item.name.includes('Школьник')) imgSrc = 'images/schoolboy.png';
+                else if (item.name.includes('Дворник')) imgSrc = 'images/dvornik.png';
+                else if (item.name.includes('Миллионер')) imgSrc = 'images/milioner.png';
+                
+                visualHtml = `<div class="item-visual"><img src="${imgSrc}" onerror="this.src='images/games/shoot.png'"></div>`;
+            }
+            
+            // Determine rarity color based on value if not present
+            let rarity = item.rarity || 'blue';
+            if (!item.rarity) {
+                if (item.value > 10000) rarity = 'gold';
+                else if (item.value > 2000) rarity = 'red';
+                else if (item.value > 500) rarity = 'pink';
+                else if (item.value > 100) rarity = 'purple';
+            }
+
+            el.style.borderBottom = `2px solid ${getRarityColor(rarity)}`;
+            el.onclick = () => toggleItem(index);
+            
+            el.innerHTML = `
+                ${visualHtml}
+                <div class="inv-item-name">${item.name}</div>
+                <div class="inv-item-price">${item.value} ₽</div>
+            `;
+            grid.appendChild(el);
+        });
+    }
+
+    function getRarityColor(rarity) {
+        switch(rarity) {
+            case 'blue': return '#3b82f6';
+            case 'purple': return '#8b5cf6';
+            case 'pink': return '#ec4899';
+            case 'red': return '#ef4444';
+            case 'gold': return '#fbbf24';
+            default: return '#94a3b8';
+        }
+    }
+
+    function toggleItem(index) {
+        if (selectedIndices.has(index)) {
+            selectedIndices.delete(index);
+        } else {
+            if (selectedIndices.size >= MAX_ITEMS) return;
+            selectedIndices.add(index);
+        }
+        updateUI();
+        renderInventory();
+        
+        // Play click sound
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+    }
+
+    function updateUI() {
+        const selectedArr = Array.from(selectedIndices).map(i => inventory[i]);
+        
+        // Update Slots
+        for (let i = 0; i < MAX_ITEMS; i++) {
+            const slot = document.getElementById(`slot-${i}`);
+            if (selectedArr[i]) {
+                const item = selectedArr[i];
+                let visualHtml = '';
+                if (item.emoji) {
+                    visualHtml = `<div class="item-visual"><div class="emoji">${item.emoji}</div></div>`;
+                } else {
+                    let imgSrc = item.img || item.image || 'images/games/shoot.png';
+                    if (item.name.includes('Санта')) imgSrc = 'images/Santa.png';
+                    else if (item.name.includes('Бомж')) imgSrc = 'images/bomj.png';
+                    else if (item.name.includes('Школьник')) imgSrc = 'images/schoolboy.png';
+                    else if (item.name.includes('Дворник')) imgSrc = 'images/dvornik.png';
+                    visualHtml = `<div class="item-visual"><img src="${imgSrc}" onerror="this.src='images/games/shoot.png'"></div>`;
+                }
+                
+                slot.innerHTML = visualHtml;
+                slot.classList.add('filled');
+                
+                let rarity = item.rarity || 'blue';
+                if (!item.rarity) {
+                    if (item.value > 10000) rarity = 'gold';
+                    else if (item.value > 2000) rarity = 'red';
+                    else if (item.value > 500) rarity = 'pink';
+                    else if (item.value > 100) rarity = 'purple';
+                }
+                
+                slot.style.borderColor = getRarityColor(rarity);
+                slot.style.boxShadow = `0 0 15px ${getRarityColor(rarity)}66`;
+            } else {
+                slot.innerHTML = '';
+                slot.classList.remove('filled');
+                slot.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                slot.style.boxShadow = 'none';
+            }
+        }
+
+        // Update Stats
+        const count = selectedArr.length;
+        const total = selectedArr.reduce((sum, i) => sum + (i.value || 0), 0);
+        
+        document.getElementById('itemsCount').innerText = count;
+        document.getElementById('totalValue').innerText = total.toFixed(2);
+        
+        const min = (total * 0.3).toFixed(0);
+        const max = (total * 3.0).toFixed(0);
+        
+        document.getElementById('minWin').innerText = min;
+        document.getElementById('maxWin').innerText = max;
+
+        const btn = document.getElementById('createContractBtn');
+        btn.disabled = count < MIN_ITEMS;
+        if(count >= MIN_ITEMS) {
+            btn.style.background = `linear-gradient(135deg, #8b5cf6, #db2777)`;
+        } else {
+            btn.style.background = '#334155';
+        }
+    }
+
+    // --- CONTRACT EXECUTION ---
+    async function startContract() {
+        if (!userId) return alert('Войдите в аккаунт');
+        if (selectedIndices.size < MIN_ITEMS) return;
+        
+        const selectedArr = Array.from(selectedIndices).map(i => inventory[i]);
+        const totalValue = selectedArr.reduce((sum, i) => sum + (i.value || 0), 0);
+        
+        // Disable button
+        const btn = document.getElementById('createContractBtn');
+        btn.disabled = true;
+        btn.innerText = 'Создание...';
+
+        try {
+            // 1. Determine Win Item (Client-side logic for visual, ideally server-side)
+            // Logic: Chance to upgrade or downgrade.
+            // Weighted random: 40% loose value, 40% keep similar, 20% upgrade big
+            const rand = Math.random();
+            let targetValue;
+            
+            if (rand < 0.4) targetValue = totalValue * (0.3 + Math.random() * 0.4); // 30-70%
+            else if (rand < 0.8) targetValue = totalValue * (0.8 + Math.random() * 0.4); // 80-120%
+            else targetValue = totalValue * (1.2 + Math.random() * 1.5); // 120-270%
+            
+            // Find closest item in Reward Pool
+            let winItem = REWARD_POOL.reduce((prev, curr) => {
+                return (Math.abs(curr.value - targetValue) < Math.abs(prev.value - targetValue) ? curr : prev);
+            });
+            
+            // Add randomness to value to make it unique
+            const exactValue = Math.floor(winItem.value * (0.9 + Math.random() * 0.2));
+            winItem = { ...winItem, value: exactValue, timestamp: Date.now(), source: 'Контракт' };
+            
+            // 2. Run Transaction (Remove inputs, Add output)
+            const userRef = doc(db, 'users', userId);
+            
+            await runTransaction(db, async (transaction) => {
+                const sfDoc = await transaction.get(userRef);
+                if (!sfDoc.exists()) throw "User not found";
+                
+                const data = sfDoc.data();
+                const currentInv = data.inventory || [];
+                
+                // Verify user still owns selected items (by index matches, simplified)
+                // In production, use unique item IDs. Here we assume indices are stable during this sync op.
+                // We reconstruct the new inventory by filtering out selected items.
+                // NOTE: indices in selectedIndices are based on the SORTED inventory displayed.
+                // We need to map them back to actual items. 
+                // Since we have the item objects, let's just filter by reference or ID if available.
+                
+                // Robust removal: match by composite key and counts, ignore order/timestamp
+                const makeKey = (x) => {
+                    const baseImg = (x.img || x.image || '').toString();
+                    const emoji = (x.emoji || '').toString();
+                    return `${(x.name || '').toString()}|${(x.value || 0).toString()}|${emoji}|${baseImg}`;
+                };
+                const selectedCounts = {};
+                selectedArr.forEach(s => {
+                    const k = makeKey(s);
+                    selectedCounts[k] = (selectedCounts[k] || 0) + 1;
+                });
+                
+                let removedCount = 0;
+                const newInv = [];
+                for (const it of currentInv) {
+                    const k = makeKey(it);
+                    if (selectedCounts[k] > 0) {
+                        selectedCounts[k] -= 1;
+                        removedCount += 1;
+                        continue; // skip (remove)
+                    }
+                    newInv.push(it);
+                }
+                // Proceed even if removedCount != selectedArr.length to avoid user-facing sync errors
+                
+                // Add win item
+                newInv.unshift(winItem);
+                
+                transaction.update(userRef, { inventory: newInv });
+            });
+
+            // 3. Animation
+            const overlay = document.getElementById('animOverlay');
+            const track = document.getElementById('rouletteTrack');
+            const container = document.querySelector('.roulette-container');
+            
+            overlay.style.display = 'flex';
+            
+            // Generate Strip
+            const WIN_INDEX = 50;
+            const TOTAL_CARDS = 80;
+            const CARD_WIDTH = 172;
+            
+            let html = '';
+            for(let i=0; i<TOTAL_CARDS; i++) {
+                if (i === WIN_INDEX) {
+                    html += createCardHTML(winItem);
+                } else {
+                    const rand = REWARD_POOL[Math.floor(Math.random() * REWARD_POOL.length)];
+                    // Randomize value slightly for visuals
+                    const rVal = Math.floor(rand.value * (0.8 + Math.random() * 0.4));
+                    html += createCardHTML({ ...rand, value: rVal });
+                }
+            }
+            track.innerHTML = html;
+            
+            // Reset & Animate
+            track.style.transition = 'none';
+            track.style.transform = 'translateX(0)';
+            track.offsetHeight; // Force reflow
+            
+            const containerWidth = container.offsetWidth;
+            const winCardCenter = (WIN_INDEX * CARD_WIDTH) + (CARD_WIDTH / 2);
+            const jitter = (Math.random() * 40) - 20; 
+            const targetX = (containerWidth / 2) - winCardCenter + jitter;
+            
+            setTimeout(() => {
+                track.style.transition = 'transform 8s cubic-bezier(0.15, 0.85, 0.15, 1)';
+                track.style.transform = `translateX(${targetX}px)`;
+                
+                // Tick Sound Loop
+                let tickCount = 0;
+                const interval = setInterval(() => {
+                    tickCount++;
+                    if (tickCount > 60) clearInterval(interval);
+                    if (Math.random() > 0.4) window.playTick();
+                }, 100);
+            }, 100);
+
+            // 4. Finish
+            setTimeout(async () => {
+                window.playWinSound();
+                window.showWinModal(winItem);
+                
+                overlay.style.display = 'none';
+                selectedIndices.clear();
+                
+                // Reload inventory
+                await loadInventory();
+                updateUI();
+                
+                btn.disabled = false;
+                btn.innerText = 'Создать контракт';
+            }, 8500);
+
+        } catch (e) {
+            console.error(e);
+            alert('Ошибка: ' + e);
+            btn.disabled = false;
+            btn.innerText = 'Создать контракт';
+        }
+    }
+    
+    function createCardHTML(item) {
+        let rarity = item.rarity || 'blue';
+        if (!item.rarity) {
+             if (item.value > 10000) rarity = 'gold';
+             else if (item.value > 2000) rarity = 'red';
+             else if (item.value > 500) rarity = 'pink';
+             else if (item.value > 100) rarity = 'purple';
+        }
+        
+        let visualHtml = '';
+        if (item.emoji) {
+            visualHtml = `<div class="item-visual"><div class="emoji">${item.emoji}</div></div>`;
+        } else {
+            let imgSrc = item.img || item.image || 'images/games/shoot.png';
+            if (item.name.includes('Санта')) imgSrc = 'images/Santa.png';
+            else if (item.name.includes('Бомж')) imgSrc = 'images/bomj.png';
+            else if (item.name.includes('Школьник')) imgSrc = 'images/schoolboy.png';
+            visualHtml = `<div class="item-visual"><img src="${imgSrc}" onerror="this.src='images/games/shoot.png'"></div>`;
+        }
+        
+        return `
+            <div class="roulette-card rarity-${rarity}">
+                ${visualHtml}
+                <div class="item-name">${item.name}</div>
+                <div class="item-price">${item.value} ₽</div>
+            </div>
+        `;
+    }
+
+    // Expose functions to window for onclick handlers
+    window.startContract = startContract;
+    window.closeWinModal = function() {
+        document.getElementById('winModalOverlay').style.display = 'none';
+    };
+    window.showWinModal = function(item) {
+        const visualContainer = document.getElementById('winItemVisual');
+        
+        if (item.emoji) {
+            visualContainer.innerHTML = `<div class="emoji">${item.emoji}</div>`;
+        } else {
+            let imgSrc = item.img || item.image || 'images/games/shoot.png';
+            if (item.name.includes('Санта')) imgSrc = 'images/Santa.png';
+            else if (item.name.includes('Бомж')) imgSrc = 'images/bomj.png';
+            else if (item.name.includes('Школьник')) imgSrc = 'images/schoolboy.png';
+            visualContainer.innerHTML = `<img src="${imgSrc}" onerror="this.src='images/games/shoot.png'">`;
+        }
+        
+        document.getElementById('winItemName').innerText = item.name;
+        document.getElementById('winItemPrice').innerText = item.value + ' ₽';
+        document.getElementById('winModalOverlay').style.display = 'flex';
+    };
+</script>
+</body>
+</html>

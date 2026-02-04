@@ -525,6 +525,8 @@
     .inv-emoji { font-size: 2.2rem; }
     .inv-name { color: #e0e0ff; font-weight: 700; font-size: 0.95rem; }
     .inv-value { color: #fde047; font-weight: 800; }
+    .item-visual { height: 60px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+    .item-visual img { width: 80%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); }
     .selected-list {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -631,6 +633,15 @@
     }
     .modal-actions .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 16px rgba(100,116,139,0.35); filter: brightness(1.05); }
     .modal-actions .btn:active { transform: translateY(0); filter: brightness(0.95); }
+    .price-btn {
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      border: 2px solid rgba(139,92,246,0.6);
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(139,92,246,0.35);
+      letter-spacing: 0.2px;
+    }
+    .price-btn:hover { box-shadow: 0 12px 24px rgba(139,92,246,0.45); filter: brightness(1.06); }
+    .price-btn:active { transform: translateY(0); filter: brightness(0.95); }
     .modal-actions input {
       flex: 1;
       margin-left: 8px;
@@ -774,7 +785,7 @@
         <div class="modal-actions">
           <div class="section-title" id="modalTitle">Выберите предмет</div>
           <div class="modal-controls">
-            <button class="btn" id="sortPriceBtn">Цена ↑</button>
+            <button class="btn price-btn" id="sortPriceBtn">Цена ₽ ↑</button>
             <div class="modal-search-wrapper">
               <input type="text" id="searchInput" placeholder="Поиск по названию или цене">
               <span class="search-indicator" id="searchIndicator">🔍</span>
@@ -828,6 +839,7 @@
     let rightIndex = null;
     let modalMode = null;
     let modalSortAsc = true;
+    let invSortAsc = true;
     let modalItems = [];
     let fastMode = false;
     let currentMult = null;
@@ -836,6 +848,7 @@
     let rightSelected = null;
     let selectedLeftIndices = [];
     let spinType = 'normal';
+    let isUpgrading = false;
     const audioCtx = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext) ? new (window.AudioContext || window.webkitAudioContext)() : null;
     function playTick(freq=1200, vol=0.06, dur=0.09) {
       if (!audioCtx) return;
@@ -965,6 +978,19 @@
 
     function isBattleItem(item) {
       return (item && typeof item.source === 'string') && item.source.includes('Баттл');
+    }
+    function resolveItemImage(item) {
+      let imgSrc = (item && (item.img || item.image)) || '';
+      const name = (item && item.name) || '';
+      if (!imgSrc) {
+        if (name.includes('Санта')) imgSrc = 'images/Santa.png';
+        else if (name.includes('Бомж')) imgSrc = 'images/bomj.png';
+        else if (name.includes('Школьник')) imgSrc = 'images/schoolboy.png';
+        else if (name.includes('Дворник')) imgSrc = 'images/dvornik.png';
+        else if (name.includes('Миллионер')) imgSrc = 'images/milioner.png';
+        else imgSrc = 'images/games/shoot.png';
+      }
+      return imgSrc;
     }
 
     const cases = {
@@ -1174,18 +1200,35 @@
       const title = document.createElement('div');
       title.className = 'section-title';
       title.textContent = 'Мои предметы';
+      const sortBtn = document.createElement('button');
+      sortBtn.className = 'btn';
+      sortBtn.id = 'mySortPriceBtn';
+      sortBtn.style.marginLeft = '10px';
+      sortBtn.textContent = invSortAsc ? 'Цена ↑' : 'Цена ↓';
+      sortBtn.onclick = () => { invSortAsc = !invSortAsc; renderInventory(); };
+      title.appendChild(sortBtn);
       const grid = document.createElement('div');
       grid.className = 'inventory-grid';
-      inventory.forEach((item, idx) => {
+      const sorted = inventory.slice().sort((a,b) => invSortAsc ? (a.value||0) - (b.value||0) : (b.value||0) - (a.value||0));
+      sorted.forEach((item, idx) => {
         const actualIndex = allInv.indexOf(item);
         const d = document.createElement('div');
         const isActive = selectedLeftIndices.includes(actualIndex);
         d.className = `inventory-item ${isActive ? 'active' : ''}`;
-        d.innerHTML = `
-          <div class="inv-emoji">${item.emoji || '❓'}</div>
-          <div class="inv-name">${item.name || ''}</div>
-          <div class="inv-value">${item.value || 0}₽</div>
-        `;
+        if (item.source === 'Контракт') {
+          const imgSrc = resolveItemImage(item);
+          d.innerHTML = `
+            <div class="item-visual"><img src="${imgSrc}" onerror="this.src='images/games/shoot.png'"></div>
+            <div class="inv-name">${item.name || ''}</div>
+            <div class="inv-value">${item.value || 0}₽</div>
+          `;
+        } else {
+          d.innerHTML = `
+            <div class="inv-emoji">${item.emoji || '❓'}</div>
+            <div class="inv-name">${item.name || ''}</div>
+            <div class="inv-value">${item.value || 0}₽</div>
+          `;
+        }
         d.onclick = () => {
           if (selectedLeftIndices.includes(actualIndex)) {
             selectedLeftIndices = selectedLeftIndices.filter(i => i !== actualIndex);
@@ -1359,8 +1402,9 @@
           active = selectedLeftIndices.includes(idx);
         }
         d.className = `inventory-item ${active ? 'active' : ''}`;
+        const imgSrc = resolveItemImage(it);
         d.innerHTML = `
-          <div class="inv-emoji">${it.emoji || '❓'}</div>
+          <div class="item-visual"><img src="${imgSrc}" onerror="this.src='images/games/shoot.png'"></div>
           <div class="inv-name">${it.name || ''}</div>
           <div class="inv-value">${it.value || 0}₽</div>
         `;
@@ -1416,85 +1460,118 @@
     }
 
     async function tryUpgrade() {
+      if (isUpgrading) return;
       const inv = currentUser?.inventory || [];
       if (selectedLeftIndices.length === 0 || !rightSelected) {
         document.getElementById('upgradeResult').innerHTML = '<span style="color:#f87171">Выберите 1–4 предмета и цель</span>';
         return;
       }
-      const selected = selectedLeftIndices.map(i => inv[i]).filter(Boolean);
-      const target = rightSelected;
-      const total = selected.reduce((sum, it) => sum + (it.value || 0), 0);
-      const effectiveBase = total + balanceUse;
-      if (!(target.value > effectiveBase)) {
-        document.getElementById('upgradeResult').innerHTML = '<span style="color:#f87171">Целевой должен быть дороже базового</span>';
-        return;
-      }
-      const chanceRaw = (effectiveBase / target.value) * 100;
-      const chance = Math.min(95, chanceRaw);
-      const proceed = true;
-      let success = false;
-      const arc = Math.max(1, Math.min(95, chance)) * 3.6;
-      const rollByAngle = (angleIn360) => angleIn360 <= arc;
-      const runAnimation = () => new Promise(resolve => {
-        const ringPtr = document.getElementById('ringPointer');
-        playSpinStart();
-        if (fastMode) {
-          const angleIn360 = Math.random() * 360;
-          if (ringPtr) {
-            window.__ringAnimating = true;
-            ringPtr.style.transition = 'transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1)';
-            ringPtr.style.transform = `rotate(${angleIn360}deg)`;
-          }
-          const tickId = startTickLoop(900, spinType);
-          setTimeout(() => {
-            window.__ringAnimating = false;
-            clearInterval(tickId);
-            const res = rollByAngle(angleIn360);
-            if (res) playWinSound(); else playLoseSound();
-            resolve(res);
-          }, 900);
+      isUpgrading = true;
+      const btnLock = document.getElementById('upgradeBtn');
+      if (btnLock) { btnLock.disabled = true; btnLock.textContent = 'Улучшение…'; }
+      try {
+        const selected = selectedLeftIndices.map(i => inv[i]).filter(Boolean);
+        const target = rightSelected;
+        const total = selected.reduce((sum, it) => sum + (it.value || 0), 0);
+        const effectiveBase = total + balanceUse;
+        if (!(target.value > effectiveBase)) {
+          document.getElementById('upgradeResult').innerHTML = '<span style="color:#f87171">Целевой должен быть дороже базового</span>';
           return;
         }
-        const baseSpins = 5 * 360;
-        const angleIn360 = Math.random() * 360;
-        const totalAngle = baseSpins + angleIn360;
-        if (spinType === 'normal') {
-          if (ringPtr) {
-            window.__ringAnimating = true;
-            ringPtr.style.transition = 'transform 2.8s cubic-bezier(0.11, 0.89, 0.32, 1.00)';
-            ringPtr.style.transform = `rotate(${totalAngle}deg)`;
-          }
-          const tickId = startTickLoop(2800, 'normal');
-          setTimeout(() => {
-            window.__ringAnimating = false;
-            clearInterval(tickId);
-            const res = rollByAngle(angleIn360);
-            if (Math.abs(angleIn360 - arc) < 8) playNearHit();
-            if (res) playWinSound(); else playLoseSound();
-            resolve(res);
-          }, 2800);
-          return;
-        }
-        if (spinType === 'bait') {
-          const nearAngle = rollByAngle(angleIn360) ? Math.max(0, arc - 6) : Math.min(360, arc + 6);
-          const phase1 = baseSpins + nearAngle;
-          const phase2 = totalAngle;
-          if (ringPtr) {
-            window.__ringAnimating = true;
-            ringPtr.style.transition = 'transform 1.6s cubic-bezier(0.18, 0.9, 0.2, 1)';
-            ringPtr.style.transform = `rotate(${phase1}deg)`;
-          }
-          const tickId = startTickLoop(2600, 'bait');
-          setTimeout(() => {
-            playNearHit();
+        const chanceRaw = (effectiveBase / target.value) * 100;
+        const chance = Math.min(95, chanceRaw);
+        let success = false;
+        const arc = Math.max(1, Math.min(95, chance)) * 3.6;
+        const rollByAngle = (angleIn360) => angleIn360 <= arc;
+        const runAnimation = () => new Promise(resolve => {
+          const ringPtr = document.getElementById('ringPointer');
+          playSpinStart();
+          if (fastMode) {
+            const angleIn360 = Math.random() * 360;
             if (ringPtr) {
-              ringPtr.style.transition = 'transform 0.4s cubic-bezier(0.6, 0.0, 0.4, 1)';
-              ringPtr.style.transform = `rotate(${phase1 + (rollByAngle(angleIn360) ? -4 : 8)}deg)`;
+              window.__ringAnimating = true;
+              ringPtr.style.transition = 'transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1)';
+              ringPtr.style.transform = `rotate(${angleIn360}deg)`;
             }
+            const tickId = startTickLoop(900, spinType);
             setTimeout(() => {
+              window.__ringAnimating = false;
+              clearInterval(tickId);
+              const res = rollByAngle(angleIn360);
+              if (res) playWinSound(); else playLoseSound();
+              resolve(res);
+            }, 900);
+            return;
+          }
+          const baseSpins = 5 * 360;
+          const angleIn360 = Math.random() * 360;
+          const totalAngle = baseSpins + angleIn360;
+          if (spinType === 'normal') {
+            if (ringPtr) {
+              window.__ringAnimating = true;
+              ringPtr.style.transition = 'transform 2.8s cubic-bezier(0.11, 0.89, 0.32, 1.00)';
+              ringPtr.style.transform = `rotate(${totalAngle}deg)`;
+            }
+            const tickId = startTickLoop(2800, 'normal');
+            setTimeout(() => {
+              window.__ringAnimating = false;
+              clearInterval(tickId);
+              const res = rollByAngle(angleIn360);
+              if (Math.abs(angleIn360 - arc) < 8) playNearHit();
+              if (res) playWinSound(); else playLoseSound();
+              resolve(res);
+            }, 2800);
+            return;
+          }
+          if (spinType === 'bait') {
+            const nearAngle = rollByAngle(angleIn360) ? Math.max(0, arc - 6) : Math.min(360, arc + 6);
+            const phase1 = baseSpins + nearAngle;
+            const phase2 = totalAngle;
+            if (ringPtr) {
+              window.__ringAnimating = true;
+              ringPtr.style.transition = 'transform 1.6s cubic-bezier(0.18, 0.9, 0.2, 1)';
+              ringPtr.style.transform = `rotate(${phase1}deg)`;
+            }
+            const tickId = startTickLoop(2600, 'bait');
+            setTimeout(() => {
+              playNearHit();
               if (ringPtr) {
-                ringPtr.style.transition = 'transform 0.8s cubic-bezier(0.11, 0.89, 0.32, 1.00)';
-                ringPtr.style.transform = `rotate(${phase2}deg)`;
+                ringPtr.style.transition = 'transform 0.4s cubic-bezier(0.6, 0.0, 0.4, 1)';
+                ringPtr.style.transform = `rotate(${phase1 + (rollByAngle(angleIn360) ? -4 : 8)}deg)`;
+              }
+              setTimeout(() => {
+                if (ringPtr) {
+                  ringPtr.style.transition = 'transform 0.8s cubic-bezier(0.11, 0.89, 0.32, 1.00)';
+                  ringPtr.style.transform = `rotate(${phase2}deg)`;
+                }
+                setTimeout(() => {
+                  window.__ringAnimating = false;
+                  clearInterval(tickId);
+                  const res = rollByAngle(angleIn360);
+                  if (res) playWinSound(); else playLoseSound();
+                  resolve(res);
+                }, 800);
+              }, 420);
+            }, 1600);
+            return;
+          }
+          if (spinType === 'degen') {
+            const accelSpins = 6 * 360;
+            const win = rollByAngle(angleIn360);
+            const delta = 6;
+            const nearAngle = win ? Math.min(360, arc + delta) : Math.max(0, arc - delta);
+            const phase1 = accelSpins + nearAngle;
+            if (ringPtr) {
+              window.__ringAnimating = true;
+              ringPtr.style.transition = 'transform 2.0s cubic-bezier(0.12, 0.85, 0.25, 1)';
+              ringPtr.style.transform = `rotate(${phase1}deg)`;
+            }
+            const tickId = startTickLoop(3200, 'degen');
+            setTimeout(() => {
+              playNearHit();
+              if (ringPtr) {
+                ringPtr.style.transition = 'transform 1.2s cubic-bezier(0.11, 0.89, 0.32, 1.00)';
+                ringPtr.style.transform = `rotate(${totalAngle}deg)`;
               }
               setTimeout(() => {
                 window.__ringAnimating = false;
@@ -1502,89 +1579,69 @@
                 const res = rollByAngle(angleIn360);
                 if (res) playWinSound(); else playLoseSound();
                 resolve(res);
-              }, 800);
-            }, 420);
-          }, 1600);
-          return;
-        }
-        if (spinType === 'degen') {
-          const accelSpins = 6 * 360;
-          const win = rollByAngle(angleIn360);
-          const delta = 6;
-          const nearAngle = win ? Math.min(360, arc + delta) : Math.max(0, arc - delta);
-          const phase1 = accelSpins + nearAngle;
-          if (ringPtr) {
-            window.__ringAnimating = true;
-            ringPtr.style.transition = 'transform 2.0s cubic-bezier(0.12, 0.85, 0.25, 1)';
-            ringPtr.style.transform = `rotate(${phase1}deg)`;
+              }, 1200);
+            }, 2000);
+            return;
           }
-          const tickId = startTickLoop(3200, 'degen');
-          setTimeout(() => {
-            playNearHit();
-            if (ringPtr) {
-              ringPtr.style.transition = 'transform 1.2s cubic-bezier(0.11, 0.89, 0.32, 1.00)';
-              ringPtr.style.transform = `rotate(${totalAngle}deg)`;
-            }
-            setTimeout(() => {
-              window.__ringAnimating = false;
-              clearInterval(tickId);
-              const res = rollByAngle(angleIn360);
-              if (res) playWinSound(); else playLoseSound();
-              resolve(res);
-            }, 1200);
-          }, 2000);
-          return;
-        }
-        resolve(rollByAngle(angleIn360));
-      });
-      success = await runAnimation();
-      {
-        const modal = document.getElementById('upgradeResultModal');
-        const card = document.getElementById('upgradeResultCard');
-        const title = document.getElementById('upgradeResultTitle');
-        const text = document.getElementById('upgradeResultText');
-        if (modal && card && title && text) {
-          card.className = `result-card ${success ? 'success' : 'fail'}`;
-          title.className = `result-title ${success ? 'success' : 'fail'}`;
-          title.textContent = success ? 'Победа!' : 'Проигрыш';
-          text.textContent = success ? `Получено: ${target.value}₽` : 'Предмет потерян';
-          modal.style.display = 'flex';
-        }
-      }
-      await runTransaction(db, async (tx) => {
-        const userRef = doc(db, 'users', userId);
-        const snap = await tx.get(userRef);
-        if (!snap.exists()) throw new Error('user not found');
-        const data = snap.data();
-        const curInv = Array.isArray(data.inventory) ? data.inventory.slice() : [];
-        const toRemove = selected.map(s => ({ emoji: s.emoji, name: s.name, value: s.value }));
-        toRemove.forEach(s => {
-          const idx = curInv.findIndex(it => it && it.emoji === s.emoji && it.name === s.name && it.value === s.value);
-          if (idx !== -1) curInv.splice(idx, 1);
+          resolve(rollByAngle(angleIn360));
         });
-        if (success) {
-          curInv.push({
-            id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(16).slice(2)),
-            emoji: target.emoji,
-            name: target.name,
-            value: target.value,
-            source: 'Апгрейд',
-            timestamp: Date.now()
-          });
+        success = await runAnimation();
+        {
+          const modal = document.getElementById('upgradeResultModal');
+          const card = document.getElementById('upgradeResultCard');
+          const title = document.getElementById('upgradeResultTitle');
+          const text = document.getElementById('upgradeResultText');
+          if (modal && card && title && text) {
+            card.className = `result-card ${success ? 'success' : 'fail'}`;
+            title.className = `result-title ${success ? 'success' : 'fail'}`;
+            title.textContent = success ? 'Победа!' : 'Проигрыш';
+            text.textContent = success ? `Получено: ${target.value}₽` : 'Предмет потерян';
+            modal.style.display = 'flex';
+          }
         }
-        const newBalance = Math.max(0, ((data.balance || 0) - balanceUse));
-        tx.update(userRef, { inventory: curInv, balance: newBalance });
-        currentUser.inventory = curInv;
-        currentUser.balance = newBalance;
-      });
-      updateBalance();
-      selectedLeftIndices = [];
-      balanceUse = 0;
-      applySelection();
-      updateBalance();
-      document.getElementById('upgradeResult').innerHTML = success
-        ? `<span style="color:#34d399">Успех! Получено: ${target.value}₽</span>`
-        : `<span style="color:#f87171">Неудача. Предмет потерян.</span>`;
+        await runTransaction(db, async (tx) => {
+          const userRef = doc(db, 'users', userId);
+          const snap = await tx.get(userRef);
+          if (!snap.exists()) throw new Error('user not found');
+          const data = snap.data();
+          const curInv = Array.isArray(data.inventory) ? data.inventory.slice() : [];
+          const toRemove = selected.map(s => ({ emoji: s.emoji, name: s.name, value: s.value }));
+          let removed = 0;
+          toRemove.forEach(s => {
+            const idx = curInv.findIndex(it => it && it.emoji === s.emoji && it.name === s.name && it.value === s.value);
+            if (idx !== -1) { curInv.splice(idx, 1); removed++; }
+          });
+          if (removed !== toRemove.length) throw new Error('items missing');
+          if (success) {
+            curInv.push({
+              id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString() + Math.random().toString(16).slice(2)),
+              emoji: target.emoji,
+              name: target.name,
+              value: target.value,
+              source: 'Апгрейд',
+              timestamp: Date.now()
+            });
+          }
+          const newBalance = Math.max(0, ((data.balance || 0) - balanceUse));
+          tx.update(userRef, { inventory: curInv, balance: newBalance });
+          currentUser.inventory = curInv;
+          currentUser.balance = newBalance;
+        });
+        updateBalance();
+        selectedLeftIndices = [];
+        balanceUse = 0;
+        applySelection();
+        updateBalance();
+        document.getElementById('upgradeResult').innerHTML = success
+          ? `<span style="color:#34d399">Успех! Получено: ${target.value}₽</span>`
+          : `<span style="color:#f87171">Неудача. Предмет потерян.</span>`;
+      } catch (e) {
+        document.getElementById('upgradeResult').innerHTML = '<span style="color:#f87171">Ошибка. Попробуйте снова</span>';
+      } finally {
+        isUpgrading = false;
+        const btnUnlock = document.getElementById('upgradeBtn');
+        if (btnUnlock) { btnUnlock.disabled = false; btnUnlock.textContent = 'Улучшить'; }
+      }
     }
 
     function bindSelectors() {
@@ -1593,7 +1650,7 @@
       document.getElementById('upgradeBtn')?.addEventListener('click', tryUpgrade);
       document.getElementById('sortPriceBtn')?.addEventListener('click', () => {
         modalSortAsc = !modalSortAsc;
-        document.getElementById('sortPriceBtn').textContent = modalSortAsc ? 'Цена ↑' : 'Цена ↓';
+        document.getElementById('sortPriceBtn').textContent = modalSortAsc ? 'Цена ₽ ↑' : 'Цена ₽ ↓';
         renderModalItems();
       });
       document.getElementById('searchInput')?.addEventListener('input', renderModalItems);

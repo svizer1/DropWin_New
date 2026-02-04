@@ -601,6 +601,33 @@
             </div>
 
             <div class="filter-bar">
+                <input type="text" id="searchInput" placeholder="Поиск по названию..." style="
+                    padding: 12px 16px;
+                    border-radius: 12px;
+                    background: rgba(99, 102, 241, 0.15);
+                    border: 1px solid rgba(99, 102, 241, 0.3);
+                    color: white;
+                    font-size: 0.95rem;
+                    width: 100%;
+                    max-width: 300px;
+                ">
+                
+                <select id="sortSelect" style="
+                    padding: 12px 16px;
+                    border-radius: 12px;
+                    background: rgba(99, 102, 241, 0.15);
+                    border: 1px solid rgba(99, 102, 241, 0.3);
+                    color: white;
+                    font-size: 0.95rem;
+                    cursor: pointer;
+                ">
+                    <option value="date_desc">📅 Сначала новые</option>
+                    <option value="date_asc">📅 Сначала старые</option>
+                    <option value="price_desc">💰 Сначала дорогие</option>
+                    <option value="price_asc">💰 Сначала дешевые</option>
+                    <option value="name_asc">🔤 По названию (А-Я)</option>
+                </select>
+
                 <button class="filter-btn active" data-filter="all">Все</button>
                 <button class="filter-btn" data-filter="high">Дорогие (100+₽)</button>
                 <button class="filter-btn" data-filter="medium">Средние (20-100₽)</button>
@@ -658,6 +685,8 @@
         let isGuest = false;
         let selectedItems = new Set();
         let currentFilter = 'all';
+        let searchQuery = '';
+        let currentSort = 'date_desc';
 
         function createParticles() {
             const container = document.getElementById('particles');
@@ -693,16 +722,35 @@
             }
 
             // Фильтрация
-            let filtered = inventory;
-            if (currentFilter === 'high') {
-                filtered = inventory.filter(item => item.value >= 100);
-            } else if (currentFilter === 'medium') {
-                filtered = inventory.filter(item => item.value >= 20 && item.value < 100);
-            } else if (currentFilter === 'low') {
-                filtered = inventory.filter(item => item.value < 20);
-            } else if (currentFilter === 'game') {
-                filtered = inventory.filter(item => item.type === 'bg' || item.type === 'skin');
-            }
+            let filtered = inventory.filter(item => {
+                // 1. Category Filter
+                let passCategory = true;
+                if (currentFilter === 'high') passCategory = (item.value >= 100);
+                else if (currentFilter === 'medium') passCategory = (item.value >= 20 && item.value < 100);
+                else if (currentFilter === 'low') passCategory = (item.value < 20);
+                else if (currentFilter === 'game') passCategory = (item.type === 'bg' || item.type === 'skin' || item.type === 'agent' || item.type === 'charm');
+
+                // 2. Search Filter
+                let passSearch = true;
+                if (searchQuery) {
+                    const q = searchQuery.toLowerCase();
+                    const name = (item.name || '').toLowerCase();
+                    const emoji = (item.emoji || '').toLowerCase();
+                    passSearch = name.includes(q) || emoji.includes(q);
+                }
+
+                return passCategory && passSearch;
+            });
+
+            // Сортировка
+            filtered.sort((a, b) => {
+                if (currentSort === 'price_desc') return (b.value || 0) - (a.value || 0);
+                if (currentSort === 'price_asc') return (a.value || 0) - (b.value || 0);
+                if (currentSort === 'name_asc') return (a.name || '').localeCompare(b.name || '');
+                if (currentSort === 'date_asc') return (a.timestamp || 0) - (b.timestamp || 0);
+                // Default: date_desc
+                return (b.timestamp || 0) - (a.timestamp || 0);
+            });
 
             if (filtered.length === 0) {
                 container.innerHTML = `
@@ -1025,6 +1073,16 @@
                     renderInventory();
                     updateActionsPanel();
                 });
+            });
+
+            document.getElementById('searchInput')?.addEventListener('input', (e) => {
+                searchQuery = e.target.value;
+                renderInventory();
+            });
+
+            document.getElementById('sortSelect')?.addEventListener('change', (e) => {
+                currentSort = e.target.value;
+                renderInventory();
             });
 
             document.addEventListener('visibilitychange', () => {

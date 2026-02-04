@@ -569,16 +569,33 @@
   // Hamburger Logic
   const hb = document.getElementById('hamburgerBtn');
   const overlay = document.getElementById('mobileMenuOverlay');
+  const drawer = document.getElementById('mobileDrawer');
+  
   function toggleDrawer() {
       document.body.classList.toggle('drawer-open');
-      hb && hb.classList.toggle('active');
+      if(hb) hb.classList.toggle('active');
+      
       const b = document.getElementById('menuBadge');
       if(b && document.body.classList.contains('drawer-open')) {
           b.classList.remove('active');
       }
   }
-  if(hb) hb.addEventListener('click', toggleDrawer);
+  
+  if(hb) hb.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleDrawer();
+  });
+  
   if(overlay) overlay.addEventListener('click', toggleDrawer);
+  
+  // Close drawer when clicking links inside
+  if(drawer) {
+      drawer.querySelectorAll('a').forEach(link => {
+          link.addEventListener('click', () => {
+              if(document.body.classList.contains('drawer-open')) toggleDrawer();
+          });
+      });
+  }
 
   window.toggleNotifications = function() {
       const widget = document.getElementById('notificationWidget');
@@ -1323,16 +1340,6 @@
       setInterval(() => goToSlide(currentSlide + 1), 5000);
   }
 
-</script>
-<script>
-  const hb = document.getElementById('hamburgerBtn');
-  const overlay = document.getElementById('mobileMenuOverlay');
-  function toggleDrawer() {
-    document.body.classList.toggle('drawer-open');
-    hb && hb.classList.toggle('active');
-  }
-  hb && hb.addEventListener('click', toggleDrawer);
-  overlay && overlay.addEventListener('click', toggleDrawer);
 </script>
 <script>
   document.addEventListener('DOMContentLoaded', () => {

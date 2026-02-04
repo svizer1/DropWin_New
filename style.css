@@ -780,8 +780,8 @@ input:focus { outline: none; border-color: var(--primary); }
     /* Compact Balance Box */
     .balance-box {
         padding: 4px 8px;
-        font-size: 0.8rem;
-        max-width: 100px;
+        font-size: 0.85rem;
+        max-width: 140px; /* Increased from 100px */
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -862,7 +862,13 @@ input:focus { outline: none; border-color: var(--primary); }
 }
 
 /* Compatibility for existing classes from previous CSS to prevent breakage */
-.game-card { padding: 20px; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); }
+.game-card {
+    padding: 20px;
+    background: var(--bg-card);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    position: relative;
+}
 .game-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 16px; text-align: center; }
 .back-btn { background: none; border: none; color: var(--text-sec); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
 

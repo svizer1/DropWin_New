@@ -16,6 +16,48 @@
       .chat-suggestions { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border, rgba(255,255,255,0.1)); background: rgba(0,0,0,0.2); max-height: 100px; overflow-y: auto; }
       .chat-chip { background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #d8b4fe; padding: 6px 12px; border-radius: 16px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
       .chat-chip:hover { background: rgba(139, 92, 246, 0.4); color: white; }
+      .nav-badge {
+          position: absolute;
+          top: 4px;
+          right: 4px;
+          width: 8px;
+          height: 8px;
+          background: #ef4444;
+          border-radius: 50%;
+          border: 1px solid #1e1b2e;
+          display: none;
+          z-index: 10;
+          box-shadow: 0 0 8px #ef4444;
+      }
+      .nav-badge.active { display: block; }
+
+      .notification-widget {
+          position: fixed;
+          top: 60px;
+          right: 12px;
+          width: 300px;
+          background: #1e1b2e;
+          border: 1px solid rgba(139, 92, 246, 0.3);
+          border-radius: 12px;
+          padding: 12px;
+          display: none;
+          flex-direction: column;
+          gap: 8px;
+          z-index: 1000;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      }
+      .notification-widget.active { display: flex; }
+      .notif-header { font-weight: 700; color: white; display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+      .notif-list { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+      .badge-count {
+          background: #ef4444;
+          color: white;
+          font-size: 0.7rem;
+          padding: 2px 6px;
+          border-radius: 10px;
+          margin-left: auto;
+          display: none;
+      }
   </style>
 </head>
 <body>
@@ -119,7 +161,10 @@
 <header class="header">
   <div class="header-left">
     <div class="logo" onclick="location.href='index.html'" style="cursor: pointer;">💎 DROP<span>WIN</span></div>
-    <button class="hamburger" id="hamburgerBtn"><span class="bar"></span><span class="bar"></span><span class="bar"></span></button>
+    <button class="hamburger" id="hamburgerBtn">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+        <span class="nav-badge" id="menuBadge"></span>
+    </button>
     <nav class="main-nav">
       <a href="inventory.html"><span class="nav-icon">🎒</span> ИНВЕНТАРЬ</a>
       <a href="leaderboard.html"><span class="nav-icon">🏆</span> ТОП ИГРОКОВ</a>
@@ -159,6 +204,7 @@
 
 <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
 <div class="mobile-drawer" id="mobileDrawer">
+  <a href="#" onclick="toggleNotifications(); return false;"><span>🔔</span> Уведомления</a>
   <a href="inventory.html"><span>🎒</span> Инвентарь</a>
   <a href="leaderboard.html"><span>🏆</span> Топ игроков</a>
   <a href="raffles.html"><span>🎁</span> Розыгрыши</a>
@@ -520,9 +566,39 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
+  // Hamburger Logic
+  const hb = document.getElementById('hamburgerBtn');
+  const overlay = document.getElementById('mobileMenuOverlay');
+  function toggleDrawer() {
+      document.body.classList.toggle('drawer-open');
+      hb && hb.classList.toggle('active');
+      const b = document.getElementById('menuBadge');
+      if(b && document.body.classList.contains('drawer-open')) {
+          b.classList.remove('active');
+      }
+  }
+  if(hb) hb.addEventListener('click', toggleDrawer);
+  if(overlay) overlay.addEventListener('click', toggleDrawer);
+
+  window.toggleNotifications = function() {
+      const widget = document.getElementById('notificationWidget');
+      if(widget) {
+          widget.classList.toggle('active');
+          // Clear badge
+          const b = document.getElementById('menuBadge');
+          if(b) b.classList.remove('active');
+      } else {
+          showToast('Уведомления', 'Нет новых уведомлений');
+      }
+  };
+
   function showToast(title, msg) {
       const c = document.getElementById('toastContainer');
       if(!c) return;
+      
+      const b = document.getElementById('menuBadge');
+      if(b) b.classList.add('active');
+
       const t = document.createElement('div');
       t.className = 'toast';
       t.innerHTML = `<div class="toast-icon">🎉</div><div class="toast-content"><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div>`;
@@ -806,6 +882,27 @@
 
 
       // --- SHARED CHAT LOGIC ---
+      function playNotificationSound() {
+          try {
+              const AudioContext = window.AudioContext || window.webkitAudioContext;
+              if (!AudioContext) return;
+              const ctx = new AudioContext();
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(440, ctx.currentTime);
+              osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
+              gain.gain.setValueAtTime(0.05, ctx.currentTime);
+              gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+              osc.start();
+              osc.stop(ctx.currentTime + 0.35);
+          } catch (e) { console.error(e); }
+      }
+
+      let lastMsgCount = -1;
+
       function loadChatMessages(userId) {
           if(chatUnsub) chatUnsub();
           
@@ -813,10 +910,25 @@
           chatUnsub = onSnapshot(chatRef, (docSnap) => {
               if (docSnap.exists()) {
                   const data = docSnap.data();
-                  renderMessages(data.messages || []);
+                  const msgs = data.messages || [];
+                  renderMessages(msgs);
                   
-                  // If Admin is viewing, mark as read (optional logic, maybe strictly on reply)
-                  // For now, we rely on 'lastSender' to determine unread status in list
+                  // Notification Logic (Only for User)
+                  if (currentUser && currentUser.uid !== ADMIN_UID) {
+                      if (lastMsgCount !== -1 && msgs.length > lastMsgCount) {
+                          const lastMsg = msgs[msgs.length - 1];
+                          // Notify if sender is admin or bot
+                          if (lastMsg.sender === 'admin' || lastMsg.sender === 'bot') {
+                              playNotificationSound();
+                              if (!chatWidget.classList.contains('active')) {
+                                  const badge = document.querySelector('.admin-chat-btn .badge');
+                                  if(badge) badge.style.display = 'block';
+                              }
+                          }
+                      }
+                      lastMsgCount = msgs.length;
+                  }
+
               } else {
                   renderMessages([]);
                   if (userId === currentUser.uid) {
@@ -843,7 +955,15 @@
                   if (msg.sender === 'admin') name = 'Вы';
               }
 
-              msgDiv.innerHTML = `<div class="chat-msg-header">${name}</div>${msg.text}`;
+              const header = document.createElement('div');
+              header.className = 'chat-msg-header';
+              header.textContent = name;
+              
+              msgDiv.appendChild(header);
+              // Safe text rendering to prevent XSS
+              const textNode = document.createTextNode(msg.text);
+              msgDiv.appendChild(textNode);
+
               chatMessages.appendChild(msgDiv);
           });
           chatMessages.scrollTop = chatMessages.scrollHeight;

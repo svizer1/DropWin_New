@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <title>Баттлы Кейсов | DropWin</title>
     <link rel="stylesheet" href="../style.css">
+    <link rel="icon" type="image/x-icon" href="../logo.ico">
     <style>
         /* ... existing styles ... */
         .mode-select {
@@ -758,8 +759,8 @@
             // Player gets a boost to high-value items
             const adjusted = items.map((it, i) => {
                 // Boost factor increases with index (value)
-                // i=0 -> 1.0, i=7 -> 1.35
-                const boostFactor = 1 + (i * 0.05); 
+                // i=0 -> 1.0, i=7 -> 2.0+ (More generous)
+                const boostFactor = 1 + (i * 0.25); 
                 const newProb = (it.prob || 0) * boostFactor;
                 return { ...it, prob: newProb };
             });
@@ -845,10 +846,10 @@ const cases = {
     agent: {
         price: 117,
         items: [
-            {emoji: '🧔', name: 'Бомж', value: 10, prob: 0.58, type: 'agent', img: '../images/games/bomj.png', desc: 'Скин Бомжа'},
-            {emoji: '👦', name: 'Пацан', value: 60, prob: 0.30, type: 'agent', img: '../images/games/boy.png', desc: 'Скин Пацана'},
-            {emoji: '🧑', name: 'Человек', value: 150, prob: 0.09, type: 'agent', img: '../images/games/people.png'},
-            {emoji: '🧙‍♂️', name: 'Гном', value: 300, prob: 0.02, type: 'agent', img: '../images/games/gnom.png'}
+            {emoji: '🧔', name: 'Бомж', value: 10, prob: 0.15, type: 'agent', img: '../images/games/bomj.png', desc: 'Скин Бомжа'},
+            {emoji: '👦', name: 'Пацан', value: 60, prob: 0.35, type: 'agent', img: '../images/games/boy.png', desc: 'Скин Пацана'},
+            {emoji: '🧑', name: 'Человек', value: 150, prob: 0.40, type: 'agent', img: '../images/games/people.png'},
+            {emoji: '🧙‍♂️', name: 'Гном', value: 300, prob: 0.10, type: 'agent', img: '../images/games/gnom.png'}
         ],
         color: '#374151',
         icon: '🕵️'
@@ -856,10 +857,10 @@ const cases = {
     background: {
         price: 99,
         items: [
-            {emoji: '🏙️', name: 'Город', value: 25, prob: 0.54, type: 'bg', img: '../images/background.png', desc: 'Фон: Город'},
+            {emoji: '🏙️', name: 'Город', value: 25, prob: 0.20, type: 'bg', img: '../images/background.png', desc: 'Фон: Город'},
             {emoji: '🌨️', name: 'Снег', value: 50, prob: 0.30, type: 'bg', img: '../images/background.png', desc: 'Фон: Снег'},
-            {emoji: '🏜️', name: 'Пустыня', value: 100, prob: 0.13, type: 'bg', img: '../images/background.png', desc: 'Фон: Пустыня'},
-            {emoji: '🌲', name: 'Лес', value: 250, prob: 0.03, type: 'bg', img: '../images/background.png', desc: 'Фон: Лес'}
+            {emoji: '🏜️', name: 'Пустыня', value: 100, prob: 0.40, type: 'bg', img: '../images/background.png', desc: 'Фон: Пустыня'},
+            {emoji: '🌲', name: 'Лес', value: 250, prob: 0.10, type: 'bg', img: '../images/background.png', desc: 'Фон: Лес'}
         ],
         color: '#6366f1',
         icon: '🖼️'
@@ -867,11 +868,11 @@ const cases = {
     keychain: {
         price: 88,
         items: [
-            {emoji: '🔑', name: 'Брелок-ключ', value: 10, prob: 0.54, type: 'charm'},
-            {emoji: '🐾', name: 'Брелок лапка', value: 20, prob: 0.30, type: 'charm'},
-            {emoji: '🎖️', name: 'Коллекционный брелок', value: 50, prob: 0.13, type: 'charm'},
-            {emoji: '💎', name: 'Редкий брелок', value: 120, prob: 0.02, type: 'charm'},
-            {emoji: '🌟', name: 'Легендарный брелок', value: 400, prob: 0.005, type: 'charm'}
+            {emoji: '🔑', name: 'Брелок-ключ', value: 10, prob: 0.10, type: 'charm'},
+            {emoji: '🐾', name: 'Брелок лапка', value: 20, prob: 0.20, type: 'charm'},
+            {emoji: '🎖️', name: 'Коллекционный брелок', value: 50, prob: 0.40, type: 'charm'},
+            {emoji: '💎', name: 'Редкий брелок', value: 120, prob: 0.25, type: 'charm'},
+            {emoji: '🌟', name: 'Легендарный брелок', value: 400, prob: 0.05, type: 'charm'}
         ],
         color: '#f59e0b',
         icon: '🔑'
@@ -879,10 +880,10 @@ const cases = {
     skin: {
         price: 175,
         items: [
-            {emoji: '🔫', name: 'Стандарт', value: 30, prob: 0.55, type: 'skin'},
+            {emoji: '🔫', name: 'Стандарт', value: 30, prob: 0.10, type: 'skin'},
             {emoji: '🎨', name: 'Граффити', value: 100, prob: 0.30, type: 'skin'},
-            {emoji: '✨', name: 'Снежный', value: 180, prob: 0.13, type: 'skin'},
-            {emoji: '🌟', name: 'Золотой', value: 500, prob: 0.015, type: 'skin'}
+            {emoji: '✨', name: 'Снежный', value: 180, prob: 0.50, type: 'skin'},
+            {emoji: '🌟', name: 'Золотой', value: 500, prob: 0.10, type: 'skin'}
         ],
         color: '#4ade80',
         icon: '🎨'
@@ -890,13 +891,13 @@ const cases = {
     bomj: {
         price: 6,
         items: [
-            {emoji: '🧦', name: 'Дырявый носок',      value: 1,   prob: 0.34},
-            {emoji: '🍞', name: 'Чёрствый хлеб',       value: 2,   prob: 0.30},
+            {emoji: '🧦', name: 'Дырявый носок',      value: 1,   prob: 0.10},
+            {emoji: '🍞', name: 'Чёрствый хлеб',       value: 2,   prob: 0.15},
             {emoji: '🗑️', name: 'Мусорный пакет',      value: 3,   prob: 0.20},
-            {emoji: '🍺', name: 'Тёплое пиво 0.5',     value: 5,   prob: 0.10},
-            {emoji: '🪙', name: 'Горстка мелочи',      value: 10,  prob: 0.045},
-            {emoji: '🧥', name: 'Старая куртка',       value: 20,  prob: 0.015},
-            {emoji: '📱', name: 'Сломанный Nokia',     value: 40,  prob: 0.005},
+            {emoji: '🍺', name: 'Тёплое пиво 0.5',     value: 5,   prob: 0.30},
+            {emoji: '🪙', name: 'Горстка мелочи',      value: 10,  prob: 0.20},
+            {emoji: '🧥', name: 'Старая куртка',       value: 20,  prob: 0.04},
+            {emoji: '📱', name: 'Сломанный Nokia',     value: 40,  prob: 0.008},
             {emoji: '💸', name: 'Заначка под матрасом',value: 80,  prob: 0.002},
         ],
         color: '#6b7280',
@@ -905,16 +906,16 @@ const cases = {
     vibe: {
         price: 77,
         items: [
-            {emoji: '💖', name: 'Сердце',          value: 6,   prob: 0.30},
-            {emoji: '🌹', name: 'Роза',            value: 10,  prob: 0.25},
-            {emoji: '🚀', name: 'Ракета',          value: 20,  prob: 0.20},
-            {emoji: '💐', name: 'Цветы',           value: 20,  prob: 0.15},
-            {emoji: '💍', name: 'Кольцо',          value: 40,  prob: 0.08},
-            {emoji: '💎', name: 'Алмаз',           value: 40,  prob: 0.02},
-            {emoji: '⭐', name: 'Звезда',           value: 80,  prob: 0.006},
-            {emoji: '🍭', name: 'Лол-поп',         value: 120, prob: 0.001},
-            {emoji: '🐶', name: 'Суп Дог',         value: 180, prob: 0.0002},
-            {emoji: '🤡', name: 'Шапка шута',      value: 200, prob: 0.00005},
+            {emoji: '💖', name: 'Сердце',          value: 6,   prob: 0.05},
+            {emoji: '🌹', name: 'Роза',            value: 10,  prob: 0.10},
+            {emoji: '🚀', name: 'Ракета',          value: 20,  prob: 0.15},
+            {emoji: '💐', name: 'Цветы',           value: 20,  prob: 0.20},
+            {emoji: '💍', name: 'Кольцо',          value: 40,  prob: 0.30},
+            {emoji: '💎', name: 'Алмаз',           value: 40,  prob: 0.15},
+            {emoji: '⭐', name: 'Звезда',           value: 80,  prob: 0.04},
+            {emoji: '🍭', name: 'Лол-поп',         value: 120, prob: 0.008},
+            {emoji: '🐶', name: 'Суп Дог',         value: 180, prob: 0.002},
+            {emoji: '🤡', name: 'Шапка шута',      value: 200, prob: 0.0005},
         ],
         color: '#ec4899',
         icon: '💖'
@@ -922,11 +923,11 @@ const cases = {
     santa: {
         price: 114,
         items: [
-            {emoji: '🍪', name: 'Печенье', value: 10, prob: 0.50},
-            {emoji: '🥛', name: 'Молоко', value: 25, prob: 0.30},
-            {emoji: '🎅', name: 'Колпак', value: 50, prob: 0.15},
-            {emoji: '🦌', name: 'Олень', value: 120, prob: 0.04},
-            {emoji: '🎁', name: 'Большой подарок', value: 400, prob: 0.005},
+            {emoji: '🍪', name: 'Печенье', value: 10, prob: 0.10},
+            {emoji: '🥛', name: 'Молоко', value: 25, prob: 0.20},
+            {emoji: '🎅', name: 'Колпак', value: 50, prob: 0.30},
+            {emoji: '🦌', name: 'Олень', value: 120, prob: 0.35},
+            {emoji: '🎁', name: 'Большой подарок', value: 400, prob: 0.05},
         ],
         color: '#dc2626',
         icon: '🎅'
@@ -934,12 +935,12 @@ const cases = {
     c2024: {
         price: 1199,
         items: [
-            {emoji: '🐉', name: 'Дракон', value: 120, prob: 0.55},
-            {emoji: '🍾', name: 'Шампанское', value: 250, prob: 0.30},
-            {emoji: '🎁', name: 'Подарок 2024', value: 500, prob: 0.12},
-            {emoji: '👑', name: 'Корона', value: 1000, prob: 0.025},
-            {emoji: '💎', name: 'Алмаз', value: 2000, prob: 0.005},
-            {emoji: '🏰', name: 'Замок', value: 6000, prob: 0.0005}
+            {emoji: '🐉', name: 'Дракон', value: 120, prob: 0.10},
+            {emoji: '🍾', name: 'Шампанское', value: 250, prob: 0.20},
+            {emoji: '🎁', name: 'Подарок 2024', value: 500, prob: 0.30},
+            {emoji: '👑', name: 'Корона', value: 1000, prob: 0.25},
+            {emoji: '💎', name: 'Алмаз', value: 2000, prob: 0.10},
+            {emoji: '🏰', name: 'Замок', value: 6000, prob: 0.05}
         ],
         color: '#facc15',
         icon: '🐉'
@@ -947,11 +948,11 @@ const cases = {
     c2025: {
         price: 799,
         items: [
-            {emoji: '🐍', name: 'Змея', value: 80, prob: 0.55},
-            {emoji: '🎊', name: 'Хлопушка', value: 150, prob: 0.30},
-            {emoji: '🎫', name: 'Билет 2025', value: 300, prob: 0.12},
-            {emoji: '🤖', name: 'Кибер-Змея', value: 800, prob: 0.025},
-            {emoji: '🚀', name: 'Ракета', value: 1500, prob: 0.005}
+            {emoji: '🐍', name: 'Змея', value: 80, prob: 0.10},
+            {emoji: '🎊', name: 'Хлопушка', value: 150, prob: 0.20},
+            {emoji: '🎫', name: 'Билет 2025', value: 300, prob: 0.30},
+            {emoji: '🤖', name: 'Кибер-Змея', value: 800, prob: 0.30},
+            {emoji: '🚀', name: 'Ракета', value: 1500, prob: 0.10}
         ],
         color: '#22d3ee',
         icon: '🐍'
@@ -959,12 +960,12 @@ const cases = {
     battle: {
         price: 189,
         items: [
-            {emoji: '🛡️', name: 'Щит', value: 20, prob: 0.50},
-            {emoji: '⚔️', name: 'Меч', value: 40, prob: 0.30},
-            {emoji: '💊', name: 'Аптечка', value: 80, prob: 0.15},
-            {emoji: '🔫', name: 'Пистолет', value: 150, prob: 0.04},
-            {emoji: '💣', name: 'Граната', value: 300, prob: 0.008},
-            {emoji: '🚁', name: 'Вертолет', value: 800, prob: 0.002},
+            {emoji: '🛡️', name: 'Щит', value: 20, prob: 0.10},
+            {emoji: '⚔️', name: 'Меч', value: 40, prob: 0.20},
+            {emoji: '💊', name: 'Аптечка', value: 80, prob: 0.30},
+            {emoji: '🔫', name: 'Пистолет', value: 150, prob: 0.30},
+            {emoji: '💣', name: 'Граната', value: 300, prob: 0.08},
+            {emoji: '🚁', name: 'Вертолет', value: 800, prob: 0.02},
         ],
         color: '#ef4444',
         icon: '⚔️'
@@ -972,14 +973,14 @@ const cases = {
     dvornik: {
         price: 29,
         items: [
-            {emoji: '🧹', name: 'Метла', value: 2, prob: 0.35},
-            {emoji: '🪣', name: 'Ведро', value: 4, prob: 0.30},
+            {emoji: '🧹', name: 'Метла', value: 2, prob: 0.10},
+            {emoji: '🪣', name: 'Ведро', value: 4, prob: 0.15},
             {emoji: '🧼', name: 'Мыло', value: 6, prob: 0.20},
-            {emoji: '🪓', name: 'Топор старый', value: 12, prob: 0.10},
-            {emoji: '🧤', name: 'Перчатки рабочие', value: 20, prob: 0.04},
-            {emoji: '⛏️', name: 'Лопата', value: 30, prob: 0.008},
-            {emoji: '🛠️', name: 'Набор инструментов', value: 60, prob: 0.002},
-            {emoji: '🚲', name: 'Велосипед б/у', value: 150, prob: 0.0005},
+            {emoji: '🪓', name: 'Топор старый', value: 12, prob: 0.25},
+            {emoji: '🧤', name: 'Перчатки рабочие', value: 20, prob: 0.20},
+            {emoji: '⛏️', name: 'Лопата', value: 30, prob: 0.08},
+            {emoji: '🛠️', name: 'Набор инструментов', value: 60, prob: 0.015},
+            {emoji: '🚲', name: 'Велосипед б/у', value: 150, prob: 0.005},
         ],
         color: '#eab308',
         icon: '🧹'
@@ -987,13 +988,13 @@ const cases = {
     schoolboy: {
         price: 259,
         items: [
-            {emoji: '📚', name: 'Учебник', value: 30, prob: 0.50},
-            {emoji: '🎒', name: 'Рюкзак', value: 60, prob: 0.30},
-            {emoji: '📱', name: 'Смартфон', value: 300, prob: 0.15},
-            {emoji: '💻', name: 'Ноутбук', value: 500, prob: 0.04},
-            {emoji: '🎮', name: 'PlayStation', value: 800, prob: 0.008},
-            {emoji: '🚗', name: 'Машинка', value: 1000, prob: 0.002},
-            {emoji: '🏠', name: 'Квартира', value: 3000, prob: 0.0002},
+            {emoji: '📚', name: 'Учебник', value: 30, prob: 0.10},
+            {emoji: '🎒', name: 'Рюкзак', value: 60, prob: 0.20},
+            {emoji: '📱', name: 'Смартфон', value: 300, prob: 0.40},
+            {emoji: '💻', name: 'Ноутбук', value: 500, prob: 0.20},
+            {emoji: '🎮', name: 'PlayStation', value: 800, prob: 0.08},
+            {emoji: '🚗', name: 'Машинка', value: 1000, prob: 0.018},
+            {emoji: '🏠', name: 'Квартира', value: 3000, prob: 0.002},
         ],
         color: '#3b82f6',
         icon: '📚'
@@ -1240,84 +1241,118 @@ const caseDisplayNames = {
             return { ...weightedPick(items), caseType };
         }
 
- async function playVsBot(quick = false) {
-    if (botRunInProgress) return;
-    botRunInProgress = true;
-    document.getElementById('playVsBot')?.setAttribute('disabled', 'true');
-    document.getElementById('quickVsBot')?.setAttribute('disabled', 'true');
-    if (!currentUser) {
-        isGuest = true;
-        currentUser = { username: 'Гость', balance: 0, inventory: [] };
+    async function playVsBot(quick = false) {
+        if (botRunInProgress) return;
+        botRunInProgress = true;
+        document.getElementById('playVsBot')?.setAttribute('disabled', 'true');
+        document.getElementById('quickVsBot')?.setAttribute('disabled', 'true');
+
+        try {
+            if (!currentUser) {
+                isGuest = true;
+                currentUser = { username: 'Гость', balance: 0, inventory: [] };
+            }
+            const totalCost = selectedBotCases.reduce((sum, type) => sum + cases[type].price, 0);
+            const balance = Number(currentUser?.balance || 0);
+            if (balance < totalCost) {
+                alert('Недостаточно баланса');
+                return;
+            }
+            if (selectedBotCases.length === 0) {
+                alert('Выберите хотя бы один кейс');
+                return;
+            }
+
+            currentUser.balance -= totalCost;
+
+            // Calendar Bet Tracking
+            const todayStr = new Date().toDateString();
+            if (currentUser.lastDailyReset !== todayStr) {
+                currentUser.dailyBet = 0;
+                currentUser.lastDailyReset = todayStr;
+            }
+            currentUser.dailyBet = (currentUser.dailyBet || 0) + totalCost;
+            currentUser.totalBet = (currentUser.totalBet || 0) + totalCost;
+
+            await saveUser();
+            updateBalance();
+
+            const playerItems = selectedBotCases.map(type => ROULETTE_FAIR ? openCaseUniform(type) : openCase(type));
+            const playerTotal = playerItems.reduce((sum, item) => sum + item.value, 0);
+            const botItems    = selectedBotCases.map(type => ROULETTE_FAIR ? openCaseUniform(type) : openCaseWithBotBoost(type));
+            lastPlayerItems = playerItems;
+            lastBotItems = botItems;
+
+            const resultsDiv = document.getElementById('botResults');
+            if (!resultsDiv) return;
+
+            resultsDiv.innerHTML = `
+                <div class="open-results">
+                    <div class="player-opens">
+                        <h4>Ваши кейсы (${currentUser?.username || 'Гость'}):</h4>
+                        <div class="case-opening-container" id="playerCases"></div>
+                        <div class="total-value" id="playerTotal">Итого: 0₽</div>
+                    </div>
+                    <div class="opponent-opens">
+                        <h4>Бот:</h4>
+                        <div class="case-opening-container" id="botCases"></div>
+                        <div class="total-value" id="botTotal">Итого: 0₽</div>
+                    </div>
+                </div>
+                <div id="resultText" style="text-align:center; margin-top:20px; font-size:1.4rem; min-height:40px;"></div>
+                <div style="display:flex; gap:10px; justify-content:center; margin-top:12px;">
+                    <button class="btn" id="sellBotBtn" style="background: linear-gradient(135deg, #34d399, #059669);">Продать сразу</button>
+                    <button class="btn" id="stashBotBtn" style="background: linear-gradient(135deg, #a855f7, #7e22ce);">Отложить всё</button>
+                </div>
+            `;
+
+            // Запускаем анимацию параллельно
+            const dual = await animateDualOpenings('playerCases', selectedBotCases, playerItems, playerTotal, 'botCases', selectedBotCases, botItems, 0, quick);
+
+            // Показываем результат только после завершения обеих анимаций
+            const realPlayerTotal = (dual?.leftResults || []).reduce((s, it) => s + Number(it.value || 0), 0);
+            const realBotTotal = (dual?.rightResults || []).reduce((s, it) => s + Number(it.value || 0), 0);
+            lastPlayerItems = dual?.leftResults || [];
+            lastBotItems = dual?.rightResults || [];
+            showBotResult(realPlayerTotal, realBotTotal, totalCost);
+            
+            // AUTO-SAVE LOGIC: Save pending items to localStorage immediately
+            // This acts as a safety net. If user leaves, next load will pick it up.
+            try {
+                if (realPlayerTotal > realBotTotal) {
+                    const myItems = lastPlayerItems.map(it => ({ emoji: it.emoji, name: it.name, value: it.value }));
+                    const oppItems = lastBotItems.map(it => ({ emoji: it.emoji, name: it.name, value: it.value }));
+                    const itemsToSave = myItems.concat(oppItems);
+                    const pending = JSON.parse(localStorage.getItem('pending_rewards') || '[]');
+                    pending.push({
+                        runId: lastBotRun.runId,
+                        items: itemsToSave,
+                        prize: realPlayerTotal + realBotTotal,
+                        timestamp: Date.now()
+                    });
+                    localStorage.setItem('pending_rewards', JSON.stringify(pending));
+                } else if (realPlayerTotal === realBotTotal) {
+                    const myItems = lastPlayerItems.map(it => ({ emoji: it.emoji, name: it.name, value: it.value }));
+                    const pending = JSON.parse(localStorage.getItem('pending_rewards') || '[]');
+                    pending.push({
+                        runId: lastBotRun.runId,
+                        items: myItems,
+                        prize: realPlayerTotal,
+                        timestamp: Date.now()
+                    });
+                    localStorage.setItem('pending_rewards', JSON.stringify(pending));
+                }
+            } catch(e) { console.error("Auto-save local failed", e); }
+
+        } catch (e) {
+            console.error("Error in playVsBot:", e);
+            alert("Произошла ошибка при игре. Попробуйте еще раз.");
+        } finally {
+            botRunInProgress = false;
+            document.getElementById('playVsBot')?.removeAttribute('disabled');
+            document.getElementById('quickVsBot')?.removeAttribute('disabled');
+        }
     }
-    const totalCost = selectedBotCases.reduce((sum, type) => sum + cases[type].price, 0);
-    const balance = Number(currentUser?.balance || 0);
-    if (balance < totalCost) {
-        alert('Недостаточно баланса');
-        botRunInProgress = false;
-        return;
-    }
-    if (selectedBotCases.length === 0) {
-        alert('Выберите хотя бы один кейс');
-        botRunInProgress = false;
-        return;
-    }
-
-    currentUser.balance -= totalCost;
-
-    // Calendar Bet Tracking
-    const todayStr = new Date().toDateString();
-    if (currentUser.lastDailyReset !== todayStr) {
-        currentUser.dailyBet = 0;
-        currentUser.lastDailyReset = todayStr;
-    }
-    currentUser.dailyBet = (currentUser.dailyBet || 0) + totalCost;
-    currentUser.totalBet = (currentUser.totalBet || 0) + totalCost;
-
-    await saveUser();
-    updateBalance();
-
-        const playerItems = selectedBotCases.map(type => ROULETTE_FAIR ? openCaseUniform(type) : openCase(type));
-        const playerTotal = playerItems.reduce((sum, item) => sum + item.value, 0);
-        const botItems    = selectedBotCases.map(type => ROULETTE_FAIR ? openCaseUniform(type) : openCaseWithBotBoost(type));
-        lastPlayerItems = playerItems;
-        lastBotItems = botItems;
-
-    const resultsDiv = document.getElementById('botResults');
-    if (!resultsDiv) return;
-
-    resultsDiv.innerHTML = `
-        <div class="open-results">
-            <div class="player-opens">
-                <h4>Ваши кейсы (${currentUser?.username || 'Гость'}):</h4>
-                <div class="case-opening-container" id="playerCases"></div>
-                <div class="total-value" id="playerTotal">Итого: 0₽</div>
-            </div>
-            <div class="opponent-opens">
-                <h4>Бот:</h4>
-                <div class="case-opening-container" id="botCases"></div>
-                <div class="total-value" id="botTotal">Итого: 0₽</div>
-            </div>
-        </div>
-        <div id="resultText" style="text-align:center; margin-top:20px; font-size:1.4rem; min-height:40px;"></div>
-        <div style="display:flex; gap:10px; justify-content:center; margin-top:12px;">
-            <button class="btn" id="sellBotBtn" style="background: linear-gradient(135deg, #34d399, #059669);">Продать сразу</button>
-            <button class="btn" id="stashBotBtn" style="background: linear-gradient(135deg, #a855f7, #7e22ce);">Отложить всё</button>
-        </div>
-    `;
-
-    // Запускаем анимацию параллельно
-    const dual = await animateDualOpenings('playerCases', selectedBotCases, playerItems, playerTotal, 'botCases', selectedBotCases, botItems, 0, quick);
-
-    // Показываем результат только после завершения обеих анимаций
-    const realPlayerTotal = (dual?.leftResults || []).reduce((s, it) => s + Number(it.value || 0), 0);
-    const realBotTotal = (dual?.rightResults || []).reduce((s, it) => s + Number(it.value || 0), 0);
-    lastPlayerItems = dual?.leftResults || [];
-    lastBotItems = dual?.rightResults || [];
-    showBotResult(realPlayerTotal, realBotTotal, totalCost);
-    botRunInProgress = false;
-    document.getElementById('playVsBot')?.removeAttribute('disabled');
-    document.getElementById('quickVsBot')?.removeAttribute('disabled');
-}
 
 function buildRouletteSequence(caseType, targetItem) {
     const src = cases[caseType].items;
@@ -1739,6 +1774,62 @@ window.addEventListener('beforeunload', () => {
             document.getElementById('authBtn').onclick = () => location.href = '../profile.html';
         }
 
+        async function checkPendingRewards() {
+            try {
+                const pendingStr = localStorage.getItem('pending_rewards');
+                if (!pendingStr) return;
+                const pending = JSON.parse(pendingStr);
+                if (!Array.isArray(pending) || pending.length === 0) return;
+
+                if (!currentUser) return; // Wait for user load
+
+                const newItems = [];
+                pending.forEach(p => {
+                    if (p.items && Array.isArray(p.items)) {
+                        p.items.forEach(it => {
+                            newItems.push({
+                                id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now() + Math.random().toString()),
+                                emoji: it.emoji,
+                                name: it.name,
+                                value: it.value,
+                                source: 'Баттл:Бот (Авто)',
+                                botRunId: p.runId,
+                                timestamp: p.timestamp || Date.now()
+                            });
+                        });
+                    }
+                });
+
+                if (newItems.length > 0) {
+                    if (isGuest) {
+                        let users = JSON.parse(localStorage.getItem('dropwin_users')) || [];
+                        const idx = users.findIndex(u => u.username === 'Гость');
+                        if (idx !== -1) {
+                            users[idx].inventory = (users[idx].inventory || []).concat(newItems);
+                            localStorage.setItem('dropwin_users', JSON.stringify(users));
+                            currentUser.inventory = users[idx].inventory;
+                        }
+                    } else if (userId) {
+                        const userRef = doc(db, 'users', userId);
+                        await runTransaction(db, async (tx) => {
+                            const snap = await tx.get(userRef);
+                            const data = snap.data();
+                            const inv = data.inventory || [];
+                            // Avoid dupes if already saved by autoSaveBotRun
+                            const trulyNew = newItems.filter(n => !inv.some(e => e.botRunId === n.botRunId));
+                            if (trulyNew.length > 0) {
+                                tx.update(userRef, { inventory: inv.concat(trulyNew) });
+                            }
+                        });
+                    }
+                    alert(`📦 Найдено незабранных наград: ${newItems.length}. Они добавлены в инвентарь!`);
+                }
+                localStorage.removeItem('pending_rewards');
+            } catch (e) {
+                console.error("Pending rewards check failed", e);
+            }
+        }
+
         function loadCurrentUser() {
             onAuthStateChanged(auth, async (user) => {
                 try {
@@ -1750,6 +1841,7 @@ window.addEventListener('beforeunload', () => {
                             isGuest = false;
                             updateBalance();
                             await awardPendingForUser();
+                            checkPendingRewards(); // Check on load
                             if (document.getElementById('vsPlayerBtn')?.classList.contains('active')) {
                                 loadBattles();
                             }
@@ -1761,6 +1853,7 @@ window.addEventListener('beforeunload', () => {
                             currentUser = users.find(u => u.username === 'Гость');
                             isGuest = true;
                             updateBalance();
+                            checkPendingRewards(); // Check on load
                         } else {
                             location.href = '../register.html';
                         }

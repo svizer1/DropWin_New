@@ -384,8 +384,77 @@
 
   // ─── Plinko logic ───────────────────────────────────────────────────────────
   let activeDrops = 0;
-  const maxActiveDrops = 5;
+  const maxActiveDrops = 10; // Increased for better gameplay
   const rAF = window.requestAnimationFrame || (cb => setTimeout(cb, 16));
+  let pinPositions = [];
+  let boardWidth = 0;
+  let boardHeight = 0;
+
+  function initBoard() {
+      const board = document.getElementById('plinkoBoard');
+      if (!board) return;
+      
+      board.innerHTML = '';
+      boardWidth = board.clientWidth;
+      boardHeight = board.clientHeight;
+
+      // Pins расположение - пирамида (Triangle Shape)
+      const rows = 14; 
+      const spacing = boardWidth / (rows + 2); // Dynamic spacing
+
+      const pinsDiv = document.createElement('div');
+      pinsDiv.className = 'pins';
+      pinsDiv.id = 'pinsContainer';
+
+      for (let row = 0; row < rows; row++) {
+        const cols = row + 3; // Pyramid: 3, 4, 5...
+        const rowWidth = (cols - 1) * spacing;
+        const startX = (boardWidth - rowWidth) / 2;
+        
+        for (let col = 0; col < cols; col++) {
+          const x = startX + col * spacing;
+          const y = (boardHeight / (rows + 2)) * (row + 1); // Start a bit lower
+
+          const pin = document.createElement('div');
+          pin.className = 'pin';
+          pin.style.left = x + 'px';
+          pin.style.top = y + 'px';
+          pinsDiv.appendChild(pin);
+        }
+      }
+      board.appendChild(pinsDiv);
+
+      // 11 бакетов с множителями - сбалансированная игра
+      const multipliers = [5, 2, 1.5, 0.8, 0.5, 0.3, 0.5, 0.8, 1.5, 2, 5];
+      const labels = ['🔥', '', '', '', '', '', '', '', '', '', '🔥'];
+
+      for (let i = 0; i < 11; i++) {
+        const bucket = document.createElement('div');
+        bucket.className = `bucket b${i}`;
+        bucket.id = `bucket${i}`;
+        bucket.innerHTML = `
+          <div class="bucket-multiplier">×${multipliers[i]}</div>
+          <div class="bucket-label">${labels[i]}</div>
+        `;
+        bucket.dataset.index = i;
+        bucket.dataset.multiplier = multipliers[i];
+        board.appendChild(bucket);
+      }
+
+      // Cache pin positions
+      const pins = document.querySelectorAll('.pin');
+      pinPositions = Array.from(pins).map(pin => ({
+        x: parseFloat(pin.style.left) + 4.5, // Center of pin
+        y: parseFloat(pin.style.top) + 4.5,
+        r: 6 // Approx radius including glow
+      }));
+  }
+
+  window.addEventListener('resize', () => {
+      // Debounce resize
+      clearTimeout(window.resizeTimer);
+      window.resizeTimer = setTimeout(initBoard, 200);
+  });
 
   // Физика Plinko
   function dropBall() {
@@ -394,7 +463,7 @@
     const betInput = document.getElementById('bet');
     const ballCountInput = document.getElementById('ballCount');
     const bet = Number(betInput.value);
-    const ballCount = Math.min(5, Math.max(1, Number(ballCountInput.value) || 1));
+    const ballCount = Math.min(10, Math.max(1, Number(ballCountInput.value) || 1));
 
     if (isNaN(bet) || bet < 10) {
       return alert('Минимальная ставка 10 ₽');
@@ -437,96 +506,49 @@
     for (let i = 0; i < ballCount; i++) {
       setTimeout(() => {
         dropSingleBall(bet);
-      }, i * 150);
+      }, i * 120);
     }
   }
 
-  function dropBallAt(spawnX) {
-    if (!currentUser) return alert('Сессия истекла. Войдите заново.');
-    const betInput = document.getElementById('bet');
-    const bet = Number(betInput.value);
-    if (isNaN(bet) || bet < 10) return alert('Минимальная ставка 10 ₽');
-    if (bet > currentUser.balance) return alert(`Недостаточно средств. Нужно ${bet}₽`);
-    if (activeDrops + 1 > maxActiveDrops) return alert(`Максимум ${maxActiveDrops} шариков одновременно`);
-    currentUser.balance = (currentUser.balance || 0) - bet;
-    currentUser.totalBet = (currentUser.totalBet || 0) + bet;
-    currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
-    saveUser({
-      balance: currentUser.balance,
-      totalBet: currentUser.totalBet,
-      gamesPlayed: currentUser.gamesPlayed
-    });
-    document.getElementById('balance').textContent = Math.floor(currentUser.balance);
-    document.getElementById('result').textContent = `Шарик запущен...`;
-    dropSingleBall(bet, spawnX);
+  function dropBallAt(e) {
+      if (!currentUser) return;
+      
+      // Prevent rapid firing on touch
+      if (Date.now() - (window.lastDropTime || 0) < 300) return;
+      window.lastDropTime = Date.now();
+
+      const rect = document.getElementById('plinkoBoard').getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const relativeX = clientX - rect.left;
+      
+      // Use existing bet value
+      const betInput = document.getElementById('bet');
+      const bet = Number(betInput.value);
+
+      if (isNaN(bet) || bet < 10) return; // Silent fail if invalid
+      if (bet > currentUser.balance) return alert(`Недостаточно средств. Нужно ${bet}₽`);
+      if (activeDrops + 1 > maxActiveDrops) return;
+
+      currentUser.balance = (currentUser.balance || 0) - bet;
+      currentUser.totalBet = (currentUser.totalBet || 0) + bet;
+      currentUser.gamesPlayed = (currentUser.gamesPlayed || 0) + 1;
+      saveUser({
+        balance: currentUser.balance,
+        totalBet: currentUser.totalBet,
+        gamesPlayed: currentUser.gamesPlayed
+      });
+      document.getElementById('balance').textContent = Math.floor(currentUser.balance);
+      
+      dropSingleBall(bet, relativeX);
   }
 
   function dropSingleBall(bet, spawnX) {
     activeDrops++;
 
     const board = document.getElementById('plinkoBoard');
+    // Ensure board is initialized
+    if (pinPositions.length === 0) initBoard();
 
-    // Если это первый шарик, создаём пины и бакеты
-    if (activeDrops === 1) {
-      board.innerHTML = '';
-
-      // Pins расположение - пирамида (Triangle Shape)
-      const rows = 14; 
-      const boardWidth = board.clientWidth;
-      const boardHeight = board.clientHeight;
-      const spacing = boardWidth / (rows + 2); // Dynamic spacing
-
-      const pinsDiv = document.createElement('div');
-      pinsDiv.className = 'pins';
-      pinsDiv.id = 'pinsContainer';
-
-      for (let row = 0; row < rows; row++) {
-        const cols = row + 3; // Pyramid: 3, 4, 5...
-        const rowWidth = (cols - 1) * spacing;
-        const startX = (boardWidth - rowWidth) / 2;
-        
-        for (let col = 0; col < cols; col++) {
-          const x = startX + col * spacing;
-          const y = (boardHeight / (rows + 2)) * (row + 1); // Start a bit lower
-
-          const pin = document.createElement('div');
-          pin.className = 'pin';
-          pin.style.left = x + 'px';
-          pin.style.top = y + 'px';
-          pinsDiv.appendChild(pin);
-        }
-      }
-      board.appendChild(pinsDiv);
-
-      // 11 бакетов с множителями - сбалансированная игра
-      const multipliers = [5, 2, 1.5, 0.8, 0.5, 0.3, 0.5, 0.8, 1.5, 2, 5];
-      const labels = ['🔥', '', '', '', '', '', '', '', '', '', '🔥'];
-
-      for (let i = 0; i < 11; i++) {
-        const bucket = document.createElement('div');
-        bucket.className = `bucket b${i}`;
-        bucket.id = `bucket${i}`;
-        bucket.innerHTML = `
-          <div class="bucket-multiplier">×${multipliers[i]}</div>
-          <div class="bucket-label">${labels[i]}</div>
-        `;
-        bucket.dataset.index = i;
-        bucket.dataset.multiplier = multipliers[i];
-        board.appendChild(bucket);
-      }
-    }
-
-    const boardWidth = board.clientWidth;
-    const boardHeight = board.clientHeight;
-
-    // Получаем позиции пинов
-    const pins = document.querySelectorAll('.pin');
-    const pinPositions = Array.from(pins).map(pin => ({
-      x: parseFloat(pin.style.left) + 4.5,
-      y: parseFloat(pin.style.top) + 4.5
-    }));
-
-    // Физика шарика
     const ball = document.createElement('div');
     ball.className = 'ball';
     board.appendChild(ball);
@@ -545,7 +567,7 @@
 
     let lastTrail = 0;
     let frameCount = 0;
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
     const animate = () => {
       frameCount++;
@@ -555,7 +577,7 @@
       x += vx;
       y += vy;
 
-      // Анти-залипание: поддерживаем минимальную динамику
+      // Анти-залипание
       const speed = Math.sqrt(vx * vx + vy * vy);
       if (speed < 0.12) {
         vx += (Math.random() - 0.5) * 0.6;
@@ -573,62 +595,62 @@
         vx = -Math.abs(vx) * bounce;
       }
 
-      // Столкновение с пинами - реалистичная физика
-      pinPositions.forEach(pin => {
-        const dx = x - pin.x;
-        const dy = y - pin.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const minDist = 13;
+      // Optimized Collision Detection
+      // Check only pins close to the ball
+      for(let i = 0; i < pinPositions.length; i++) {
+          const pin = pinPositions[i];
+          // Quick bounding box check
+          if (Math.abs(x - pin.x) > 20 || Math.abs(y - pin.y) > 20) continue;
 
-        if (dist < minDist) {
-          // Вычисляем угол столкновения
-          const angle = Math.atan2(dy, dx);
-          const overlap = minDist - dist;
+          const dx = x - pin.x;
+          const dy = y - pin.y;
+          const distSq = dx*dx + dy*dy;
+          const minDist = 13;
+          
+          if (distSq < minDist * minDist) {
+             const dist = Math.sqrt(distSq);
+             const angle = Math.atan2(dy, dx);
+             const overlap = minDist - dist;
 
-          // Отталкиваем шарик от пина
-          x += Math.cos(angle) * overlap;
-          y += Math.sin(angle) * overlap;
+             x += Math.cos(angle) * overlap;
+             y += Math.sin(angle) * overlap;
 
-          // Изменяем скорость с учетом угла
-          const hitSpeed = Math.sqrt(vx * vx + vy * vy);
-          const newSpeed = Math.max(hitSpeed * bounce, 0.6);
-          vx = Math.cos(angle) * newSpeed;
-          vy = Math.sin(angle) * newSpeed;
-          vy += gravity * 0.2; // толчок вниз, чтобы не висеть на пине
+             const hitSpeed = Math.sqrt(vx * vx + vy * vy);
+             const newSpeed = Math.max(hitSpeed * bounce, 0.6);
+             vx = Math.cos(angle) * newSpeed;
+             vy = Math.sin(angle) * newSpeed;
+             vy += gravity * 0.2;
 
-          // Умеренное притяжение к выигрышным зонам ×1.5 и ×2
-          const zones = [
-            { pos: boardWidth * 0.14, strength: 0.006 },  // ×2
-            { pos: boardWidth * 0.23, strength: 0.008 },  // ×1.5
-            { pos: boardWidth * 0.77, strength: 0.008 },  // ×1.5
-            { pos: boardWidth * 0.86, strength: 0.006 }   // ×2
-          ];
+             // Zone attraction logic remains...
+             const zones = [
+                { pos: boardWidth * 0.14, strength: 0.006 },
+                { pos: boardWidth * 0.23, strength: 0.008 },
+                { pos: boardWidth * 0.77, strength: 0.008 },
+                { pos: boardWidth * 0.86, strength: 0.006 }
+             ];
+             zones.forEach(zone => {
+                if (Math.abs(x - zone.pos) < boardWidth * 0.15) {
+                   vx += (zone.pos - x) * zone.strength;
+                }
+             });
 
-          zones.forEach(zone => {
-            const dist = Math.abs(x - zone.pos);
-            if (dist < boardWidth * 0.15) {
-              vx += (zone.pos - x) * zone.strength;
-            }
-          });
-
-          // Добавляем случайность
-          vx += (Math.random() - 0.5) * 0.6;
-        }
-      });
+             vx += (Math.random() - 0.5) * 0.6;
+          }
+      }
 
       // Применяем трение
       vx *= friction;
       vy *= friction;
 
-      // Трейл эффект (каждые 3 кадра)
-      if (!isIOS) {
-        if (frameCount % 3 === 0 && Date.now() - lastTrail > 30) {
+      // Трейл эффект (reduced frequency on mobile)
+      if (!isMobile) {
+        if (frameCount % 4 === 0 && Date.now() - lastTrail > 40) {
           const trail = document.createElement('div');
           trail.className = 'ball-trail';
           trail.style.left = x + 'px';
           trail.style.top = y + 'px';
           board.appendChild(trail);
-          setTimeout(() => trail.remove(), 400);
+          setTimeout(() => trail.remove(), 350);
           lastTrail = Date.now();
         }
       }
@@ -636,7 +658,7 @@
       ball.style.transform = `translate(-50%, -50%) translate3d(${x}px, ${y}px, 0)`;
 
       // Проверка достижения дна
-      if (y < boardHeight - 75) {
+      if (y < boardHeight - 65) {
         rAF(animate);
       } else {
         // Определяем в какой бакет попал (11 бакетов)
@@ -645,53 +667,49 @@
 
         // Анимация бакета
         const buckets = document.querySelectorAll('.bucket');
-        buckets[finalIndex].classList.add('active');
+        if (buckets[finalIndex]) {
+            buckets[finalIndex].classList.add('active');
+            setTimeout(() => buckets[finalIndex].classList.remove('active'), 500);
+        
+            const mult = parseFloat(buckets[finalIndex].dataset.multiplier);
+            let payout = Math.round(bet * mult);
+            let net = payout - bet;
 
-        setTimeout(() => {
-          const buckets = document.querySelectorAll('.bucket');
-          const targetBucket = buckets[finalIndex];
-          const mult = parseFloat(targetBucket.dataset.multiplier);
-
-          // Правильный расчет: ставка × множитель = выплата
-          let payout = Math.round(bet * mult);
-          let net = payout - bet; // чистая прибыль/убыток
-
-          currentUser.balance = (currentUser.balance || 0) + payout;
-
-          if (net > 0) {
-            currentUser.totalWin = (currentUser.totalWin || 0) + net;
-            currentUser.wins = (currentUser.wins || 0) + 1;
-          } else if (net < 0) {
-            currentUser.losses = (currentUser.losses || 0) + 1;
-          }
-
-          document.getElementById('balance').textContent = Math.floor(currentUser.balance);
-
-          addToHistory('Plinko', net);
-          saveUser({
-            balance: currentUser.balance,
-            totalWin: currentUser.totalWin,
-            wins: currentUser.wins,
-            losses: currentUser.losses
-          });
-
-          activeDrops--;
-
-          // Обновляем результат только когда все шарики упали
-          if (activeDrops === 0) {
-            let message = '';
+            currentUser.balance = (currentUser.balance || 0) + payout;
             if (net > 0) {
-              message = `<span style="color:#34d399; font-size:1.15rem">Выигрыш! +${net}₽ (×${mult}) 🎉</span>`;
-            } else if (net === 0) {
-              message = `<span style="color:#fbbf24">Возврат ${payout}₽ (×${mult})</span>`;
-            } else {
-              message = `<span style="color:#f87171">Потеря ${Math.abs(net)}₽ (×${mult})</span>`;
+                currentUser.totalWin = (currentUser.totalWin || 0) + net;
+                currentUser.wins = (currentUser.wins || 0) + 1;
+            } else if (net < 0) {
+                currentUser.losses = (currentUser.losses || 0) + 1;
             }
-            document.getElementById('result').innerHTML = message;
-          }
 
-          targetBucket.classList.remove('active');
-        }, 500);
+            document.getElementById('balance').textContent = Math.floor(currentUser.balance);
+            addToHistory('Plinko', net);
+            saveUser({
+                balance: currentUser.balance,
+                totalWin: currentUser.totalWin,
+                wins: currentUser.wins,
+                losses: currentUser.losses
+            });
+
+            activeDrops--;
+
+            if (activeDrops === 0) {
+                let message = '';
+                if (net > 0) {
+                message = `<span style="color:#34d399; font-size:1.15rem">Выигрыш! +${net}₽ (×${mult}) 🎉</span>`;
+                } else if (net === 0) {
+                message = `<span style="color:#fbbf24">Возврат ${payout}₽ (×${mult})</span>`;
+                } else {
+                message = `<span style="color:#f87171">Потеря ${Math.abs(net)}₽ (×${mult})</span>`;
+                }
+                document.getElementById('result').innerHTML = message;
+            }
+        } else {
+            activeDrops--;
+        }
+        
+        ball.remove(); // Remove ball from DOM
       }
     };
 
@@ -702,8 +720,18 @@
   document.addEventListener('DOMContentLoaded', () => {
     createParticles();
     loadCurrentUser();
+    initBoard();
 
     document.getElementById('dropBtn').onclick = dropBall;
+    
+    // Add touch support to board
+    const board = document.getElementById('plinkoBoard');
+    board.addEventListener('click', dropBallAt);
+    board.addEventListener('touchstart', (e) => {
+        if (e.target.closest('.bucket')) return; // Allow bucket interaction if any
+        e.preventDefault(); 
+        dropBallAt(e); 
+    }, { passive: false });
   });
 </script>
 </body>

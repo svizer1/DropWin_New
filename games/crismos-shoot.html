@@ -445,7 +445,7 @@
         /* Кнопки управления */
         .controls {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(2, 1fr);
             gap: 10px;
             margin-top: 10px;
             padding-bottom: 20px;
@@ -453,13 +453,13 @@
 
         .action-row {
             grid-column: 1 / -1;
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 10px;
-            flex-wrap: wrap;
         }
         
         .control-btn {
-            padding: 16px;
+            padding: 12px;
             background: var(--bg-card);
             border: 2px solid var(--border);
             border-radius: 14px;
@@ -467,14 +467,31 @@
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 1rem;
+            font-size: 0.95rem;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 5px;
+            gap: 4px;
             touch-action: manipulation;
-            flex: 1;
+            min-height: 70px; /* Touch target size */
+        }
+        
+        /* Mobile Specifics */
+        @media (max-width: 480px) {
+            .game-title { font-size: 1.5rem; }
+            .ui-panel { padding: 8px; min-width: 80px; }
+            .ui-value { font-size: 1rem; }
+            .control-btn { font-size: 0.85rem; padding: 10px; }
+            .btn-reload span:last-child { font-size: 0.7rem; }
+            .game-header { padding: 10px; margin-bottom: 10px; }
+            .arena-canvas { border-radius: 12px; }
+            
+            /* Hide non-essential text on very small screens */
+            .btn-upgrade span:nth-child(2),
+            .btn-grenade span:nth-child(2) {
+                font-size: 0.75rem;
+            }
         }
         
         .control-btn:active {

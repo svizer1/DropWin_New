@@ -513,6 +513,36 @@
             }
         }
 
+        @media (max-width: 480px) {
+            .wheel-container {
+                width: 300px;
+                height: 300px;
+            }
+            .wheel-center {
+                width: 70px;
+                height: 70px;
+                font-size: 2rem;
+            }
+            .betting-panel {
+                padding: 15px;
+            }
+            .quick-bets {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px;
+            }
+            .quick-bet-btn {
+                padding: 8px;
+                font-size: 0.9rem;
+            }
+            .title {
+                font-size: 1.8rem;
+            }
+            .balance-display {
+                font-size: 1.2rem;
+                padding: 10px 20px;
+            }
+        }
+
         .glow {
             animation: glow 2s ease-in-out infinite;
         }
@@ -654,17 +684,25 @@
 
         function resizeCanvas() {
             const container = canvas.parentElement;
-            canvas.width = container.offsetWidth;
-            canvas.height = container.offsetHeight;
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = container.offsetWidth * dpr;
+            canvas.height = container.offsetHeight * dpr;
+            ctx.scale(dpr, dpr);
+            // Fix style width/height to match logical pixels
+            canvas.style.width = container.offsetWidth + 'px';
+            canvas.style.height = container.offsetHeight + 'px';
             drawWheel();
         }
 
         function drawWheel() {
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
+            // Use logical dimensions for drawing logic
+            const width = canvas.width / (window.devicePixelRatio || 1);
+            const height = canvas.height / (window.devicePixelRatio || 1);
+            const centerX = width / 2;
+            const centerY = height / 2;
             const radius = Math.min(centerX, centerY) - 10;
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, width, height);
 
             if (players.length === 0) {
                 ctx.fillStyle = '#1a1625';

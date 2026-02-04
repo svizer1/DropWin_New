@@ -761,16 +761,33 @@ input:focus { outline: none; border-color: var(--primary); }
 @media (max-width: 480px) {
     .header {
         padding: 0 10px;
+        background: transparent; /* Make header transparent on mobile */
+        border-bottom: none;
+        backdrop-filter: none;
+        position: absolute; /* Overlay content */
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1100;
     }
     .header-left {
         gap: 8px;
     }
     .logo {
         font-size: 1.1rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.8); /* Add shadow for visibility */
     }
     .hamburger {
-        width: 36px;
-        height: 36px;
+        width: 44px; /* Slightly larger */
+        height: 44px;
+        background: rgba(0,0,0,0.2); /* Slight background for contrast */
+        backdrop-filter: blur(4px);
+    }
+    .hamburger .bar {
+        width: 24px;
+        height: 3px; /* Thicker bars */
+        background: white;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.5);
     }
     .header-right {
         gap: 6px;
@@ -781,19 +798,19 @@ input:focus { outline: none; border-color: var(--primary); }
     .balance-box {
         padding: 4px 8px;
         font-size: 0.85rem;
-        max-width: 140px; /* Increased from 100px */
+        max-width: none; /* Allow full width */
         white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        overflow: visible;
         display: flex;
         align-items: center;
         gap: 4px;
+        background: rgba(26, 26, 32, 0.8); /* Ensure readability */
+        backdrop-filter: blur(4px);
     }
     .balance-box span {
         display: inline-block;
-        max-width: 50px;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        max-width: none; /* Allow full width */
+        overflow: visible;
     }
     .add-funds-btn {
         width: 20px;
